@@ -1,0 +1,74 @@
+{
+  "allowed_commands": [
+    {
+      "name": "typecheck",
+      "command": ["{drive}\\PortableApps\\Node\\node-v24.15.0-win-x64\\node.exe", "node_modules\\typescript\\bin\\tsc", "--noEmit"],
+      "allow_args": false,
+      "timeout": 120
+    },
+    {
+      "name": "test",
+      "command": ["{drive}\\PortableApps\\Node\\node-v24.15.0-win-x64\\node.exe", "node_modules\\vitest\\vitest.mjs", "run"],
+      "allow_args": false,
+      "timeout": 180
+    },
+    {
+      "name": "test_target",
+      "command": ["{drive}\\PortableApps\\Node\\node-v24.15.0-win-x64\\node.exe", "node_modules\\vitest\\vitest.mjs", "run"],
+      "allow_args": true,
+      "arg_pattern": "^[A-Za-z0-9_./\\\\-]+$",
+      "timeout": 180
+    },
+    {
+      "name": "find_bloat",
+      "command": ["{drive}\\PortablePython\\python.exe", "tools/find_bloat.py"],
+      "allow_args": true,
+      "arg_pattern": "^--json$",
+      "timeout": 60
+    },
+    {
+      "name": "git_status",
+      "command": ["git", "status", "--short"],
+      "allow_args": false,
+      "timeout": 30
+    },
+    {
+      "name": "git_diff",
+      "command": ["git", "diff"],
+      "allow_args": true,
+      "arg_pattern": "^[A-Za-z0-9_./\\\\-]+$",
+      "timeout": 60
+    },
+    {
+      "name": "browser_research_check",
+      "command": ["{drive}\\PortablePython\\python.exe", ".agent/orchestrator/browser_research.py", "--check"],
+      "allow_args": false,
+      "timeout": 60
+    }
+  ],
+  "blocked_patterns": [
+    "git commit",
+    "git add",
+    "git reset",
+    "git clean",
+    "git checkout",
+    "git push",
+    "npm install",
+    "pnpm add",
+    "yarn add",
+    "curl ",
+    "wget ",
+    "powershell -enc",
+    "rm ",
+    "del ",
+    "rmdir",
+    "format ",
+    "Remove-Item",
+    "&&",
+    "||",
+    ";",
+    "|",
+    ">",
+    "<"
+  ]
+}

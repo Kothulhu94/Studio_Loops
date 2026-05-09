@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ACTIONS_JSON",
+  "type": "object",
+  "required": ["stage", "status", "summary"],
+  "additionalProperties": false,
+  "properties": {
+    "stage": {
+      "type": "string",
+      "enum": [
+        "concept_producer",
+        "researcher",
+        "designer",
+        "asset_creator",
+        "developer",
+        "qa_tester",
+        "bug_hunter",
+        "debug_dev"
+      ]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["complete", "blocked", "failed"]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 10
+    },
+    "research_requests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["query"],
+        "additionalProperties": false,
+        "properties": {
+          "query": { "type": "string" },
+          "reason": { "type": "string" },
+          "required": { "type": "boolean" }
+        }
+      }
+    },
+    "writes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "content"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string" },
+          "content": { "type": "string" },
+          "mode": { "type": "string", "enum": ["create", "overwrite", "append"] }
+        }
+      }
+    },
+    "patches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "diff"],
+        "additionalProperties": false,
+        "properties": {
+          "path": { "type": "string" },
+          "diff": { "type": "string" }
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "args": { "type": ["array", "string", "null"] },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["reason"],
+        "additionalProperties": false,
+        "properties": {
+          "reason": { "type": "string" },
+          "required_followup": { "type": "string" }
+        }
+      }
+    },
+    "design_required": { "type": "boolean" },
+    "assets_required": { "type": "boolean" },
+    "qa_result": {
+      "type": ["string", "null"],
+      "enum": ["PASS", "FAIL", "BLOCKED", "SKIPPED", null]
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" }
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "next_stage_recommendation": {
+      "type": ["string", "null"]
+    }
+  }
+}
+

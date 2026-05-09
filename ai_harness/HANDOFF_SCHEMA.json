@@ -1,0 +1,130 @@
+{
+  "version": "4.0",
+  "project": "Studio Loop",
+  "orchestration": {
+    "state_file": ".agent/state/studio_loop_state.json",
+    "artifact_directory": ".agent/Loop_Flow/",
+    "context_pack_directory": ".agent/Loop_Flow/context_packs/",
+    "controller": ".agent/orchestrator/studio_loop.py",
+    "transition_authority": "orchestrator"
+  },
+  "stages": {
+    "concept_producer": {
+      "stage_type": "planning",
+      "can_write_source": false,
+      "can_write_artifacts": true,
+      "can_run_commands": true,
+      "can_request_research": true,
+      "required_input": ["User Request", "Current Roadmap"],
+      "required_output": ["Feature Vision Artifact (.md)", "Target User Experience"],
+      "next_stages": ["researcher"],
+      "validation": {
+        "required_files": [".agent/Loop_Flow/{feature}_blueprint.md"],
+        "required_sections": ["Vision", "Target User Experience", "Thematic Alignment"],
+        "forbidden_actions": ["modifies_source_code"],
+        "actions_json_required": true
+      }
+    },
+    "researcher": {
+      "stage_type": "research",
+      "can_write_source": false,
+      "can_write_artifacts": true,
+      "can_run_commands": true,
+      "can_request_research": true,
+      "required_input": ["Feature Vision Artifact"],
+      "required_output": ["Technical Audit (.md)", "Implementation Blueprint", "Context Pruning Map"],
+      "next_stages": ["designer", "developer"],
+      "validation": {
+        "required_files": [".agent/Loop_Flow/{feature}_blueprint.md", ".agent/Loop_Flow/context_map.json"],
+        "required_sections": ["Technical Audit", "Implementation Blueprint", "Context Pruning Map", "Implementation Checklist"],
+        "forbidden_actions": ["modifies_source_code"],
+        "actions_json_required": true,
+        "research_required": true
+      }
+    },
+    "designer": {
+      "stage_type": "design",
+      "can_write_source": false,
+      "can_write_artifacts": true,
+      "can_run_commands": true,
+      "can_request_research": true,
+      "required_input": ["Technical Audit", "Feature Vision Artifact"],
+      "required_output": ["Aesthetic Spec (.md)", "CSS Tokens / Assets", "Interactive Prototypes"],
+      "next_stages": ["developer"],
+      "validation": {
+        "required_files": [".agent/Loop_Flow/{feature}_design_spec.md"],
+        "required_sections": ["Aesthetic Spec", "Interaction Spec", "CSS Tokens"],
+        "forbidden_actions": ["modifies_source_code"],
+        "actions_json_required": true
+      }
+    },
+    "developer": {
+      "stage_type": "implementation",
+      "can_write_source": true,
+      "can_write_artifacts": true,
+      "can_run_commands": true,
+      "can_request_research": true,
+      "required_input": ["Technical Audit", "Implementation Blueprint", "Aesthetic Spec (if applicable)"],
+      "required_output": ["Functional Code", "Unit Tests", "Implementation Report", "Verification Results", "Changed Files Summary"],
+      "next_stages": ["qa_tester"],
+      "validation": {
+        "required_files": [],
+        "required_sections": ["Implementation Summary", "Files Changed", "Verification"],
+        "forbidden_actions": [],
+        "actions_json_required": true
+      }
+    },
+    "qa_tester": {
+      "stage_type": "verification",
+      "can_write_source": false,
+      "can_write_artifacts": true,
+      "can_run_commands": true,
+      "can_request_research": true,
+      "required_input": ["Functional Code", "Implementation Blueprint"],
+      "required_output": ["Test Report (.md)", "Performance Metrics"],
+      "next_stages": ["bug_hunter", "handover_complete"],
+      "validation": {
+        "required_files": [".agent/Loop_Flow/{feature}_qa_report.md"],
+        "required_sections": ["Test Cases", "Result", "Risks"],
+        "forbidden_actions": ["modifies_source_code"],
+        "actions_json_required": true
+      }
+    },
+    "bug_hunter": {
+      "stage_type": "debug",
+      "can_write_source": false,
+      "can_write_artifacts": true,
+      "can_run_commands": true,
+      "can_request_research": true,
+      "required_input": ["Test Report", "Error Logs"],
+      "required_output": ["Root Cause Analysis (.md)", "Reproduction Script (repro.js)"],
+      "next_stages": ["debug_dev"],
+      "validation": {
+        "required_files": [".agent/Loop_Flow/{feature}_root_cause_analysis.md"],
+        "required_sections": ["Root Cause", "Reproduction Steps", "Fix Strategy"],
+        "forbidden_actions": ["modifies_source_code"],
+        "actions_json_required": true
+      }
+    },
+    "debug_dev": {
+      "stage_type": "implementation",
+      "can_write_source": true,
+      "can_write_artifacts": true,
+      "can_run_commands": true,
+      "can_request_research": true,
+      "required_input": ["Root Cause Analysis", "Reproduction Script"],
+      "required_output": ["Surgical Fix", "Regression Test Results"],
+      "next_stages": ["qa_tester"],
+      "validation": {
+        "required_files": [],
+        "required_sections": ["Fix Summary", "Regression Check"],
+        "forbidden_actions": ["feature_creep"],
+        "actions_json_required": true
+      }
+    }
+  },
+  "logging": {
+    "directory": ".agent/logs/",
+    "format": "Decision Log: [Timestamp] [Identity] [Action] [Decision Rationale]"
+  }
+}

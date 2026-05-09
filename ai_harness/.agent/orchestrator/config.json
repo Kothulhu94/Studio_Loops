@@ -1,0 +1,64 @@
+{
+  "koboldcpp": {
+    "base_url": "http://127.0.0.1:5001",
+    "endpoint": "/v1/chat/completions",
+    "model": "local-gemma-4",
+    "temperature": 0.3,
+    "top_p": 0.9,
+    "max_output_tokens": 2500
+  },
+  "context_budget": {
+    "max_prompt_chars": 48000,
+    "project_capsule_chars": 5000,
+    "role_instruction_chars": 7000,
+    "active_artifact_chars": 12000,
+    "pruned_context_chars": 20000,
+    "decision_memory_chars": 4000
+  },
+  "paths": {
+    "schema": "HANDOFF_SCHEMA.json",
+    "workflows": ".agent/workflows",
+    "skills": ".agent/skills",
+    "loop_flow": ".agent/Loop_Flow",
+    "state": ".agent/state/studio_loop_state.json",
+    "logs": ".agent/logs"
+  },
+  "automation": {
+    "default_mode": "single_stage",
+    "allow_auto_continue": true,
+    "max_total_stages": 20,
+    "max_stage_retries": 3,
+    "require_validation_before_transition": true,
+    "require_tests_after_code_changes": true,
+    "require_typecheck_after_code_changes": true,
+    "stop_before_git_commit": true,
+    "allow_git_commit": false
+  },
+  "web_research": {
+    "enabled": true,
+    "provider": "browser",
+    "browser_backend": "playwright",
+    "headless": true,
+    "search_engine": "mdn",
+    "search_url_template": "https://developer.mozilla.org/en-US/search?q={query}",
+
+
+    "max_results": 5,
+    "max_pages_per_query": 3,
+    "timeout_seconds": 30,
+    "cache_dir": ".agent/logs/research/cache",
+    "artifact_dir": ".agent/Loop_Flow/research",
+    "screenshots_dir": ".agent/logs/research/screenshots",
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "respect_robots": true,
+    "allow_direct_url_fetch": true,
+    "fail_on_captcha": true,
+    "fail_on_login_wall": true
+  },
+  "search_engines": {
+    "duckduckgo_lite": "https://duckduckgo.com/html/?q={query}",
+    "bing": "https://www.bing.com/search?q={query}",
+    "wikipedia": "https://en.wikipedia.org/w/index.php?search={query}",
+    "mdn": "https://developer.mozilla.org/en-US/search?q={query}"
+  }
+}

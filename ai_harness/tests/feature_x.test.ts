@@ -1,0 +1,1 @@
+import {x} from '../src/feature_x'; test('x', () => expect(x).toBe(1));
