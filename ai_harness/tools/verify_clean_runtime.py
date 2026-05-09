@@ -201,14 +201,20 @@ def _verify_allowlist_targets(base_path, dirty):
         allowlist = json.load(handle)
 
     drive = os.path.splitdrive(base_path)[0] or "C:"
+    path_tools = {"python", "npx", "node", "npm", "git"}
     for command in allowlist.get("allowed_commands", []):
         command_parts = command.get("command", [])
         if not command_parts:
             dirty.append(f"Allowlisted command has no command parts: {command.get('name')}")
             continue
-        exe = command_parts[0].replace("{drive}", drive)
-        if not (os.path.exists(exe) or shutil.which(exe) or shutil.which(os.path.basename(exe))):
-            dirty.append(f"Allowlisted command executable missing: {exe}")
+        exe = command_parts[0]
+        if exe in path_tools:
+            if not shutil.which(exe):
+                dirty.append(f"Allowlisted PATH command missing: {exe}")
+        else:
+            resolved_exe = exe.replace("{drive}", drive)
+            if not (os.path.exists(resolved_exe) or shutil.which(resolved_exe)):
+                dirty.append(f"Allowlisted command executable missing: {resolved_exe}")
         for part in command_parts[1:]:
             if _allowlist_part_points_to_repo_file(part):
                 full_path = os.path.join(base_path, part)

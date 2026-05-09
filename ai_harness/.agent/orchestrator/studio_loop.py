@@ -143,7 +143,16 @@ class StudioLoopOrchestrator:
         self._apply_policy_context(state)
         
         if repair_prompt_override:
-            prompt = repair_prompt_override
+            if isinstance(repair_prompt_override, str):
+                prompt = {
+                    "system": (
+                        "You are repairing the previous ACTIONS_JSON for the current Studio Loop stage.\n"
+                        "Return corrected ACTIONS_JSON only."
+                    ),
+                    "user": repair_prompt_override
+                }
+            else:
+                prompt = repair_prompt_override
         else:
             # 1. Build Context
             print("Building context...")
@@ -180,6 +189,7 @@ class StudioLoopOrchestrator:
             print(f"Invalid ACTIONS_JSON: {err}")
             if self.retry_engine.should_retry(attempt):
                 return self.repair_output(response_text, err, stage_name, attempt + 1)
+            self.record_stage_validation_failure(stage_name, err, response_text)
             return False
 
         # 6. Safety Guard
@@ -481,12 +491,33 @@ class StudioLoopOrchestrator:
         
         # 1. Generate repair prompt
         error_type = "SCHEMA_ERROR" if "JSON" in error else "VALIDATION_FAILED"
-        repair_prompt = self.retry_engine.get_repair_prompt(error_type, error, context_snippet=raw_response[:1000])
+        repair_prompt = self.retry_engine.get_repair_prompt(
+            error_type,
+            error,
+            context_snippet=raw_response[:1000],
+            stage_name=stage_name
+        )
+        repair_prompt_packet = {
+            "system": (
+                "You are repairing the previous ACTIONS_JSON for the current Studio Loop stage.\n"
+                "Return corrected ACTIONS_JSON only."
+            ),
+            "user": repair_prompt
+        }
         
         # 2. Get repair response from model
-        # For now, we simulate the model call via execute_stage but passing the repair prompt
-        # In a real implementation, execute_stage would take an optional override_prompt
-        return self.execute_stage(stage_name, attempt, repair_prompt_override=repair_prompt)
+        return self.execute_stage(stage_name, attempt, repair_prompt_override=repair_prompt_packet)
+
+    def record_stage_validation_failure(self, stage_name, error, response_text):
+        excerpt = response_text[:1000] if response_text else ""
+        reason = (
+            f"ACTIONS_JSON validation failed after repair retries at stage '{stage_name}': {error}. "
+            f"Response excerpt: {excerpt}"
+        )
+        print(
+            f"Stage {stage_name} reached local model, but ACTIONS_JSON validation failed after repair retries: {error}"
+        )
+        self.state_store.fail_stage(stage_name, reason)
 
     def status(self):
         state = self.state_store.load_state()

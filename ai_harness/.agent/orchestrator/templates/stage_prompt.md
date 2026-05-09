@@ -53,6 +53,12 @@ Do not use XML tags.
 Do not assume chat history.
 Use only the supplied task state, artifacts, research briefs, and context pack.
 Request all actions through `ACTIONS_JSON`.
+The status field must be exactly one of: complete, blocked, failed.
+Never use running, in_progress, pending, or custom status values.
+If you are requesting research, commands, writes, or patches, still choose a valid status for this response.
+Use real JSON null, not the string "null".
+Only QA should set qa_result to PASS, FAIL, BLOCKED, or SKIPPED.
+All non-QA roles should set qa_result to null.
 
 End with:
 
@@ -63,7 +69,7 @@ ACTIONS_JSON:
   "summary": "Detailed summary of work performed",
   "design_required": false,
   "assets_required": false,
-  "qa_result": "PASS|FAIL|BLOCKED|SKIPPED|null",
+  "qa_result": null,
   "writes": [
     {"path": "relative/path", "content": "content", "mode": "create|overwrite|append"}
   ],

@@ -87,53 +87,72 @@ class CapabilityRegistry:
             self.capabilities["koboldcpp"]["error"] = str(e)
 
     def _detect_commands(self):
+        import shutil
         # We check common tools
         self.capabilities["commands"]["git_status"] = self._can_run(["git", "status", "--short"])
         self.capabilities["commands"]["git_diff"] = self.capabilities["commands"]["git_status"]
         
-        # Check node_modules for local tools
-        if os.path.exists("node_modules/.bin/tsc"):
-            self.capabilities["commands"]["typecheck"] = True
-        elif self._can_run(["tsc", "--version"]):
-            self.capabilities["commands"]["typecheck"] = True
-            
-        if os.path.exists("node_modules/.bin/vitest"):
-            self.capabilities["commands"]["test"] = True
-        elif self._can_run(["vitest", "--version"]):
-            self.capabilities["commands"]["test"] = True
+        # Check node tools via npx or local
+        node_available = shutil.which("node") is not None
+        npm_available = shutil.which("npm") is not None
+        npx_available = shutil.which("npx") is not None
+        
+        if npx_available:
+            self.capabilities["commands"]["typecheck"] = self._can_run(["npx", "tsc", "--version"])
+            self.capabilities["commands"]["test"] = self._can_run(["npx", "vitest", "--version"])
+        else:
+            # Check node_modules for local tools
+            if os.path.exists("node_modules/.bin/tsc"):
+                self.capabilities["commands"]["typecheck"] = True
+            elif self._can_run(["tsc", "--version"]):
+                self.capabilities["commands"]["typecheck"] = True
+                
+            if os.path.exists("node_modules/.bin/vitest"):
+                self.capabilities["commands"]["test"] = True
+            elif self._can_run(["vitest", "--version"]):
+                self.capabilities["commands"]["test"] = True
 
     def _detect_research(self):
-        from playwright_research import PlaywrightResearch
-        
-        pw = PlaywrightResearch(self.config.get("web_research", {}))
-        
-        # Playwright is the primary research backend
-        if pw.is_available():
-            self.capabilities["research"]["web_search"] = True
-            self.capabilities["research"]["web_fetch"] = True
-            self.capabilities["research"]["backend"] = "playwright"
-            self.capabilities["research"]["error"] = None
-        else:
-            self.capabilities["research"]["web_search"] = False
-            self.capabilities["research"]["web_fetch"] = False
-            self.capabilities["research"]["backend"] = None
-            self.capabilities["research"]["error"] = "No functional browser research backend (Playwright) found."
-
+        try:
+            from playwright_research import PlaywrightResearch
+            pw = PlaywrightResearch(self.config.get("web_research", {}))
+            
+            # Playwright is the primary research backend
+            if pw.is_available():
+                self.capabilities["research"]["web_search"] = True
+                self.capabilities["research"]["web_fetch"] = True
+                self.capabilities["research"]["backend"] = "playwright"
+                self.capabilities["research"]["error"] = None
+            else:
+                self.capabilities["research"]["web_search"] = False
+                self.capabilities["research"]["web_fetch"] = False
+                self.capabilities["research"]["backend"] = None
+                self.capabilities["research"]["error"] = "No functional browser research backend (Playwright) found. Check if chromium is installed."
+        except Exception as e:
+            self.capabilities["research"]["error"] = f"Failed to import or initialize PlaywrightResearch: {str(e)}"
 
     def _detect_browser(self):
-        from playwright_research import PLAYWRIGHT_AVAILABLE
-        
-        self.capabilities["browser"]["playwright"] = PLAYWRIGHT_AVAILABLE
-        self.capabilities["browser"]["available"] = PLAYWRIGHT_AVAILABLE
-        self.capabilities["browser"]["chrome_devtools"] = False # CDP disabled
-        self.capabilities["browser"]["chrome_remote_debugging"] = False
-        self.capabilities["browser"]["performance_trace"] = False
+        try:
+            from playwright_research import PLAYWRIGHT_AVAILABLE, PlaywrightResearch
+            
+            pw = PlaywrightResearch(self.config.get("web_research", {}))
+            browser_ok = pw.is_available()
+            
+            self.capabilities["browser"]["playwright"] = PLAYWRIGHT_AVAILABLE
+            self.capabilities["browser"]["available"] = browser_ok
+            self.capabilities["browser"]["chrome_devtools"] = False # CDP disabled
+            self.capabilities["browser"]["chrome_remote_debugging"] = False
+            self.capabilities["browser"]["performance_trace"] = False
+        except:
+            self.capabilities["browser"]["available"] = False
 
     def _can_run(self, cmd):
         try:
             # We don't use shell=True for detection to avoid side effects
-            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False, timeout=2)
-            return True
+            # For Windows, some commands like npx might need shell=True, 
+            # but shutil.which should have found the .cmd/.bat
+            result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False, timeout=5, shell=True)
+            return result.returncode == 0
         except:
             return False
 

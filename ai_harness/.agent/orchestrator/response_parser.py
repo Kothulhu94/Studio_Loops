@@ -93,16 +93,7 @@ class ResponseParser:
     def __init__(self, schema_path=None):
         self.validator = SchemaValidator(schema_path) if schema_path else None
 
-    def extract_json(self, text, marker):
-        """Extracts JSON starting from marker using balanced brace counting."""
-        start_idx = text.find(marker)
-        if start_idx == -1:
-            return None
-        
-        json_start = text.find('{', start_idx)
-        if json_start == -1:
-            return None
-        
+    def _parse_json_object_at(self, text, json_start):
         depth = 0
         in_string = False
         escape = False
@@ -130,10 +121,49 @@ class ResponseParser:
                     if depth == 0:
                         json_str = text[json_start:i+1]
                         try:
-                            return json.loads(json_str)
-                        except json.JSONDecodeError as e:
-                            print(f"JSON Decode Error for {marker}: {e}")
-                            return None
+                            return json.loads(json_str), i + 1
+                        except json.JSONDecodeError:
+                            return None, i + 1
+        return None, None
+
+    def extract_json(self, text, marker):
+        """Extracts JSON starting from marker using balanced brace counting."""
+        start_idx = text.find(marker)
+        if start_idx == -1:
+            return None
+        
+        json_start = text.find('{', start_idx)
+        if json_start == -1:
+            return None
+
+        data, _ = self._parse_json_object_at(text, json_start)
+        if data is None:
+            print(f"JSON Decode Error for {marker}")
+        return data
+
+    def extract_fallback_actions_json(self, text):
+        """Accepts exactly one bare or fenced JSON object that looks like ACTIONS_JSON."""
+        stripped = text.strip()
+        candidates = []
+        
+        fence_match = re.fullmatch(r"```(?:json)?\s*(\{.*\})\s*```", stripped, re.DOTALL)
+        if fence_match:
+            candidate_text = fence_match.group(1)
+            data, end = self._parse_json_object_at(candidate_text, 0)
+            if data is not None and end == len(candidate_text):
+                candidates.append(data)
+        elif stripped.startswith("{"):
+            data, end = self._parse_json_object_at(stripped, 0)
+            if data is not None and end == len(stripped):
+                candidates.append(data)
+        
+        if len(candidates) != 1:
+            return None
+        
+        actions = candidates[0]
+        required_action_keys = {"stage", "status", "summary"}
+        if isinstance(actions, dict) and required_action_keys.issubset(actions.keys()):
+            return actions
         return None
 
     def parse(self, text):
@@ -145,6 +175,8 @@ class ResponseParser:
 
         # Extract ACTIONS_JSON using balanced braces
         actions = self.extract_json(text, "ACTIONS_JSON:")
+        if actions is None:
+            actions = self.extract_fallback_actions_json(text)
         results["actions"] = actions
 
         if actions:
@@ -158,6 +190,8 @@ class ResponseParser:
     def validate_actions(self, actions):
         if not actions:
             return False, "No valid ACTIONS_JSON found."
+
+        self.normalize_actions(actions)
         
         if self.validator:
             return self.validator.validate(actions)
@@ -169,3 +203,8 @@ class ResponseParser:
                 return False, f"Missing required key in ACTIONS_JSON: {key}"
         
         return True, None
+
+    def normalize_actions(self, actions):
+        if actions.get("qa_result") == "null":
+            actions["qa_result"] = None
+        return actions

@@ -15,11 +15,15 @@ class CommandRunner:
 
     def _resolve_command_parts(self, cmd_spec):
         drive = os.path.splitdrive(self.workspace_root)[0] or "C:"
+        path_tools = {"python", "npx", "node", "npm", "git"}
         
         if isinstance(cmd_spec, list):
             resolved = []
             for part in cmd_spec:
-                resolved.append(part.replace("{drive}", drive))
+                if part in path_tools:
+                    resolved.append(part)
+                else:
+                    resolved.append(part.replace("{drive}", drive))
             return resolved
         else:
             # Legacy string support

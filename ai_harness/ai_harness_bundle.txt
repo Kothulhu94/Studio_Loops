@@ -1,4 +1,4 @@
-AI HARNESS COMPLETE BUNDLE - Generated on 05/09/2026 14:54:47
+AI HARNESS COMPLETE BUNDLE - Generated on 05/09/2026 15:56:42
 --------------------------------------------------------------------------------
 FILE: HANDOFF_SCHEMA.json
 --------------------------------------------------------------------------------
@@ -379,9 +379,10 @@ class ArtifactValidator:
 
         return errors
 
-    def validate(self, stage, actions, execution_results, validation_rules, state):
+    def validate(self, stage, actions, execution_results, validation_rules, state, skill_manifests=None):
         errors = []
         warnings = []
+        skill_manifests = skill_manifests or []
 
         if not actions:
             errors.append("Missing ACTIONS_JSON.")
@@ -399,12 +400,7 @@ class ArtifactValidator:
         feature_slug = state.get("feature_slug", "")
         for req_file in validation_rules.get("required_files", []):
             req_file_processed = req_file.replace("{feature}", feature_slug)
-            full_path = os.path.join(self.base_path, req_file_processed)
-            
-            if not os.path.exists(full_path):
-                # Fallback check in Loop_Flow
-                full_path = os.path.join(self.base_path, ".agent/Loop_Flow", os.path.basename(req_file_processed))
-            
+            full_path = self._resolve_existing_artifact(req_file_processed)
             if not os.path.exists(full_path):
                 errors.append(f"Required file missing: {req_file_processed}")
                 continue
@@ -421,6 +417,28 @@ class ArtifactValidator:
                                 errors.append(f"Required section '{section}' missing in {req_file_processed}")
                     except Exception as e:
                         errors.append(f"Failed to read {req_file_processed} for section validation: {str(e)}")
+
+        for manifest in skill_manifests:
+            for artifact in manifest.get("expected_artifacts", []):
+                path_template = artifact.get("path")
+                if not path_template:
+                    continue
+                artifact_path = path_template.replace("{feature}", feature_slug)
+                full_path = self._resolve_existing_artifact(artifact_path)
+                if not os.path.exists(full_path):
+                    if artifact.get("required", True):
+                        errors.append(f"Expected skill artifact missing for {manifest['id']}: {artifact_path}")
+                    continue
+                required_sections = artifact.get("required_sections", [])
+                if required_sections and full_path.endswith(".md"):
+                    try:
+                        with open(full_path, "r", encoding="utf-8") as f:
+                            content = f.read()
+                        for section in required_sections:
+                            if not re.search(f"^#+\\s+.*?{re.escape(section)}", content, re.MULTILINE | re.IGNORECASE):
+                                errors.append(f"Expected skill artifact section '{section}' missing in {artifact_path}")
+                    except Exception as e:
+                        errors.append(f"Failed to read expected artifact {artifact_path}: {str(e)}")
 
         # 4. Check writes/patches (Safety & Line Limits)
         for w in execution_results.get("writes", []):
@@ -462,11 +480,27 @@ class ArtifactValidator:
                     latest_errors = self.validate_research_result(all_research[-1])
                     errors.append("Mandatory research failed to meet quality metrics: " + "; ".join(latest_errors))
 
+        validators = {
+            validator
+            for manifest in skill_manifests
+            for validator in manifest.get("validators", [])
+        }
+        if "research_quality" in validators and (stage == "researcher" or actions.get("research_requests")):
+            all_research = execution_results.get("research", []) + state.get("research_results", [])
+            if all_research and not any(not self.validate_research_result(r) for r in all_research):
+                errors.append("Skill validator research_quality failed.")
+
         return {
             "valid": len(errors) == 0,
             "errors": errors,
             "warnings": warnings
         }
+
+    def _resolve_existing_artifact(self, rel_path):
+        full_path = os.path.join(self.base_path, rel_path)
+        if os.path.exists(full_path):
+            return full_path
+        return os.path.join(self.base_path, ".agent/Loop_Flow", os.path.basename(rel_path))
 
 
 
@@ -1491,8 +1525,12 @@ class FileWriter:
         self.logs_dir = os.path.join(self.workspace_root, logs_dir)
         self.blocked_targets = [
             ".git", "node_modules", "dist", "build", ".env", 
-            "package-lock.json", "pnpm-lock.yaml", "yarn.lock"
+            "package.json", "tsconfig.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb"
         ]
+        self.stage_write_policy = {}
+
+    def set_policy_context(self, stage_write_policy=None):
+        self.stage_write_policy = stage_write_policy or {}
 
     def write(self, stage, path, content, mode="overwrite"):
         # 1. Normalize and validate path
@@ -1529,7 +1567,7 @@ class FileWriter:
         normalized_path = os.path.normpath(path).replace("\\", "/")
         
         # Check stage-specific permissions
-        allowed_roots = self.STAGE_PERMISSIONS.get(stage, [])
+        allowed_roots = self.stage_write_policy.get(stage) or self.STAGE_PERMISSIONS.get(stage, [])
         is_allowed = False
         for root in allowed_roots:
             root = root.rstrip("/")
@@ -1857,8 +1895,12 @@ class PatchApplier:
         self.logs_dir = os.path.join(self.workspace_root, logs_dir)
         self.blocked_targets = [
             ".git", "node_modules", "dist", "build", ".env", 
-            "package-lock.json", "pnpm-lock.yaml", "yarn.lock"
+            "package.json", "tsconfig.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb"
         ]
+        self.stage_write_policy = {}
+
+    def set_policy_context(self, stage_write_policy=None):
+        self.stage_write_policy = stage_write_policy or {}
 
     def apply(self, stage, path, diff_content):
         # 1. Validate stage permissions and safety
@@ -1868,7 +1910,7 @@ class PatchApplier:
         normalized_path = os.path.normpath(path).replace("\\", "/")
         
         # Check stage-specific permissions
-        allowed_roots = self.STAGE_PERMISSIONS.get(stage, [])
+        allowed_roots = self.stage_write_policy.get(stage) or self.STAGE_PERMISSIONS.get(stage, [])
         is_allowed = False
         for root in allowed_roots:
             root = root.rstrip("/")
@@ -2464,6 +2506,7 @@ class RetryEngine:
 FILE: .agent\orchestrator\role_loader.py
 --------------------------------------------------------------------------------
 import os
+from skill_registry import SkillRegistry
 
 class RoleLoader:
     ROLE_MAPPING = {
@@ -2490,6 +2533,7 @@ class RoleLoader:
 
     def __init__(self, base_path):
         self.base_path = base_path
+        self.skill_registry = SkillRegistry(base_path)
 
     def load_role_workflow(self, role_name):
         rel_path = self.ROLE_MAPPING.get(role_name)
@@ -2504,6 +2548,18 @@ class RoleLoader:
             return f.read()
 
     def load_role_skills(self, role_name):
+        manifests = self.load_role_skill_manifests(role_name)
+        if manifests:
+            skills_content = []
+            for manifest in manifests:
+                summary = self.skill_registry.summarize_manifest(manifest)
+                markdown = self.skill_registry.load_skill_markdown(manifest)
+                skills_content.append(
+                    f"### Skill: {manifest['id']}@{manifest['version']}\n"
+                    f"Manifest:\n```json\n{summary}\n```\n\n{markdown}"
+                )
+            return "\n\n".join(skills_content)
+
         skill_files = self.SKILL_MAPPING.get(role_name, [])
         skills_content = []
         
@@ -2517,6 +2573,12 @@ class RoleLoader:
         
         return "\n\n".join(skills_content)
 
+    def load_role_skill_manifests(self, role_name):
+        try:
+            return self.skill_registry.get_role_skills(role_name)
+        except FileNotFoundError:
+            return []
+
 
 
 --------------------------------------------------------------------------------
@@ -2529,6 +2591,8 @@ import re
 class SafetyGuard:
     def __init__(self, workspace_root):
         self.workspace_root = workspace_root
+        self.stage_write_policy = {}
+        self.session_workspace_roots = []
         self.allowed_roots = [
             "src/", "tests/", "tools/", "data/", "docs/", 
             ".agent/Loop_Flow/", ".agent/logs/", ".agent/state/", 
@@ -2542,6 +2606,10 @@ class SafetyGuard:
         ]
         self.allowlist_path = os.path.join(workspace_root, ".agent/orchestrator/command_allowlist.json")
         self._allowlist = None
+
+    def set_policy_context(self, stage_write_policy=None, session_workspace_roots=None):
+        self.stage_write_policy = stage_write_policy or {}
+        self.session_workspace_roots = session_workspace_roots or []
 
     @property
     def allowlist(self):
@@ -2584,8 +2652,8 @@ class SafetyGuard:
         if basename in lock_files:
             return False
 
-        # Stage-specific permissions
-        permissions = {
+        # Stage-specific permissions supplied by active skill/session policy.
+        permissions = self.stage_write_policy or {
             "concept_producer": [".agent/Loop_Flow", "docs/adr"],
             "researcher": [".agent/Loop_Flow", "docs/adr"],
             "designer": [".agent/Loop_Flow"],
@@ -2601,7 +2669,7 @@ class SafetyGuard:
             for root in allowed_for_stage:
                 root = root.rstrip("/")
                 if path == root or path.startswith(root + "/"):
-                    return True
+                    return self._within_session_workspace(path)
             return False
 
         # Fallback to global allowed roots if no stage provided (for general safety)
@@ -2610,6 +2678,15 @@ class SafetyGuard:
             if path == root or path.startswith(root + "/"):
                 return True
                 
+        return False
+
+    def _within_session_workspace(self, path):
+        if not self.session_workspace_roots:
+            return True
+        for root in self.session_workspace_roots:
+            root = root.rstrip("/")
+            if path == root or path.startswith(root + "/"):
+                return True
         return False
 
     def validate_actions(self, stage, actions):
@@ -2789,6 +2866,260 @@ class SearchResultParser:
 
 
 --------------------------------------------------------------------------------
+FILE: .agent\orchestrator\session_router.py
+--------------------------------------------------------------------------------
+import json
+import os
+from datetime import datetime
+
+
+class SessionRouter:
+    SESSION_KINDS = {"feature", "bug", "asset", "design", "research", "implementation"}
+
+    KIND_ROUTES = {
+        "feature": "concept_producer",
+        "design": "concept_producer",
+        "research": "researcher",
+        "asset": "asset_creator",
+        "bug": "bug_hunter",
+        "implementation": "developer",
+    }
+
+    KIND_ALLOWED_ROLES = {
+        "feature": ["concept_producer", "researcher", "designer", "asset_creator", "developer", "qa_tester", "bug_hunter", "debug_dev"],
+        "design": ["concept_producer", "researcher", "designer", "asset_creator", "developer", "qa_tester"],
+        "research": ["researcher", "designer", "developer"],
+        "asset": ["asset_creator", "designer", "developer", "qa_tester"],
+        "bug": ["bug_hunter", "debug_dev", "qa_tester"],
+        "implementation": ["developer", "qa_tester", "bug_hunter", "debug_dev"],
+    }
+
+    KIND_COMPLETION_CRITERIA = {
+        "feature": ["Feature reaches QA PASS or handover_complete."],
+        "design": ["Design spec exists and downstream implementation handoff is clear."],
+        "research": ["Research-backed technical audit and implementation blueprint are complete."],
+        "asset": ["Asset specs or generated assets and integration plan are complete."],
+        "bug": ["Root cause, fix, and regression verification are complete."],
+        "implementation": ["Code changes, tests, and verification report are complete."],
+    }
+
+    def __init__(self, workspace_root, sessions_dir=".agent/state/sessions"):
+        self.workspace_root = workspace_root
+        self.sessions_dir = os.path.join(workspace_root, sessions_dir)
+
+    def infer_kind(self, request_text):
+        request = (request_text or "").lower()
+        if any(word in request for word in ["bug", "fix", "broken", "error", "failure", "crash", "regression"]):
+            return "bug"
+        if any(word in request for word in ["asset", "sprite", "icon", "tileset", "sound", "animation"]):
+            return "asset"
+        if any(word in request for word in ["research", "how to", "architecture", "compare", "investigate"]):
+            return "research"
+        if any(word in request for word in ["design", "ui", "look", "aesthetic", "layout", "ux"]):
+            return "design"
+        if any(word in request for word in ["implement", "build", "code", "add", "create"]):
+            return "implementation"
+        return "feature"
+
+    def route_initial_stage(self, request_text, kind=None):
+        resolved_kind = kind or self.infer_kind(request_text)
+        return self.KIND_ROUTES.get(resolved_kind, "concept_producer")
+
+    def create_session(self, title, slug, kind=None, start_stage=None):
+        resolved_kind = kind or self.infer_kind(title)
+        if resolved_kind not in self.SESSION_KINDS:
+            resolved_kind = "feature"
+
+        now = datetime.now().isoformat()
+        session_id = self._make_session_id(slug, now)
+        initial_stage = start_stage or self.route_initial_stage(title, resolved_kind)
+
+        return {
+            "session_id": session_id,
+            "kind": resolved_kind,
+            "title": title,
+            "slug": slug,
+            "feature": title,
+            "feature_slug": slug,
+            "active": True,
+            "status": "running",
+            "current_stage": initial_stage,
+            "allowed_roles": self.KIND_ALLOWED_ROLES.get(resolved_kind, self.KIND_ALLOWED_ROLES["feature"]),
+            "workspace_roots": ["src", "tests", "tools", "data", "docs", ".agent/Loop_Flow"],
+            "artifact_root": ".agent/Loop_Flow",
+            "memory_root": f".agent/Loop_Flow/context_packs/{slug}",
+            "completion_criteria": self.KIND_COMPLETION_CRITERIA.get(resolved_kind, []),
+            "completed_stages": [],
+            "stage_attempts": {},
+            "artifacts": {},
+            "context_packs": {},
+            "research_briefs": [],
+            "research_results": [],
+            "research_request_history": [],
+            "research_duplicate_warnings": {},
+            "writes": [],
+            "patches": [],
+            "commands": [],
+            "tests": [],
+            "validations": [],
+            "failures": [],
+            "blockers": [],
+            "transition_history": [],
+            "skills_used": {},
+            "last_model_response_path": None,
+            "last_actions": None,
+            "last_results": None,
+            "last_validation": None,
+            "last_transition": None,
+            "capabilities": {},
+            "created_at": now,
+            "updated_at": now,
+            "archived_at": None,
+        }
+
+    def list_sessions(self):
+        if not os.path.exists(self.sessions_dir):
+            return []
+        sessions = []
+        for name in sorted(os.listdir(self.sessions_dir)):
+            if not name.endswith(".json"):
+                continue
+            try:
+                with open(os.path.join(self.sessions_dir, name), "r", encoding="utf-8") as handle:
+                    sessions.append(json.load(handle))
+            except Exception:
+                continue
+        return sessions
+
+    def session_path(self, session_id):
+        return os.path.join(self.sessions_dir, f"{session_id}.json")
+
+    def _make_session_id(self, slug, timestamp):
+        compact_time = timestamp.replace("-", "").replace(":", "").replace(".", "").replace("T", "_")
+        return f"{slug}_{compact_time}"
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\orchestrator\skill_registry.py
+--------------------------------------------------------------------------------
+import json
+import os
+
+
+class SkillRegistry:
+    TRUSTED_LEVELS = {"core", "local"}
+    REQUIRED_FIELDS = {
+        "id",
+        "name",
+        "version",
+        "roles",
+        "required_tools",
+        "allowed_write_paths",
+        "expected_artifacts",
+        "validators",
+        "provenance",
+        "trust_level",
+    }
+
+    def __init__(self, base_path, registry_path=".agent/skills/registry.json", allow_external=False):
+        self.base_path = base_path
+        self.registry_path = os.path.join(base_path, registry_path)
+        self.allow_external = allow_external
+        self._skills = None
+
+    def load(self):
+        if self._skills is not None:
+            return self._skills
+        if not os.path.exists(self.registry_path):
+            raise FileNotFoundError(f"Skill registry not found: {self.registry_path}")
+        with open(self.registry_path, "r", encoding="utf-8") as handle:
+            registry = json.load(handle)
+        skills = {}
+        for entry in registry.get("skills", []):
+            manifest_path = os.path.join(self.base_path, entry["manifest"])
+            manifest = self.load_manifest(manifest_path)
+            trust_level = manifest.get("trust_level")
+            if trust_level not in self.TRUSTED_LEVELS and not self.allow_external:
+                continue
+            skills[manifest["id"]] = manifest
+        self._skills = skills
+        return skills
+
+    def load_manifest(self, manifest_path):
+        with open(manifest_path, "r", encoding="utf-8") as handle:
+            manifest = json.load(handle)
+        missing = sorted(self.REQUIRED_FIELDS - set(manifest.keys()))
+        if missing:
+            raise ValueError(f"Skill manifest missing fields {missing}: {manifest_path}")
+        trust_level = manifest.get("trust_level")
+        if trust_level not in {"core", "local", "external"}:
+            raise ValueError(f"Invalid trust_level '{trust_level}' in {manifest_path}")
+        manifest["_manifest_path"] = os.path.relpath(manifest_path, self.base_path).replace("\\", "/")
+        manifest["_skill_dir"] = os.path.dirname(manifest_path)
+        return manifest
+
+    def get_role_skills(self, role_name):
+        skills = []
+        for manifest in self.load().values():
+            if role_name in manifest.get("roles", []):
+                skills.append(manifest)
+        return sorted(skills, key=lambda item: item["id"])
+
+    def load_skill_markdown(self, manifest):
+        skill_dir = manifest.get("_skill_dir")
+        skill_path = os.path.join(skill_dir, "SKILL.md")
+        if os.path.exists(skill_path):
+            with open(skill_path, "r", encoding="utf-8") as handle:
+                content = handle.read()
+            legacy_path = manifest.get("legacy_markdown")
+            if legacy_path:
+                with open(os.path.join(self.base_path, legacy_path), "r", encoding="utf-8") as handle:
+                    content = content.rstrip() + "\n\n" + handle.read()
+        else:
+            legacy_path = manifest.get("legacy_markdown")
+            if not legacy_path:
+                content = ""
+            else:
+                with open(os.path.join(self.base_path, legacy_path), "r", encoding="utf-8") as handle:
+                    content = handle.read()
+        return content
+
+    def summarize_manifest(self, manifest):
+        public_fields = {
+            "id": manifest["id"],
+            "version": manifest["version"],
+            "roles": manifest["roles"],
+            "required_tools": manifest["required_tools"],
+            "allowed_write_paths": manifest["allowed_write_paths"],
+            "expected_artifacts": manifest["expected_artifacts"],
+            "validators": manifest["validators"],
+            "provenance": manifest["provenance"],
+            "trust_level": manifest["trust_level"],
+        }
+        return json.dumps(public_fields, indent=2)
+
+    def allowed_write_paths_for_role(self, role_name):
+        allowed = []
+        for manifest in self.get_role_skills(role_name):
+            allowed.extend(manifest.get("allowed_write_paths", []))
+        return sorted(set(allowed))
+
+    def expected_artifacts_for_role(self, role_name):
+        artifacts = []
+        for manifest in self.get_role_skills(role_name):
+            artifacts.extend(manifest.get("expected_artifacts", []))
+        return artifacts
+
+    def validators_for_role(self, role_name):
+        validators = []
+        for manifest in self.get_role_skills(role_name):
+            validators.extend(manifest.get("validators", []))
+        return sorted(set(validators))
+
+
+
+--------------------------------------------------------------------------------
 FILE: .agent\orchestrator\source_indexer.py
 --------------------------------------------------------------------------------
 import os
@@ -2902,25 +3233,45 @@ FILE: .agent\orchestrator\state_store.py
 import json
 import os
 from datetime import datetime
+from session_router import SessionRouter
 
 class StateStore:
     def __init__(self, state_path):
         self.state_path = state_path
+        self.workspace_root = os.path.abspath(os.path.join(os.path.dirname(state_path), "..", ".."))
+        self.session_router = SessionRouter(self.workspace_root)
 
     def load_state(self):
         if not os.path.exists(self.state_path):
             return self.reset_state()
-        with open(self.state_path, 'r') as f:
-            return json.load(f)
+        with open(self.state_path, 'r', encoding='utf-8') as f:
+            state = json.load(f)
+        active_session_id = state.get("active_session_id")
+        if active_session_id:
+            session_path = self.session_router.session_path(active_session_id)
+            if os.path.exists(session_path):
+                with open(session_path, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+        return state
 
     def save_state(self, state):
         state["updated_at"] = datetime.now().isoformat()
+        if state.get("session_id"):
+            os.makedirs(self.session_router.sessions_dir, exist_ok=True)
+            with open(self.session_router.session_path(state["session_id"]), 'w', encoding='utf-8') as f:
+                json.dump(state, f, indent=2)
+            pointer = self._pointer_state(state["session_id"], state)
+            os.makedirs(os.path.dirname(self.state_path), exist_ok=True)
+            with open(self.state_path, 'w', encoding='utf-8') as f:
+                json.dump(pointer, f, indent=2)
+            return
         os.makedirs(os.path.dirname(self.state_path), exist_ok=True)
-        with open(self.state_path, 'w') as f:
+        with open(self.state_path, 'w', encoding='utf-8') as f:
             json.dump(state, f, indent=2)
 
     def reset_state(self):
         state = {
+            "active_session_id": None,
             "active": False,
             "feature": None,
             "feature_slug": None,
@@ -2953,15 +3304,42 @@ class StateStore:
         self.save_state(state)
         return state
 
-    def start_feature(self, feature_text, slug, start_stage):
-        state = self.reset_state()
-        state["active"] = True
-        state["feature"] = feature_text
-        state["feature_slug"] = slug
-        state["status"] = "running"
-        state["current_stage"] = start_stage
-        state["created_at"] = datetime.now().isoformat()
+    def start_feature(self, feature_text, slug, start_stage, kind=None):
+        state = self.session_router.create_session(feature_text, slug, kind=kind, start_stage=start_stage)
         self.save_state(state)
+        return state
+
+    def list_sessions(self):
+        return self.session_router.list_sessions()
+
+    def get_session(self, session_id):
+        session_path = self.session_router.session_path(session_id)
+        if not os.path.exists(session_path):
+            raise FileNotFoundError(f"Session not found: {session_id}")
+        with open(session_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
+
+    def resume_session(self, session_id):
+        state = self.get_session(session_id)
+        if state.get("status") == "archived":
+            state["status"] = "running" if state.get("active") else "idle"
+            state["archived_at"] = None
+        self.save_state(state)
+        return state
+
+    def archive_session(self, session_id):
+        session_path = self.session_router.session_path(session_id)
+        if not os.path.exists(session_path):
+            raise FileNotFoundError(f"Session not found: {session_id}")
+        with open(session_path, 'r', encoding='utf-8') as f:
+            state = json.load(f)
+        state["status"] = "archived"
+        state["active"] = False
+        state["archived_at"] = datetime.now().isoformat()
+        self.save_state(state)
+        pointer = self._pointer_state(None, state)
+        with open(self.state_path, 'w', encoding='utf-8') as f:
+            json.dump(pointer, f, indent=2)
         return state
 
     def complete_stage(self, stage_name, result):
@@ -3003,14 +3381,17 @@ class StateStore:
 
     def set_current_stage(self, stage_name):
         state = self.load_state()
+        previous_stage = state.get("current_stage")
         if stage_name == "handover_complete":
             state["current_stage"] = stage_name
             state["status"] = "complete"
             state["active"] = False
+            self._record_transition(state, previous_stage, stage_name)
             self.save_state(state)
             return
         state["current_stage"] = stage_name
         state["status"] = "running"
+        self._record_transition(state, previous_stage, stage_name)
         self.save_state(state)
 
     def record_artifact(self, key, path):
@@ -3027,6 +3408,43 @@ class StateStore:
         state = self.load_state()
         state["capabilities"] = capabilities
         self.save_state(state)
+
+    def record_skills_used(self, stage_name, skills):
+        state = self.load_state()
+        if "skills_used" not in state:
+            state["skills_used"] = {}
+        state["skills_used"][stage_name] = [
+            {
+                "id": skill["id"],
+                "version": skill["version"],
+                "trust_level": skill["trust_level"],
+                "manifest": skill.get("_manifest_path"),
+            }
+            for skill in skills
+        ]
+        self.save_state(state)
+
+    def _record_transition(self, state, from_stage, to_stage):
+        if from_stage == to_stage:
+            return
+        if "transition_history" not in state:
+            state["transition_history"] = []
+        state["transition_history"].append({
+            "from": from_stage,
+            "to": to_stage,
+            "timestamp": datetime.now().isoformat()
+        })
+
+    def _pointer_state(self, active_session_id, session_state):
+        return {
+            "active_session_id": active_session_id,
+            "active": bool(active_session_id and session_state.get("active")),
+            "status": session_state.get("status", "idle"),
+            "feature": session_state.get("feature"),
+            "feature_slug": session_state.get("feature_slug"),
+            "current_stage": session_state.get("current_stage"),
+            "updated_at": datetime.now().isoformat(),
+        }
 
 
 
@@ -3064,6 +3482,7 @@ from artifact_store import ArtifactStore
 from source_indexer import SourceIndexer
 from hooks import OrchestratorHooks
 from context_compactor import ContextCompactor
+from session_router import SessionRouter
 
 
 class StudioLoopOrchestrator:
@@ -3103,6 +3522,7 @@ class StudioLoopOrchestrator:
         self.safety_guard = SafetyGuard(base_path)
         self.retry_engine = RetryEngine(max_retries=self.config.get("automation", {}).get("max_stage_retries", 3))
         self.artifact_validator = ArtifactValidator(base_path)
+        self.session_router = SessionRouter(base_path)
 
     def load_config(self):
         with open(self.config_path, 'r') as f:
@@ -3115,12 +3535,14 @@ class StudioLoopOrchestrator:
             print(f"Transformed (copyright-safe): {safe_feature}")
             
         slug = self.pruner.generate_slug(safe_feature)
-        start_stage = self.transition_engine.determine_initial_stage(safe_feature)
-        state = self.state_store.start_feature(safe_feature, slug, start_stage)
+        kind = self.session_router.infer_kind(safe_feature)
+        start_stage = self.session_router.route_initial_stage(safe_feature, kind)
+        state = self.state_store.start_feature(safe_feature, slug, start_stage, kind=kind)
         
         self.detect_capabilities()
         
         print(f"Starting feature: {safe_feature} (slug: {slug})")
+        print(f"Session: {state.get('session_id')} ({kind})")
         print(f"Initial stage: {start_stage}")
         
         if mode == "auto":
@@ -3165,6 +3587,13 @@ class StudioLoopOrchestrator:
             return True
 
         print(f"Stage: {stage_name}")
+        allowed_roles = state.get("allowed_roles")
+        if allowed_roles and stage_name not in allowed_roles:
+            print(f"Stage {stage_name} is not allowed for session {state.get('session_id')}.")
+            return False
+        skill_manifests = self.role_loader.load_role_skill_manifests(stage_name)
+        self.state_store.record_skills_used(stage_name, skill_manifests)
+        self._apply_policy_context(state)
         
         if repair_prompt_override:
             prompt = repair_prompt_override
@@ -3300,6 +3729,7 @@ class StudioLoopOrchestrator:
 
     def perform_actions(self, stage, actions):
         state = self.state_store.load_state()
+        self._apply_policy_context(state)
         feature_slug = state.get("feature_slug")
         results = {"writes": [], "patches": [], "commands": [], "research": []}
         
@@ -3403,10 +3833,11 @@ class StudioLoopOrchestrator:
 
     def validate_stage(self, stage_name, actions, results):
         state = self.state_store.load_state()
+        skill_manifests = self.role_loader.load_role_skill_manifests(stage_name)
         val_rules = self.graph.get_validation_rules(stage_name)
         
         # 1. Structural & File Validation
-        report = self.artifact_validator.validate(stage_name, actions, results, val_rules, state)
+        report = self.artifact_validator.validate(stage_name, actions, results, val_rules, state, skill_manifests=skill_manifests)
         errors = report["errors"]
         
         # 2. Copyright Scan
@@ -3472,9 +3903,26 @@ class StudioLoopOrchestrator:
         report_path = os.path.join(self.base_path, f".agent/logs/validation/{timestamp}_{state['feature_slug']}_{stage_name}.json")
         os.makedirs(os.path.dirname(report_path), exist_ok=True)
         with open(report_path, 'w', encoding='utf-8') as f:
-            json.dump({"valid": len(errors) == 0, "errors": errors, "actions": actions, "results": results}, f, indent=2)
+            json.dump({
+                "valid": len(errors) == 0,
+                "errors": errors,
+                "actions": actions,
+                "results": results,
+                "skills_used": state.get("skills_used", {}).get(stage_name, [])
+            }, f, indent=2)
 
         return {"valid": len(errors) == 0, "errors": errors}
+
+    def _apply_policy_context(self, state):
+        stage_write_policy = {}
+        for role in self.graph.schema.get("stages", {}).keys():
+            roots = self.role_loader.skill_registry.allowed_write_paths_for_role(role)
+            if roots:
+                stage_write_policy[role] = roots
+        workspace_roots = state.get("workspace_roots", []) if state else []
+        self.safety_guard.set_policy_context(stage_write_policy, workspace_roots)
+        self.file_writer.set_policy_context(stage_write_policy)
+        self.patch_applier.set_policy_context(stage_write_policy)
 
     def detect_capabilities(self):
         caps = self.capability_registry.detect_all()
@@ -3496,6 +3944,33 @@ class StudioLoopOrchestrator:
     def status(self):
         state = self.state_store.load_state()
         print(json.dumps(state, indent=2))
+
+    def sessions(self):
+        sessions = self.state_store.list_sessions()
+        rows = [
+            {
+                "session_id": s.get("session_id"),
+                "kind": s.get("kind"),
+                "title": s.get("title"),
+                "status": s.get("status"),
+                "current_stage": s.get("current_stage"),
+                "updated_at": s.get("updated_at"),
+            }
+            for s in sessions
+        ]
+        print(json.dumps(rows, indent=2))
+
+    def session_status(self, session_id):
+        state = self.state_store.get_session(session_id)
+        print(json.dumps(state, indent=2))
+
+    def resume_session(self, session_id):
+        state = self.state_store.resume_session(session_id)
+        print(f"Resumed session {session_id} at stage {state.get('current_stage')}.")
+
+    def archive_session(self, session_id):
+        self.state_store.archive_session(session_id)
+        print(f"Archived session {session_id}.")
 
     def reset(self):
         self.state_store.reset_state()
@@ -3560,7 +4035,7 @@ class StudioLoopOrchestrator:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Studio Loop Orchestrator 4.0")
-    parser.add_argument("command", choices=["run", "auto", "continue", "step", "retry", "repair", "status", "reset", "validate", "context", "research", "capabilities"])
+    parser.add_argument("command", choices=["run", "auto", "continue", "step", "retry", "repair", "status", "reset", "validate", "context", "research", "capabilities", "sessions", "session-status", "resume-session", "archive-session"])
     parser.add_argument("payload", nargs="?", help="Task description or query")
     
     args = parser.parse_args()
@@ -3595,6 +4070,23 @@ if __name__ == "__main__":
             print("No active feature to repair.")
     elif args.command == "status":
         orchestrator.status()
+    elif args.command == "sessions":
+        orchestrator.sessions()
+    elif args.command == "session-status":
+        if args.payload:
+            orchestrator.session_status(args.payload)
+        else:
+            print("session-status requires a session id.")
+    elif args.command == "resume-session":
+        if args.payload:
+            orchestrator.resume_session(args.payload)
+        else:
+            print("resume-session requires a session id.")
+    elif args.command == "archive-session":
+        if args.payload:
+            orchestrator.archive_session(args.payload)
+        else:
+            print("archive-session requires a session id.")
     elif args.command == "reset":
         orchestrator.reset()
     elif args.command == "validate":
@@ -4138,6 +4630,25 @@ This consolidated skill file contains all core capabilities required for the QA 
 
 
 --------------------------------------------------------------------------------
+FILE: .agent\skills\registry.json
+--------------------------------------------------------------------------------
+{
+  "version": "1.0",
+  "skills": [
+    {"id": "studio-loop.producer", "manifest": ".agent/skills/producer/skill.json"},
+    {"id": "studio-loop.researcher", "manifest": ".agent/skills/researcher/skill.json"},
+    {"id": "studio-loop.designer", "manifest": ".agent/skills/designer/skill.json"},
+    {"id": "studio-loop.asset_creator", "manifest": ".agent/skills/asset_creator/skill.json"},
+    {"id": "studio-loop.developer", "manifest": ".agent/skills/developer/skill.json"},
+    {"id": "studio-loop.qa", "manifest": ".agent/skills/qa/skill.json"},
+    {"id": "studio-loop.bug_hunter", "manifest": ".agent/skills/bug_hunter/skill.json"},
+    {"id": "studio-loop.debug_dev", "manifest": ".agent/skills/debug_dev/skill.json"}
+  ]
+}
+
+
+
+--------------------------------------------------------------------------------
 FILE: .agent\skills\researcher_skills.md
 --------------------------------------------------------------------------------
 # Master Skill: Researcher Bundle
@@ -4237,6 +4748,272 @@ This consolidated skill file contains all core capabilities required for the Res
 - Browser QA is not currently available. Use research_requests for external research and allowlisted commands only.
 - **Request an allowlisted command through ACTIONS_JSON.commands.**
 - **Do not invoke tools directly.**
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\asset_creator\skill.json
+--------------------------------------------------------------------------------
+{
+  "id": "studio-loop.asset_creator",
+  "name": "Studio Loop Asset Creator",
+  "version": "1.0.0",
+  "roles": ["asset_creator"],
+  "required_tools": ["file_writer", "research_requests", "git_status"],
+  "allowed_write_paths": [".agent/Loop_Flow", "src/assets", "data/assets", "src/SVG"],
+  "expected_artifacts": [
+    {"type": "asset_plan", "path": ".agent/Loop_Flow/{feature}_asset_plan.md", "required": false, "required_sections": ["Asset Specs", "Integration Plan"]}
+  ],
+  "validators": ["required_sections", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/asset_creator_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/asset_creator_skills.md"
+}
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\asset_creator\SKILL.md
+--------------------------------------------------------------------------------
+# Studio Loop Asset Creator Skill
+
+Versioned package wrapper for the legacy asset creator skill bundle.
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\bug_hunter\skill.json
+--------------------------------------------------------------------------------
+{
+  "id": "studio-loop.bug_hunter",
+  "name": "Studio Loop Bug Hunter",
+  "version": "1.0.0",
+  "roles": ["bug_hunter"],
+  "required_tools": ["file_writer", "research_requests", "test_target", "find_bloat", "git_diff"],
+  "allowed_write_paths": [".agent/Loop_Flow", "tools"],
+  "expected_artifacts": [
+    {
+      "type": "root_cause_analysis",
+      "path": ".agent/Loop_Flow/{feature}_root_cause_analysis.md",
+      "required": true,
+      "required_sections": ["Root Cause", "Reproduction Steps", "Fix Strategy"]
+    }
+  ],
+  "validators": ["required_sections", "research_quality", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/qa_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/qa_skills.md"
+}
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\bug_hunter\SKILL.md
+--------------------------------------------------------------------------------
+# Studio Loop Bug Hunter Skill
+
+Versioned package wrapper for the legacy QA and researcher skill bundles.
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\debug_dev\skill.json
+--------------------------------------------------------------------------------
+{
+  "id": "studio-loop.debug_dev",
+  "name": "Studio Loop Debug Developer",
+  "version": "1.0.0",
+  "roles": ["debug_dev"],
+  "required_tools": ["file_writer", "patch_applier", "typecheck", "test", "test_target", "git_diff"],
+  "allowed_write_paths": ["src", "tests", "tools", ".agent/Loop_Flow"],
+  "expected_artifacts": [
+    {"type": "fix_report", "path": ".agent/Loop_Flow/{feature}_fix_report.md", "required": false, "required_sections": ["Fix Summary", "Regression Check"]}
+  ],
+  "validators": ["full_test_suite", "bloat_check", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/developer_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/developer_skills.md"
+}
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\debug_dev\SKILL.md
+--------------------------------------------------------------------------------
+# Studio Loop Debug Developer Skill
+
+Versioned package wrapper for the legacy developer skill bundle.
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\designer\skill.json
+--------------------------------------------------------------------------------
+{
+  "id": "studio-loop.designer",
+  "name": "Studio Loop Designer",
+  "version": "1.0.0",
+  "roles": ["designer"],
+  "required_tools": ["file_writer", "research_requests", "git_status"],
+  "allowed_write_paths": [".agent/Loop_Flow"],
+  "expected_artifacts": [
+    {
+      "type": "design_spec",
+      "path": ".agent/Loop_Flow/{feature}_design_spec.md",
+      "required": true,
+      "required_sections": ["Aesthetic Spec", "Interaction Spec", "CSS Tokens"]
+    }
+  ],
+  "validators": ["required_sections", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/designer_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/designer_skills.md"
+}
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\designer\SKILL.md
+--------------------------------------------------------------------------------
+# Studio Loop Designer Skill
+
+Versioned package wrapper for the legacy designer skill bundle.
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\developer\skill.json
+--------------------------------------------------------------------------------
+{
+  "id": "studio-loop.developer",
+  "name": "Studio Loop Developer",
+  "version": "1.0.0",
+  "roles": ["developer"],
+  "required_tools": ["file_writer", "patch_applier", "typecheck", "test", "find_bloat", "git_diff"],
+  "allowed_write_paths": ["src", "tests", "tools", "data", ".agent/Loop_Flow", "docs/adr"],
+  "expected_artifacts": [
+    {"type": "implementation_report", "path": ".agent/Loop_Flow/{feature}_implementation_report.md", "required": false, "required_sections": ["Implementation Summary", "Files Changed", "Verification"]}
+  ],
+  "validators": ["full_test_suite", "bloat_check", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/developer_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/developer_skills.md"
+}
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\developer\SKILL.md
+--------------------------------------------------------------------------------
+# Studio Loop Developer Skill
+
+Versioned package wrapper for the legacy developer skill bundle.
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\producer\skill.json
+--------------------------------------------------------------------------------
+{
+  "id": "studio-loop.producer",
+  "name": "Studio Loop Concept Producer",
+  "version": "1.0.0",
+  "roles": ["concept_producer"],
+  "required_tools": ["file_writer", "research_requests", "git_status"],
+  "allowed_write_paths": [".agent/Loop_Flow", "docs/adr"],
+  "expected_artifacts": [
+    {
+      "type": "blueprint",
+      "path": ".agent/Loop_Flow/{feature}_blueprint.md",
+      "required": true,
+      "required_sections": ["Vision", "Target User Experience", "Thematic Alignment"]
+    }
+  ],
+  "validators": ["required_sections", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/producer_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/producer_skills.md"
+}
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\producer\SKILL.md
+--------------------------------------------------------------------------------
+# Studio Loop Producer Skill
+
+Versioned package wrapper for the legacy concept producer skill bundle.
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\qa\skill.json
+--------------------------------------------------------------------------------
+{
+  "id": "studio-loop.qa",
+  "name": "Studio Loop QA Tester",
+  "version": "1.0.0",
+  "roles": ["qa_tester"],
+  "required_tools": ["file_writer", "typecheck", "test", "test_target", "find_bloat", "git_status"],
+  "allowed_write_paths": [".agent/Loop_Flow", "tests"],
+  "expected_artifacts": [
+    {
+      "type": "qa_report",
+      "path": ".agent/Loop_Flow/{feature}_qa_report.md",
+      "required": true,
+      "required_sections": ["Test Cases", "Result", "Risks"]
+    }
+  ],
+  "validators": ["required_sections", "full_test_suite", "bloat_check", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/qa_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/qa_skills.md"
+}
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\qa\SKILL.md
+--------------------------------------------------------------------------------
+# Studio Loop QA Skill
+
+Versioned package wrapper for the legacy QA skill bundle.
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\researcher\skill.json
+--------------------------------------------------------------------------------
+{
+  "id": "studio-loop.researcher",
+  "name": "Studio Loop Researcher",
+  "version": "1.0.0",
+  "roles": ["researcher"],
+  "required_tools": ["research_requests", "file_writer", "find_bloat", "git_status"],
+  "allowed_write_paths": [".agent/Loop_Flow", "docs/adr"],
+  "expected_artifacts": [
+    {
+      "type": "blueprint",
+      "path": ".agent/Loop_Flow/{feature}_blueprint.md",
+      "required": true,
+      "required_sections": ["Technical Audit", "Implementation Blueprint", "Context Pruning Map", "Implementation Checklist"]
+    },
+    {"type": "context_map", "path": ".agent/Loop_Flow/context_map.json", "required": true, "required_sections": []}
+  ],
+  "validators": ["required_sections", "research_quality", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/researcher_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/researcher_skills.md"
+}
+
+
+
+--------------------------------------------------------------------------------
+FILE: .agent\skills\researcher\SKILL.md
+--------------------------------------------------------------------------------
+# Studio Loop Researcher Skill
+
+Versioned package wrapper for the legacy researcher skill bundle.
 
 
 
@@ -5038,11 +5815,9 @@ class TestFullLoop(unittest.TestCase):
             }
         }
 
-        # Sequence of model responses
+        # Sequence of model responses. Direct implementation requests now route
+        # straight to developer sessions.
         self.orchestrator.client.call.side_effect = [
-            f"Thinking...\nACTIONS_JSON:\n{json.dumps(cp_response['actions'])}",
-            f"Thinking...\nACTIONS_JSON:\n{json.dumps(res_response_1['actions'])}",
-            f"Thinking...\nACTIONS_JSON:\n{json.dumps(res_response_2['actions'])}", 
             f"Thinking...\nACTIONS_JSON:\n{json.dumps(dev_response['actions'])}",
             f"Thinking...\nACTIONS_JSON:\n{json.dumps(qa_response['actions'])}"
         ]
@@ -5369,6 +6144,185 @@ class TestBrowserResearchMock(unittest.TestCase):
                 self.assertEqual(results["status"], "complete")
                 self.assertTrue(len(results["sources"]) >= 2)
                 self.assertTrue(len(results["findings"]) >= 1)
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+
+--------------------------------------------------------------------------------
+FILE: tests\test_sessions_and_skills.py
+--------------------------------------------------------------------------------
+import json
+import os
+import shutil
+import sys
+import tempfile
+import unittest
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../.agent/orchestrator")))
+
+from artifact_validator import ArtifactValidator
+from safety_guard import SafetyGuard
+from session_router import SessionRouter
+from skill_registry import SkillRegistry
+from state_store import StateStore
+
+
+class TestSessionsAndSkills(unittest.TestCase):
+    def setUp(self):
+        self.original_base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        self.temp_dir_obj = tempfile.TemporaryDirectory()
+        self.base_dir = os.path.join(self.temp_dir_obj.name, "workspace")
+        shutil.copytree(
+            self.original_base_dir,
+            self.base_dir,
+            ignore=shutil.ignore_patterns("node_modules", ".git", ".agent/logs/*", ".agent/state/sessions/*"),
+        )
+        self.state_store = StateStore(os.path.join(self.base_dir, ".agent/state/studio_loop_state.json"))
+
+    def tearDown(self):
+        self.temp_dir_obj.cleanup()
+
+    def test_session_creation_and_active_pointer_compatibility(self):
+        state = self.state_store.start_feature("Design the colony HUD", "design_the_colony_hud", "concept_producer", kind="design")
+
+        self.assertTrue(state["session_id"])
+        self.assertEqual(state["kind"], "design")
+        self.assertEqual(state["current_stage"], "concept_producer")
+        self.assertTrue(os.path.exists(os.path.join(self.base_dir, ".agent/state/sessions", state["session_id"] + ".json")))
+
+        with open(os.path.join(self.base_dir, ".agent/state/studio_loop_state.json"), "r", encoding="utf-8") as handle:
+            pointer = json.load(handle)
+        self.assertEqual(pointer["active_session_id"], state["session_id"])
+        self.assertEqual(self.state_store.load_state()["session_id"], state["session_id"])
+
+    def test_routing_by_request_kind(self):
+        router = SessionRouter(self.base_dir)
+        self.assertEqual(router.infer_kind("fix the crash on load"), "bug")
+        self.assertEqual(router.route_initial_stage("fix the crash on load"), "bug_hunter")
+        self.assertEqual(router.infer_kind("make a new sprite sheet"), "asset")
+        self.assertEqual(router.route_initial_stage("research canvas input architecture"), "researcher")
+        self.assertEqual(router.route_initial_stage("implement the save game migration"), "developer")
+
+    def test_resume_and_archive_session(self):
+        first = self.state_store.start_feature("Research pathfinding", "research_pathfinding", "researcher", kind="research")
+        second = self.state_store.start_feature("Fix combat bug", "fix_combat_bug", "bug_hunter", kind="bug")
+
+        resumed = self.state_store.resume_session(first["session_id"])
+        self.assertEqual(resumed["session_id"], first["session_id"])
+        self.assertEqual(self.state_store.load_state()["session_id"], first["session_id"])
+
+        archived = self.state_store.archive_session(second["session_id"])
+        self.assertEqual(archived["status"], "archived")
+
+    def test_two_sessions_keep_stage_artifacts_and_research_isolated(self):
+        first = self.state_store.start_feature("Research pathfinding", "research_pathfinding", "researcher", kind="research")
+        first["current_stage"] = "developer"
+        first["artifacts"]["brief"] = ".agent/Loop_Flow/research_pathfinding_blueprint.md"
+        first["research_results"].append({"query": "pathfinding", "status": "complete"})
+        self.state_store.save_state(first)
+
+        second = self.state_store.start_feature("Fix combat bug", "fix_combat_bug", "bug_hunter", kind="bug")
+        second["artifacts"]["root_cause"] = ".agent/Loop_Flow/fix_combat_bug_root_cause_analysis.md"
+        self.state_store.save_state(second)
+
+        loaded_first = self.state_store.get_session(first["session_id"])
+        loaded_second = self.state_store.get_session(second["session_id"])
+        self.assertEqual(loaded_first["current_stage"], "developer")
+        self.assertEqual(loaded_second["current_stage"], "bug_hunter")
+        self.assertEqual(len(loaded_first["research_results"]), 1)
+        self.assertEqual(loaded_second["research_results"], [])
+        self.assertNotEqual(loaded_first["artifacts"], loaded_second["artifacts"])
+
+    def test_skill_registry_loads_trusted_and_rejects_external_by_default(self):
+        registry = SkillRegistry(self.base_dir)
+        developer_skills = registry.get_role_skills("developer")
+        self.assertEqual([skill["id"] for skill in developer_skills], ["studio-loop.developer"])
+        self.assertIn("src", registry.allowed_write_paths_for_role("developer"))
+
+        external_dir = os.path.join(self.base_dir, ".agent/skills/external_test")
+        os.makedirs(external_dir, exist_ok=True)
+        manifest = {
+            "id": "external.test",
+            "name": "External Test",
+            "version": "1.0.0",
+            "roles": ["developer"],
+            "required_tools": [],
+            "allowed_write_paths": ["."],
+            "expected_artifacts": [],
+            "validators": [],
+            "provenance": {"source": "test"},
+            "trust_level": "external",
+        }
+        with open(os.path.join(external_dir, "skill.json"), "w", encoding="utf-8") as handle:
+            json.dump(manifest, handle)
+        with open(os.path.join(self.base_dir, ".agent/skills/registry.json"), "r", encoding="utf-8") as handle:
+            data = json.load(handle)
+        data["skills"].append({"id": "external.test", "manifest": ".agent/skills/external_test/skill.json"})
+        with open(os.path.join(self.base_dir, ".agent/skills/registry.json"), "w", encoding="utf-8") as handle:
+            json.dump(data, handle)
+
+        registry = SkillRegistry(self.base_dir)
+        self.assertNotIn("external.test", [skill["id"] for skill in registry.get_role_skills("developer")])
+
+    def test_skill_registry_rejects_invalid_manifest(self):
+        registry = SkillRegistry(self.base_dir)
+        invalid_path = os.path.join(self.base_dir, ".agent/skills/invalid_skill.json")
+        with open(invalid_path, "w", encoding="utf-8") as handle:
+            json.dump({"id": "broken"}, handle)
+        with self.assertRaises(ValueError):
+            registry.load_manifest(invalid_path)
+
+    def test_safety_guard_uses_skill_policy(self):
+        guard = SafetyGuard(self.base_dir)
+        guard.set_policy_context({"designer": [".agent/Loop_Flow"]}, [".agent/Loop_Flow", "src"])
+
+        safe, err = guard.validate_actions("designer", {
+            "stage": "designer",
+            "status": "complete",
+            "summary": "Writes design spec.",
+            "writes": [{"path": ".agent/Loop_Flow/test_design_spec.md", "content": "ok"}],
+        })
+        self.assertTrue(safe, err)
+
+        safe, err = guard.validate_actions("designer", {
+            "stage": "designer",
+            "status": "complete",
+            "summary": "Attempts source write.",
+            "writes": [{"path": "src/ui.ts", "content": "bad"}],
+        })
+        self.assertFalse(safe)
+        self.assertIn("Unsafe write path", err)
+
+    def test_artifact_validator_uses_skill_expected_artifacts(self):
+        validator = ArtifactValidator(self.base_dir)
+        os.makedirs(os.path.join(self.base_dir, ".agent/Loop_Flow"), exist_ok=True)
+        path = os.path.join(self.base_dir, ".agent/Loop_Flow/test_feature_design_spec.md")
+        with open(path, "w", encoding="utf-8") as handle:
+            handle.write("# Aesthetic Spec\nOk\n# Interaction Spec\nOk\n# CSS Tokens\nOk\n")
+
+        manifest = {
+            "id": "test.designer",
+            "expected_artifacts": [
+                {
+                    "path": ".agent/Loop_Flow/{feature}_design_spec.md",
+                    "required": True,
+                    "required_sections": ["Aesthetic Spec", "Interaction Spec", "CSS Tokens"],
+                }
+            ],
+            "validators": [],
+        }
+        report = validator.validate(
+            "designer",
+            {"stage": "designer", "status": "complete", "summary": "Done"},
+            {"writes": [], "patches": [], "commands": [], "research": []},
+            {},
+            {"feature_slug": "test_feature", "research_results": []},
+            skill_manifests=[manifest],
+        )
+        self.assertTrue(report["valid"], report["errors"])
+
 
 if __name__ == "__main__":
     unittest.main()

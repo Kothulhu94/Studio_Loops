@@ -39,9 +39,9 @@ class PlaywrightResearch:
 
     def get_install_hint(self):
         if not self.available:
-            return r"Run: \PortablePython\python.exe -m pip install playwright"
+            return "Run: python -m pip install playwright"
         if not self._browser_available:
-            return r"Run: \PortablePython\python.exe -m playwright install chromium"
+            return "Run: python -m playwright install chromium"
         return ""
 
     def run_search(self, query, search_url_template):
