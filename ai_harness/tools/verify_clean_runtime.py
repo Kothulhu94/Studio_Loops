@@ -65,14 +65,35 @@ def verify_clean_runtime():
                     # Proof Validation
                     if "docs/verification" in path.replace("\\", "/"):
                         if "browser_research_mdn_requestanimationframe.md" in path:
-                            required = ["Status", "complete", "Backend: playwright", "developer.mozilla.org", "requestAnimationFrame", "Canvas API"]
-                            forbidden = ["mock_verification", "Status: blocked", "Status: failed", "Status: partial", "No findings recorded"]
+                            required = [
+                                "Status", "complete", "Backend: playwright", 
+                                "developer.mozilla.org", "requestAnimationFrame", "Canvas_API"
+                            ]
+                            # Require at least one core match (Point 3)
+                            core_matches = [
+                                "Window/requestAnimationFrame", 
+                                "Canvas_API/Tutorial/Basic_animations",
+                                "CanvasRenderingContext2D"
+                            ]
+                            if not any(cm in content for cm in core_matches):
+                                dirty.append(f"Proof {path} missing at least one core source match: {core_matches}")
+
+                            forbidden = [
+                                "mock_verification", "Status: blocked", "Status: failed", 
+                                "Status: partial", "No findings recorded",
+                                "VRDisplay", "XRSession", "WebXR", "Deprecated", 
+                                "Experimental", "Non-standard", "Limited availability"
+                            ]
+                            # Mojibake check (Point 2)
+                            mojibake_markers = ["â€™", "â€œ", "â€", "â€”", "Ã", "Â", ""]
+                            forbidden.extend(mojibake_markers)
+
                             for r in required:
                                 if r not in content:
                                     dirty.append(f"Proof {path} missing required term: {r}")
                             for f in forbidden:
                                 if f in content:
-                                    dirty.append(f"Proof {path} contains forbidden term: {f}")
+                                    dirty.append(f"Proof {path} contains forbidden term/marker: {f}")
                         else:
                             if "Status: blocked" in content and "blocked_expected" not in path:
                                 dirty.append(f"Invalid proof artifact (Status: blocked): {path}")

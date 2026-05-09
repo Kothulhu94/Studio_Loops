@@ -3,8 +3,9 @@ import os
 import re
 
 class CopyrightGuard:
-    def __init__(self, forbidden_terms_path=".agent/orchestrator/forbidden_ip_terms.json"):
-        self.forbidden_terms_path = forbidden_terms_path
+    def __init__(self, base_path=None, forbidden_terms_path=".agent/orchestrator/forbidden_ip_terms.json"):
+        self.base_path = base_path or os.getcwd()
+        self.forbidden_terms_path = os.path.join(self.base_path, forbidden_terms_path)
         self.forbidden_data = self._load_terms()
 
     def _load_terms(self):

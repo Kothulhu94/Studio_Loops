@@ -4,9 +4,10 @@ import os
 from datetime import datetime
 
 class KoboldClient:
-    def __init__(self, config):
+    def __init__(self, config, base_path=None):
         self.config = config["koboldcpp"]
-        self.logs_path = config["paths"]["logs"]
+        self.base_path = base_path or os.getcwd()
+        self.logs_path = os.path.join(self.base_path, config["paths"]["logs"])
 
     def call(self, prompt_packet):
         url = f"{self.config['base_url']}{self.config['endpoint']}"

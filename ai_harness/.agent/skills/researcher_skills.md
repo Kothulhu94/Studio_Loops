@@ -41,15 +41,15 @@ This consolidated skill file contains all core capabilities required for the Res
 **Description**: Identifying unused npm packages, version conflicts, and bloated dependencies to maintain a "Flash Drive Friendly" codebase.
 
 ### Instructions
-1. **Tree Analysis**: Run `npm list` or similar tools to visualize the dependency graph.
+1. **Tree Analysis**: Use allowlisted commands to visualize the dependency graph.
 2. **Bloat Identification**: Identify large packages that could be replaced by lighter alternatives or vanilla implementations.
 3. **Unused Detection**: Check `package.json` against actual imports in the source code to find unused dependencies.
 4. **Refactor Recommendation**: Provide a list of packages to prune or consolidate to the Developer.
 
 ### Orchestrator Actions
 - **package.json**: The manifest.
-- **allowlisted command action**: To execute `npm list` or `depcheck`.
-- **context_culler / source_indexer**: To verify package usage in source code.
+- **allowlisted command action**: Use `ACTIONS_JSON.commands` with name: `find_bloat` for analysis.
+- **source context**: Use the provided source index to verify package usage.
 
 ---
 
@@ -57,7 +57,7 @@ This consolidated skill file contains all core capabilities required for the Res
 **Description**: Utilizing the decision logs to perform architectural discovery and maintain consistency.
 
 ### Instructions
-1. **Deep Search**: Use `source_indexer` on `.agent/logs/` to find past architectural decisions.
+1. **Deep Search**: Use the provided source index and context pack to find past architectural decisions.
 2. **Context Seeding**: When starting a major research task, review the `.agent/logs/` to get a "High-Level Architectural Overview".
 3. **Decision Logging**: ALWAYS record major research outcomes in `.agent/logs/` using the format: `Decision Log: [Timestamp] [Identity] [Topic] [Outcome]`.
 4. **Reporting**: All major findings MUST be saved as a `.md` report in `.agent/Loop_Flow/`.
@@ -74,7 +74,7 @@ This consolidated skill file contains all core capabilities required for the Res
 1. **Symbol Search**: Use available orchestrator LSP capabilities to find all definitions, references, and implementations of a symbol.
 2. **Type Inspection**: Use available orchestrator LSP capabilities to see full type signatures.
 3. **Workspace Diagnostics**: Scan the entire project for hidden type errors that `tsc` might miss in incremental mode.
-4. **Integration**: If LSP is unavailable, fall back to `context_culler / source_indexer` and `context pack / source index` with manual type deduction.
+4. **Integration**: If LSP is unavailable, fall back to the provided source index and context pack with manual type deduction.
 
 ### Orchestrator Actions
 - **Use the context pack and source index supplied by the orchestrator.**
@@ -92,6 +92,6 @@ This consolidated skill file contains all core capabilities required for the Res
 4. **Root Cause**: Trace the retainer path of leaked objects (e.g., event listeners not removed, global array growth).
 
 ### Orchestrator Actions
-- Browser audit is not currently available. Do not request browser_audit. Use research_requests for external research and allowlisted commands only.
+- Browser QA is not currently available. Use research_requests for external research and allowlisted commands only.
 - **Request an allowlisted command through ACTIONS_JSON.commands.**
 - **Do not invoke tools directly.**

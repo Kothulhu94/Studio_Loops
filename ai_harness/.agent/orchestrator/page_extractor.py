@@ -4,9 +4,10 @@ import hashlib
 from datetime import datetime
 
 class PageExtractor:
-    def __init__(self, config=None):
+    def __init__(self, config=None, base_path=None):
         self.config = config or {}
-        self.cache_dir = self.config.get("cache_dir", ".agent/logs/research/cache/pages")
+        self.base_path = base_path or os.getcwd()
+        self.cache_dir = os.path.join(self.base_path, self.config.get("cache_dir", ".agent/logs/research/cache/pages"))
 
     def extract(self, url, html_content):
         import html
@@ -32,8 +33,10 @@ class PageExtractor:
         
         # Mojibake detection
         bad_markers = [
-            "Ã", "Â", "â€", "â€™", "â€œ", "â€",
-            "ðŸ", "Ø", "Ù", "Ð", "Ñ", "É™", "Ä°"
+            "Ã", "Â",
+            "â€", "â€™", "â€œ", "â€", "â€”", "â€“",
+            "ðŸ",
+            "Ø", "Ù", "Ð", "Ñ", "É™", "Ä°"
         ]
         bad_marker_count = sum(text.count(m) for m in bad_markers)
         bad_ratio = bad_marker_count / max(len(text), 1)

@@ -10,12 +10,13 @@ from search_result_parser import SearchResultParser
 from page_extractor import PageExtractor
 
 class BrowserResearch:
-    def __init__(self, config=None):
+    def __init__(self, config=None, base_path=None):
         self.config = config or {}
+        self.base_path = base_path or os.getcwd()
         self.research_config = self.config.get("web_research", {})
-        self.playwright = PlaywrightResearch(self.research_config)
+        self.playwright = PlaywrightResearch(self.research_config, self.base_path)
         self.parser = SearchResultParser(self.research_config.get("search_engine", "duckduckgo_lite"))
-        self.extractor = PageExtractor(self.research_config)
+        self.extractor = PageExtractor(self.research_config, self.base_path)
 
     def perform_research(self, query, reason=None):
         results = {
@@ -51,10 +52,8 @@ class BrowserResearch:
             # Standardize pre-extracted links
             for l in search_res["links"]:
                 links.append({"url": l["url"], "title": l.get("title", "")})
-            print(f"DEBUG: Using {len(links)} pre-extracted links from backend.")
         else:
             links = self.parser.parse_links(search_res["html"])
-            print(f"DEBUG: Using {len(links)} parsed links from HTML.")
 
         if not links:
             results["status"] = "partial"
@@ -118,7 +117,6 @@ class BrowserResearch:
                 score -= 40
             
             scored_links.append((score, link))
-            print(f"DEBUG: Scored link {link['url']} -> {score}")
         
         # Sort by score descending
         scored_links.sort(key=lambda x: x[0], reverse=True)
@@ -143,7 +141,29 @@ class BrowserResearch:
             
             # Deep Relevance Check for MDN / Technical docs
             excerpt_lower = extracted.get("excerpt", "").lower()
-            strong_body_count = sum(1 for term in strong_terms if term in excerpt_lower)
+            title_lower = extracted.get("title", "").lower()
+            
+            # Require distinct term coverage (Point 1)
+            strong_body_terms_found = {term for term in strong_terms if term in excerpt_lower or term in title_lower}
+            strong_body_count = len(strong_body_terms_found)
+            
+            # Rejection Keywords (unless specifically requested in query)
+            rejection_keywords = [
+                "vrdisplay", "xrsession", "webxr", "deprecated", 
+                "experimental", "non-standard", "limited availability"
+            ]
+            
+            is_rejected = False
+            for rj in rejection_keywords:
+                if rj in excerpt_lower or rj in title_lower:
+                    # Only reject if the query didn't explicitly ask for this term
+                    if rj not in query.lower():
+                        is_rejected = True
+                        break
+            
+            if is_rejected:
+                extracted["status"] = "failed"
+                extracted["notes"] = f"rejected: contains irrelevant or low-quality term ({rj})"
             
             source_entry = {
                 "title": extracted["title"],
@@ -164,7 +184,7 @@ class BrowserResearch:
             results["sources"].append(source_entry)
 
         # 5. Final Validation
-        # Require at least 2 valid sources with strong terms in body
+        # Require at least 2 valid sources with distinct strong terms in body
         valid_sources = [s for s in results["sources"] if s["status"] == "fetched" and s.get("strong_relevance", 0) >= 2]
 
         if len(valid_sources) >= 2:

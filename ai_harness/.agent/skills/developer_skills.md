@@ -10,10 +10,10 @@ This consolidated skill file contains all core capabilities required for the Dev
 1. **Target Identification**: Identify the symbols or structures needing refactoring.
 2. **Context Gathering**: Use `context pack / source index` to understand all references.
 3. **Refactor Plan**: Draft the changes focusing on type safety and symbol consistency.
-4. **Verification**: Always run `tsc_build` (or equivalent) after refactoring to ensure no regressions occurred.
+4. **Verification**: Always run `typecheck` after refactoring to ensure no regressions occurred.
 
 ### Orchestrator Actions
-- **tsc_build**: Verification.
+- **typecheck**: Verification.
 - **context pack / source index**: Context.
 
 ---

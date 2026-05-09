@@ -41,6 +41,7 @@ class StateStore:
             "blockers": [],
             "last_model_response_path": None,
             "last_actions": None,
+            "last_results": None,
             "last_validation": None,
             "last_transition": None,
             "capabilities": {},
@@ -69,6 +70,9 @@ class StateStore:
         # New: Record detailed stage result components
         if "actions" in result:
             state["last_actions"] = result["actions"]
+        
+        if "results" in result:
+            state["last_results"] = result["results"]
             
         # Record artifacts from result
         for art in result.get("artifacts_written", []):

@@ -10,7 +10,7 @@ This consolidated skill file contains all core capabilities required for the Des
 1. **Color Palette Enforcement**: Use curated, harmonious color palettes (e.g., sleek dark modes, vibrant accent colors).
 2. **Material Standards**: Apply modern UI effects like "Glassmorphism" (blur + transparency) and high-quality shadows.
 3. **Micro-animations**: Add subtle "pulsing" or "breathing" animations to interactive elements.
-4. **Visual Audit**: Review the UI to ensure it feels premium and state of the art.
+4. **Visual Audit**: Browser visual audit is currently unavailable. Produce design specs and manual QA checklists for CSS/token criteria only.
 
 ### Orchestrator Actions
 - **index.css**: The root of the design system.
@@ -27,7 +27,7 @@ This consolidated skill file contains all core capabilities required for the Des
 4. **Remediation**: Adjust the luminosity or saturation of colors if they fail the audit.
 
 ### Orchestrator Actions
-- **browser_bridge capability**: To inspect computed colors in the live UI.
+- **Browser visual audit is currently unavailable.** Use manual contrast checks or design tool verification.
 - **WCAG Guidelines**: The standard for compliance.
 
 ---
@@ -42,7 +42,7 @@ This consolidated skill file contains all core capabilities required for the Des
 4. **Report**: Categorize changes as "Intended" (Design Update) or "Regressions" (Bugs).
 
 ### Orchestrator Actions
-- **browser_bridge capability**: For screenshot capture.
+- **Browser visual audit is currently unavailable.** Producing design specs and testable CSS criteria only. Do not request browser screenshots.
 
 ---
 

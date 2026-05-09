@@ -53,8 +53,8 @@ class TransitionEngine:
             elif qa_res == "FAIL":
                 return "bug_hunter"
             elif qa_res == "BLOCKED":
-                return "blocked"
-            return "qa_tester" # Stay if ambiguous
+                return current_stage
+            return current_stage # Stay if ambiguous
         
         elif current_stage == "bug_hunter":
             return "debug_dev"

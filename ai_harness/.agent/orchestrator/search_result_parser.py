@@ -56,9 +56,6 @@ class SearchResultParser:
             # Generic parser for other engines (Bing, Google, etc.)
             direct_pattern = r'<a\s+[^>]*?href=["\'](http[s]?://[^"\']+|/[^"\']+)["\'][^>]*?>(.*?)</a>'
             matches = re.findall(direct_pattern, html_content, re.DOTALL | re.IGNORECASE)
-            print(f"DEBUG: Found {len(matches)} potential matches in generic parser")
-            for m in matches[:20]:
-                print(f"DEBUG: Match: {m[0][:50]} | Title: {m[1][:30]}")
             
             for url, title in matches:
                 # Handle relative links
@@ -103,11 +100,7 @@ class SearchResultParser:
 
                 clean_title = self._clean_text(title)
                 if clean_title and len(clean_title) > 2 and url.startswith("http"):
-                    # print(f"DEBUG: Accepting link: {url}")
                     links.append({"url": url, "title": clean_title})
-                else:
-                    # print(f"DEBUG: Rejecting link (Short title or not http): {url} | Title: {clean_title}")
-                    pass
 
 
 

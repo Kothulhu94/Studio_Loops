@@ -13,7 +13,7 @@ class ResearchClient:
         self.base_path = base_path or os.getcwd()
         research_config = self.config.get("web_research", {})
         self.enabled = research_config.get("enabled", False)
-        self.browser_research = BrowserResearch(self.config)
+        self.browser_research = BrowserResearch(self.config, self.base_path)
         self.artifact_dir = os.path.join(self.base_path, research_config.get("artifact_dir", ".agent/Loop_Flow/research"))
 
     def perform_research(self, query, reason=None, feature_slug=None, stage=None):

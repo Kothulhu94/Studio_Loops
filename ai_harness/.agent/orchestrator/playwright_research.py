@@ -9,11 +9,12 @@ except ImportError:
     PLAYWRIGHT_AVAILABLE = False
 
 class PlaywrightResearch:
-    def __init__(self, config=None):
+    def __init__(self, config=None, base_path=None):
         self.config = config or {}
+        self.base_path = base_path or os.getcwd()
         self.available = PLAYWRIGHT_AVAILABLE
         self._browser_available = None
-        self.browser_profile_dir = os.path.abspath(".agent/logs/research/browser_profile/")
+        self.browser_profile_dir = os.path.join(self.base_path, ".agent/logs/research/browser_profile/")
         
     def is_available(self):
         if not self.available:
@@ -52,7 +53,6 @@ class PlaywrightResearch:
                 user_agent=self.config.get("user_agent", "Mozilla/5.0 StudioLoopLocalGemmaResearch/1.0")
             )
             page = context.new_page()
-            page.on("console", lambda msg: print(f"BROWSER: {msg.text}"))
             
             try:
                 print(f"Navigating to {search_url}...")
@@ -65,7 +65,6 @@ class PlaywrightResearch:
                 
                 # Small sleep for final rendering
                 time.sleep(3)
-                page.screenshot(path="debug_search.png")
                 
                 # Aggressively extract all links from all Shadow DOMs
                 extracted_links = []

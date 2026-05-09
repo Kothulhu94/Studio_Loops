@@ -23,13 +23,13 @@ This consolidated skill file contains all core capabilities required for the QA 
 
 ### Instructions
 1. **Baseline Setup**: Run the application in a stable environment.
-2. **Profiling**: Use browser performance profiling tools to identify "hot" functions.
+2. **Performance Audit**: Browser-based performance profiling is currently unavailable. Use unit tests, loop audits, and allowlisted analysis commands (like find_bloat) to identify bottlenecks.
 3. **Loop Analysis**: Check the main execution path for unnecessary allocations or heavy calculations.
 4. **Report**: Document findings with specific line numbers and execution times.
 
 ### Orchestrator Actions
-- Browser audit is not currently available. Do not request browser_audit. Use research_requests for external research and allowlisted commands only.
-- **Request an allowlisted command through ACTIONS_JSON.commands.**
+- **Browser visual audit and performance profiling are currently unavailable.** Use research_requests for external research and allowlisted commands only.
+- **Request an allowlisted command through ACTIONS_JSON.commands (e.g., 'test', 'find_bloat').**
 - **Do not invoke tools directly.**
 
 ---

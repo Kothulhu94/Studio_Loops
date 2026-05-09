@@ -43,7 +43,7 @@ class StudioLoopOrchestrator:
         self.role_loader = RoleLoader(base_path)
         self.pruner = ContextPruner(self.config, base_path)
         self.compiler = PromptCompiler(self.config)
-        self.client = KoboldClient(self.config)
+        self.client = KoboldClient(self.config, base_path)
         self.transition_engine = TransitionEngine(self.graph)
         
         # Execution & Tooling
@@ -66,7 +66,7 @@ class StudioLoopOrchestrator:
         # Guardrails & Parsers
         self.capability_registry = CapabilityRegistry(self.config)
         self.response_parser = ResponseParser(schema_path=os.path.join(self.base_path, ".agent/orchestrator/actions_schema.json"))
-        self.copyright_guard = CopyrightGuard()
+        self.copyright_guard = CopyrightGuard(base_path)
         self.safety_guard = SafetyGuard(base_path)
         self.retry_engine = RetryEngine(max_retries=self.config.get("automation", {}).get("max_stage_retries", 3))
         self.artifact_validator = ArtifactValidator(base_path)
@@ -259,18 +259,26 @@ class StudioLoopOrchestrator:
                 for r in state.get("research_results", [])
             )
 
-            # Rule 2: If same stage requests same query twice (even if failed), block
             if completed_same_query:
-                print(f"Research loop guard: Query '{query}' already completed. Forcing model to use existing brief.")
-                res = {
-                    "status": "blocked",
-                    "query": query,
-                    "reason": "Research already completed for this query. Use existing brief.",
-                    "sources": [],
-                    "findings": [],
-                    "artifact_path": None,
-                    "errors": ["Research already exists for this query. Do not request again."]
-                }
+                # Rule 1: If same query already complete, return it instead of blocking (Point 6)
+                existing_res = next(r for r in state.get("research_results", []) if r.get("query", "").lower().strip() == query.lower().strip())
+                
+                # Check if we already warned about this
+                warning_key = f"warned:{fingerprint}"
+                if state.get(warning_key):
+                    print(f"Research loop guard: Query '{query}' repeated AFTER warning. Blocking.")
+                    res = {
+                        "status": "blocked",
+                        "query": query,
+                        "reason": "Research loop: Query repeated after warning.",
+                        "sources": [], "findings": [], "artifact_path": None,
+                        "errors": ["Research already exists. Do not request again."]
+                    }
+                else:
+                    print(f"Research loop guard: Query '{query}' already completed. Injecting brief and issuing warning.")
+                    res = existing_res.copy()
+                    res["notes"] = res.get("notes", "") + " [WARNING: DUPLICATE RESEARCH REQUESTED. Use existing brief.]"
+                    state[warning_key] = True
             elif state["research_request_history"].count(fingerprint) >= 2:
                 print(f"Research loop guard: Blocking repeated query '{query}' for stage '{stage}'.")
                 res = {
@@ -541,6 +549,8 @@ if __name__ == "__main__":
         if args.payload:
             res = orchestrator.research_client.perform_research(args.payload)
             print(json.dumps(res, indent=2))
+            if res.get("status") != "complete":
+                sys.exit(1)
         else:
             print("Research requires a query payload.")
     elif args.command == "capabilities":
