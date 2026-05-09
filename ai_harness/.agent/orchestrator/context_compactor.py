@@ -52,10 +52,11 @@ class ContextCompactor:
         content += "- Use Playwright for research.\n\n"
         
         content += "## Files Changed\n"
-        for write in state.get("last_results", {}).get("writes", []):
+        last_results = state.get("last_results") or {}
+        for write in last_results.get("writes", []):
             if write["success"]:
                 content += f"- {write['path']}\n"
-        for patch in state.get("last_results", {}).get("patches", []):
+        for patch in last_results.get("patches", []):
             if patch["success"]:
                 content += f"- {patch['path']}\n"
         content += "\n"

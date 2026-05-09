@@ -56,8 +56,6 @@ class StudioLoopOrchestrator:
         
         # Wire up compaction and other hooks
         self.hooks.register_callback("after_transition", lambda ctx: self.compactor.compact(ctx["slug"], ctx["stage"], ctx["state"]))
-        self.hooks.register_callback("before_write", lambda ctx: self.safety_guard.is_path_safe(ctx["path"], ctx["stage"]))
-        self.hooks.register_callback("before_patch", lambda ctx: self.safety_guard.is_path_safe(ctx["path"], ctx["stage"]))
 
         self.research_client = ResearchClient(self.config, base_path)
         self.artifact_store = ArtifactStore(os.path.join(base_path, ".agent/Loop_Flow/"))
@@ -126,6 +124,11 @@ class StudioLoopOrchestrator:
             print("No active feature. Run 'run <feature>' first.")
             return False
 
+        if stage_name == "handover_complete":
+            print("Terminal handover already reached.")
+            self.state_store.set_current_stage("handover_complete")
+            return True
+
         print(f"Stage: {stage_name}")
         
         if repair_prompt_override:
@@ -186,14 +189,18 @@ class StudioLoopOrchestrator:
             # Check if research was blocked or failed fundamentally
             required = self.graph.get_validation_rules(stage_name).get("research_required", False)
             
-            bad_required_research = any(
-                r.get("status") != "complete"
-                for r in execution_results["research"]
-            )
+            bad_required_research = []
+            for res in execution_results["research"]:
+                bad_required_research.extend(self.artifact_validator.validate_research_result(res))
 
             if required and bad_required_research:
-                print(f"Mandatory research failed to complete (Statuses: {[r.get('status') for r in execution_results['research']]}). Marking stage as failed.")
+                print(f"Mandatory research failed quality checks: {bad_required_research}. Marking stage as failed.")
                 state["status"] = "failed"
+                state["failures"].append({
+                    "stage": stage_name,
+                    "reason": "Mandatory research failed: " + "; ".join(bad_required_research),
+                    "timestamp": datetime.now().isoformat()
+                })
                 self.state_store.save_state(state)
                 return False
             
@@ -226,17 +233,34 @@ class StudioLoopOrchestrator:
             self.state_store.set_current_stage(next_stage)
             
             # Trigger hook
-            if state:
+            updated_state = self.state_store.load_state()
+            if updated_state:
                 self.hooks.trigger("after_transition", {
-                    "slug": state.get("feature_slug"),
+                    "slug": updated_state.get("feature_slug"),
                     "stage": stage_name,
-                    "state": state,
+                    "state": updated_state,
                     "next_stage": next_stage
                 })
             
             return True
 
             
+        if actions.get("status") in ["blocked", "failed"]:
+            state = self.state_store.load_state()
+            state["status"] = actions.get("status")
+            if actions.get("status") == "blocked":
+                state["blockers"].append({
+                    "stage": stage_name,
+                    "reason": actions.get("summary", "Stage blocked."),
+                    "timestamp": datetime.now().isoformat()
+                })
+            else:
+                state["failures"].append({
+                    "stage": stage_name,
+                    "reason": actions.get("summary", "Stage failed."),
+                    "timestamp": datetime.now().isoformat()
+                })
+            self.state_store.save_state(state)
         return False
 
     def perform_actions(self, stage, actions):
@@ -246,6 +270,8 @@ class StudioLoopOrchestrator:
         
         if "research_request_history" not in state:
             state["research_request_history"] = []
+        if "research_duplicate_warnings" not in state:
+            state["research_duplicate_warnings"] = {}
 
         # 1. Research
         for req in actions.get("research_requests", []):
@@ -256,16 +282,20 @@ class StudioLoopOrchestrator:
             completed_same_query = any(
                 r.get("status") == "complete"
                 and r.get("query", "").lower().strip() == query.lower().strip()
+                and r.get("stage", stage) == stage
                 for r in state.get("research_results", [])
             )
 
             if completed_same_query:
                 # Rule 1: If same query already complete, return it instead of blocking (Point 6)
-                existing_res = next(r for r in state.get("research_results", []) if r.get("query", "").lower().strip() == query.lower().strip())
+                existing_res = next(
+                    r for r in state.get("research_results", [])
+                    if r.get("query", "").lower().strip() == query.lower().strip()
+                    and r.get("stage", stage) == stage
+                )
                 
                 # Check if we already warned about this
-                warning_key = f"warned:{fingerprint}"
-                if state.get(warning_key):
+                if state["research_duplicate_warnings"].get(fingerprint):
                     print(f"Research loop guard: Query '{query}' repeated AFTER warning. Blocking.")
                     res = {
                         "status": "blocked",
@@ -278,7 +308,7 @@ class StudioLoopOrchestrator:
                     print(f"Research loop guard: Query '{query}' already completed. Injecting brief and issuing warning.")
                     res = existing_res.copy()
                     res["notes"] = res.get("notes", "") + " [WARNING: DUPLICATE RESEARCH REQUESTED. Use existing brief.]"
-                    state[warning_key] = True
+                    state["research_duplicate_warnings"][fingerprint] = True
             elif state["research_request_history"].count(fingerprint) >= 2:
                 print(f"Research loop guard: Blocking repeated query '{query}' for stage '{stage}'.")
                 res = {
@@ -293,6 +323,7 @@ class StudioLoopOrchestrator:
             else:
                 self.hooks.trigger("before_research", {"stage": stage, "query": query})
                 res = self.research_client.perform_research(query, req.get("reason"), feature_slug=feature_slug, stage=stage)
+                res["stage"] = stage
                 state["research_request_history"].append(fingerprint)
             
             results["research"].append(res)

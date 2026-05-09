@@ -21,7 +21,7 @@ class ResearchClient:
             return {
                 "query": query,
                 "status": "blocked",
-                "error": "Web research is disabled in config."
+                "errors": ["Web research is disabled in config."]
             }
             
         print(f"Researching (Browser-Based): {query}")
@@ -56,8 +56,20 @@ class ResearchClient:
         content += "## Sources\n\n"
         content += "| Title | URL | Status | Retrieved | Notes |\n"
         content += "|---|---|---|---|---|\n"
-        for src in research_data.get("sources", []):
-            content += f"| {src['title']} | {src['url']} | {src['status']} | {src.get('retrieved_at', 'N/A')} | {src.get('notes', '')} |\n"
+        sources = research_data.get("sources", [])
+        if status == "complete":
+            sources = [
+                src for src in sources
+                if src.get("status") == "fetched" and src.get("relevant", True) and not src.get("rejected")
+            ]
+        for src in sources:
+            coverage = ", ".join(src.get("topic_coverage", []))
+            notes = src.get("notes", "")
+            if coverage:
+                notes = f"{notes} coverage: {coverage}".strip()
+            title = str(src.get("title", "")).replace("|", "\\|")
+            url = str(src.get("url", "")).replace("|", "%7C")
+            content += f"| {title} | {url} | {src.get('status', 'unknown')} | {src.get('retrieved_at', 'N/A')} | {notes.replace('|', '/')} |\n"
         
         content += "\n## Extracted Findings\n\n"
         if research_data.get("findings"):

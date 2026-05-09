@@ -16,17 +16,16 @@ This consolidated skill file contains all core capabilities required for the Ass
 
 ---
 
-## 2. Vectorization Workflow
-**Description**: Converting bitmap assets into resolution-independent SVG vector graphics.
+## 2. Vectorization Availability
+**Description**: Vectorization is unavailable unless a future allowlisted command is added.
 
 ### Instructions
-1. **Asset Preparation**: Ensure the source image is available.
-2. **Batch Execution**: Use the `vectorize_batch.cjs` script to process multiple assets if the capability is available.
-    - Command: `node .agent/scripts/vectorize_batch.cjs <input_dir> <output_dir>`
-3. **Tuning**: For high-quality icons, ensure thresholding removes tiny noise and maintains smooth curves.
+1. **Asset Preparation**: Produce SVG specs, filename plans, and registry integration plans only.
+2. **No Batch Conversion**: Do not request vectorization commands.
+3. **No Registry Edits**: Do not modify source registry files.
 
 ### Orchestrator Actions
-- **Request an allowlisted command through ACTIONS_JSON.commands.**
+- **Request only allowlisted command names through ACTIONS_JSON.commands.**
 - **Do not invoke tools directly.**
 
 ---
@@ -40,5 +39,5 @@ This consolidated skill file contains all core capabilities required for the Ass
 3. **Verification**: Ensure the integration plan is clear and all assets are documented.
 
 ### Orchestrator Actions
-- **Request an allowlisted command through ACTIONS_JSON.commands.**
+- **Request only allowlisted command names through ACTIONS_JSON.commands.**
 - **Do not invoke tools directly.**

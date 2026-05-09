@@ -38,14 +38,17 @@ class PageExtractor:
             "ðŸ",
             "Ø", "Ù", "Ð", "Ñ", "É™", "Ä°"
         ]
-        bad_marker_count = sum(text.count(m) for m in bad_markers)
-        bad_ratio = bad_marker_count / max(len(text), 1)
+        direct_bad_markers = [
+            "�", "Ã", "Â", "â€", "â€™", "â€œ", "â€", "â€”",
+            "â€“", "ðŸ", "Ø", "Ù", "Ð", "Ñ",
+        ]
+        bad_marker_count = sum(text.count(m) for m in bad_markers + direct_bad_markers)
         
         # Non-ASCII ratio (penalize if high for English query context)
         non_ascii_count = sum(1 for c in text if ord(c) > 127)
         non_ascii_ratio = non_ascii_count / max(len(text), 1)
         
-        is_mojibake = bad_ratio > 0.05 or non_ascii_ratio > 0.25
+        is_mojibake = bad_marker_count > 0 or non_ascii_ratio > 0.25
         
         # 2. Format as Markdown
         retrieved = datetime.now().isoformat()

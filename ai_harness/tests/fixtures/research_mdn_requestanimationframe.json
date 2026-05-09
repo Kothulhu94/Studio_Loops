@@ -1,7 +1,7 @@
 {
   "status": "complete",
   "query": "MDN Canvas API requestAnimationFrame",
-  "backend": "mock_verification",
+  "backend": "test_fixture",
   "sources": [
     {
       "title": "Window: requestAnimationFrame() method - Web APIs | MDN",

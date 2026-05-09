@@ -14,7 +14,12 @@ class PlaywrightResearch:
         self.base_path = base_path or os.getcwd()
         self.available = PLAYWRIGHT_AVAILABLE
         self._browser_available = None
-        self.browser_profile_dir = os.path.join(self.base_path, ".agent/logs/research/browser_profile/")
+        self.browser_profile_dir = self._resolve_path(self.config.get("browser_profile_dir", ".agent/logs/research/browser_profile"))
+
+    def _resolve_path(self, path):
+        if os.path.isabs(path):
+            return path
+        return os.path.join(self.base_path, path)
         
     def is_available(self):
         if not self.available:

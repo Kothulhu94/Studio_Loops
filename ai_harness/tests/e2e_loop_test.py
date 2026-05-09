@@ -113,12 +113,16 @@ class TestFullLoop(unittest.TestCase):
             "status": "complete",
             "query": "pattern A",
             "findings": ["Finding 1", "Finding 2"],
+            "source_set_relevance_passed": True,
             "sources": [
-                {"title": "Source A", "url": "https://developer.mozilla.org/docs/Web/API/Canvas_API", "status": "fetched"},
-                {"title": "Source B", "url": "https://developer.mozilla.org/docs/Web/API/CanvasRenderingContext2D", "status": "fetched"}
+                {"title": "Source A", "url": "https://developer.mozilla.org/docs/Web/API/Canvas_API", "status": "fetched", "relevant": True},
+                {"title": "Source B", "url": "https://developer.mozilla.org/docs/Web/API/CanvasRenderingContext2D", "status": "fetched", "relevant": True}
             ],
             "artifact_path": os.path.join(self.base_dir, ".agent/Loop_Flow/research/latest_pattern_a_research_brief.md")
         }
+        os.makedirs(os.path.join(self.base_dir, ".agent/Loop_Flow/research"), exist_ok=True)
+        with open(os.path.join(self.base_dir, ".agent/Loop_Flow/research/latest_pattern_a_research_brief.md"), "w", encoding="utf-8") as handle:
+            handle.write("# Test research")
         
         # Mock test runner to succeed
         self.orchestrator.test_runner.run_full_suite = MagicMock(return_value={

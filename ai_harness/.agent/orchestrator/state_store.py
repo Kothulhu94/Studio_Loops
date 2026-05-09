@@ -32,6 +32,7 @@ class StateStore:
             "research_briefs": [],
             "research_results": [],
             "research_request_history": [],
+            "research_duplicate_warnings": {},
             "writes": [],
             "patches": [],
             "commands": [],
@@ -101,6 +102,12 @@ class StateStore:
 
     def set_current_stage(self, stage_name):
         state = self.load_state()
+        if stage_name == "handover_complete":
+            state["current_stage"] = stage_name
+            state["status"] = "complete"
+            state["active"] = False
+            self.save_state(state)
+            return
         state["current_stage"] = stage_name
         state["status"] = "running"
         self.save_state(state)

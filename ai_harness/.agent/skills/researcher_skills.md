@@ -58,12 +58,12 @@ This consolidated skill file contains all core capabilities required for the Res
 
 ### Instructions
 1. **Deep Search**: Use the provided source index and context pack to find past architectural decisions.
-2. **Context Seeding**: When starting a major research task, review the `.agent/logs/` to get a "High-Level Architectural Overview".
+2. **Context Seeding**: When starting a major research task, use the orchestrator-provided context pack and state summaries.
 3. **Decision Logging**: ALWAYS record major research outcomes in `.agent/logs/` using the format: `Decision Log: [Timestamp] [Identity] [Topic] [Outcome]`.
 4. **Reporting**: All major findings MUST be saved as a `.md` report in `.agent/Loop_Flow/`.
 
 ### Orchestrator Actions
-- **.agent/logs/**: The architectural memory storage.
+- **Context pack**: The orchestrator-provided architectural memory source.
 
 ---
 
@@ -86,10 +86,10 @@ This consolidated skill file contains all core capabilities required for the Res
 **Description**: Analyzing JavaScript heap snapshots and allocation timelines to identify retained objects in long-duration game sessions.
 
 ### Instructions
-1. **Baseline Capture**: Record a heap snapshot after the game finishes loading but before significant action.
-2. **Stress Session**: Perform high-frequency actions (combat, menu cycling, area transitions) for 10-15 minutes.
-3. **Comparison**: Capture a second snapshot and compare with the baseline to find objects that were not garbage collected.
-4. **Root Cause**: Trace the retainer path of leaked objects (e.g., event listeners not removed, global array growth).
+1. **Static Review**: Inspect allocation-heavy loops, event listener lifecycles, and long-lived collections from source context.
+2. **Stress Scenario Plan**: Describe manual stress scenarios for QA to run later.
+3. **Allowlisted Checks**: Request only allowlisted commands through `ACTIONS_JSON.commands`.
+4. **Root Cause**: Document likely retention paths such as event listeners not removed or global array growth.
 
 ### Orchestrator Actions
 - Browser QA is not currently available. Use research_requests for external research and allowlisted commands only.

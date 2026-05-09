@@ -58,7 +58,8 @@ class TestAutonomousLoop(unittest.TestCase):
               "path": ".agent/Loop_Flow/test_feature_blueprint.md", 
               "content": "# Technical Blueprint\\n\\n## Technical Audit\\nDone.\\n\\n## Implementation Blueprint\\nPlan established.\\n\\n## Context Pruning Map\\n- src/main.ts\\n\\n## Implementation Checklist\\n- [ ] Task 1", 
               "mode": "overwrite" 
-            }
+            },
+            { "path": ".agent/Loop_Flow/context_map.json", "content": "{}" }
           ],
           "next_stage_recommendation": "developer"
         }
@@ -76,12 +77,18 @@ class TestAutonomousLoop(unittest.TestCase):
         self.orchestrator.research_client.browser_research.perform_research = MagicMock(return_value={
             "status": "complete",
             "query": "TypeScript Canvas game architecture patterns",
+            "source_set_relevance_passed": True,
             "sources": [
-                {"title": "Canvas API", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API", "status": "fetched"},
-                {"title": "Game Loop Patterns", "url": "https://gameprogrammingpatterns.com/game-loop.html", "status": "fetched"}
+                {"title": "Canvas API", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API", "status": "fetched", "relevant": True},
+                {"title": "Game Loop Patterns", "url": "https://gameprogrammingpatterns.com/game-loop.html", "status": "fetched", "relevant": True}
             ],
             "findings": ["Finding 1: Use a game loop.", "Finding 2: Separate update and render."],
             "artifact_path": os.path.join(self.temp_dir, ".agent/Loop_Flow/research/test_research.md")
+        })
+        self.orchestrator.test_runner.run_full_suite = MagicMock(return_value={
+            "typecheck": {"success": True},
+            "tests": {"success": True},
+            "bloat": {"success": True}
         })
         
         # Start the feature

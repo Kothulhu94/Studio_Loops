@@ -43,8 +43,8 @@
     "search_url_template": "https://developer.mozilla.org/en-US/search?q={query}",
 
 
-    "max_results": 5,
-    "max_pages_per_query": 3,
+    "max_results": 30,
+    "max_pages_per_query": 8,
     "timeout_seconds": 30,
     "cache_dir": ".agent/logs/research/cache",
     "artifact_dir": ".agent/Loop_Flow/research",

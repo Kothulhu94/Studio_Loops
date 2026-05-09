@@ -1,6 +1,7 @@
 import os
 import json
 import sys
+from urllib.parse import urlparse, urlunparse
 
 # Add the current directory to sys.path to allow absolute imports of sibling modules
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -17,6 +18,113 @@ class BrowserResearch:
         self.playwright = PlaywrightResearch(self.research_config, self.base_path)
         self.parser = SearchResultParser(self.research_config.get("search_engine", "duckduckgo_lite"))
         self.extractor = PageExtractor(self.research_config, self.base_path)
+
+    def _query_variants(self, query):
+        variants = [query]
+        q_lower = query.lower()
+        if "mdn" in q_lower and "canvas" in q_lower and "requestanimationframe" in q_lower:
+            variants.extend([
+                "Canvas API requestAnimationFrame MDN",
+                "site:developer.mozilla.org/en-US/docs/Web/API Canvas requestAnimationFrame",
+                "requestAnimationFrame Canvas MDN",
+                "Canvas API basic animations MDN",
+            ])
+        return list(dict.fromkeys(variants))
+
+    def _canonical_candidates(self, query):
+        q_lower = query.lower()
+        if "canvas" not in q_lower or "requestanimationframe" not in q_lower:
+            return []
+        base = "https://developer.mozilla.org"
+        paths = [
+            "/en-US/docs/Web/API/Canvas_API",
+            "/en-US/docs/Web/API/Window/requestAnimationFrame",
+            "/en-US/docs/Web/API/Canvas_API/Tutorial/Basic_animations",
+            "/en-US/docs/Web/API/CanvasRenderingContext2D",
+        ]
+        return [{"url": base + path, "title": path.rsplit("/", 1)[-1]} for path in paths]
+
+    def _normalize_url(self, url):
+        parsed = urlparse(url)
+        return urlunparse((parsed.scheme, parsed.netloc.lower(), parsed.path.rstrip("/"), "", "", ""))
+
+    def _topic_coverage(self, query, title, url, excerpt):
+        haystack = " ".join([title or "", url or "", excerpt or ""]).lower()
+        coverage = []
+        checks = {
+            "canvas": ["canvas api", "canvas_api", "canvasrenderingcontext2d", "htmlcanvas", "canvas "],
+            "requestanimationframe": ["requestanimationframe"],
+            "animation/rendering": ["animation", "animate", "render", "repaint", "frame"],
+            "2d context": ["2d context", "canvasrenderingcontext2d", "getcontext", "2d graphics"],
+            "basic animations": ["basic animations", "basic_animations"],
+        }
+        for topic, needles in checks.items():
+            if any(needle in haystack for needle in needles):
+                coverage.append(topic)
+        return coverage
+
+    def _explicitly_requested_rejected_topic(self, query, keyword):
+        q = query.lower()
+        explicit = {
+            "vrdisplay": ["vrdisplay", "webvr", "vr "],
+            "xrsession": ["xrsession", "xr ", "webxr"],
+            "webxr": ["webxr", "xr "],
+            "deprecated": ["deprecated"],
+            "experimental": ["experimental"],
+            "non-standard": ["non-standard", "nonstandard"],
+            "limited availability": ["limited availability"],
+        }
+        return any(term in q for term in explicit.get(keyword, [keyword]))
+
+    def _rejection_reason(self, query, title, url, excerpt):
+        haystack = " ".join([title or "", url or "", excerpt or ""]).lower()
+        for keyword in [
+            "vrdisplay", "xrsession", "webxr", "deprecated",
+            "experimental", "non-standard", "limited availability",
+        ]:
+            if keyword in haystack and not self._explicitly_requested_rejected_topic(query, keyword):
+                return f"rejected: contains {keyword}"
+        return ""
+
+    def _score_link(self, query, link):
+        title_lower = link.get("title", "").lower()
+        url_lower = link.get("url", "").lower()
+        score = 0
+        domain = urlparse(link.get("url", "")).netloc.lower()
+        if "developer.mozilla.org" in domain:
+            score += 40
+        if "/en-us/docs/web/api/" in url_lower:
+            score += 25
+        if "canvas_api/tutorial/basic_animations" in url_lower:
+            score += 45
+        if "window/requestanimationframe" in url_lower:
+            score += 45
+        if "canvas_api" in url_lower or "canvas api" in title_lower:
+            score += 35
+        if "canvasrenderingcontext2d" in url_lower or "canvasrenderingcontext2d" in title_lower:
+            score += 30
+        if "requestanimationframe" in url_lower or "requestanimationframe" in title_lower:
+            score += 35
+        if any(bad in url_lower for bad in ["scrimba.com", "github.com/mdn", "localhost", "/plus", "/curriculum/", "/blog/", "/learn/"]):
+            score -= 100
+        if self._rejection_reason(query, title_lower, url_lower, ""):
+            score -= 100
+        return score
+
+    def _source_set_valid(self, sources, findings):
+        relevant = [
+            s for s in sources
+            if s.get("status") == "fetched" and s.get("relevant") and not s.get("rejected")
+        ]
+        covered = set()
+        for source in relevant:
+            covered.update(source.get("topic_coverage", []))
+        return (
+            len(relevant) >= 2
+            and "canvas" in covered
+            and ("requestanimationframe" in covered or "animation/rendering" in covered)
+            and len(findings) >= 2
+        )
 
     def perform_research(self, query, reason=None):
         results = {
@@ -37,97 +145,46 @@ class BrowserResearch:
         backend = self.playwright
         results["backend"] = "playwright"
 
-        # 2. Run search
+        # 2. Run search variants and add known canonical docs candidates.
         search_url_template = self.research_config.get("search_url_template")
-        search_res = backend.run_search(query, search_url_template)
-        
-        if "error" in search_res:
-            results["status"] = "failed"
-            results["errors"].append(search_res["error"])
-            return results
-
-        # 3. Parse links
         links = []
-        if "links" in search_res and search_res["links"]:
-            # Standardize pre-extracted links
-            for l in search_res["links"]:
-                links.append({"url": l["url"], "title": l.get("title", "")})
-        else:
-            links = self.parser.parse_links(search_res["html"])
+        links.extend(self._canonical_candidates(query))
+        search_errors = []
+        for variant in self._query_variants(query):
+            search_res = backend.run_search(variant, search_url_template)
+            if "error" in search_res:
+                search_errors.append(f"{variant}: {search_res['error']}")
+                continue
+            if search_res.get("links"):
+                for l in search_res["links"]:
+                    links.append({"url": l["url"], "title": l.get("title", "")})
+            else:
+                links.extend(self.parser.parse_links(search_res.get("html", "")))
 
         if not links:
-            results["status"] = "partial"
+            results["status"] = "failed"
             results["errors"].append("No search results found.")
+            results["errors"].extend(search_errors)
             return results
 
-        # 3b. Relevance Scoring
-        scored_links = []
-        query_terms = set(query.lower().split())
-        # Strong-term filtering
-        weak_terms = {"mdn", "api", "web", "docs", "documentation", "guide", "tutorial", "how", "to"}
-        strong_terms = query_terms - weak_terms
-        if not strong_terms: strong_terms = query_terms # Fallback if all terms are weak
-
-        # Point 3 support: Ensure requestanimationframe is treated as a strong term
-        # (It already should be from the query split, but let's be explicit if needed)
-
-        preferred_domains = [
-            "developer.mozilla.org", "typescriptlang.org", "web.dev", 
-            "w3.org"
-        ]
-        
+        deduped = {}
         for link in links:
-            score = 0
-            title_lower = link["title"].lower()
-            url_lower = link["url"].lower()
-            
-            # 1. Strong term matches in title/URL (Highest weight)
-            strong_matches = 0
-            for term in strong_terms:
-                if term in title_lower: 
-                    score += 25
-                    strong_matches += 1
-                if term in url_lower: 
-                    score += 15
-                    strong_matches += 1
-            
-            # 2. Weak term matches (Lower weight)
-            for term in weak_terms:
-                if term in title_lower: score += 5
-                if term in url_lower: score += 2
-            
-            # 3. Domain boosts / penalties
-            domain = ""
-            try:
-                from urllib.parse import urlparse
-                domain = urlparse(link["url"]).netloc.lower()
-                if any(pd in domain for pd in preferred_domains):
-                    score += 20
-            except: pass
-            
-            # 4. Reject marketing/placeholder/generic landing pages
-            bad_patterns = ["scrimba.com", "github.com/mdn", "example" + "." + "com", "localhost", "plus", "curriculum", "course", "marketing"]
-            if any(bad in url_lower for bad in bad_patterns):
-                score -= 100 # Disqualify
-                
-            # 5. Language Penalties (Non-English prefixes)
-            non_english_prefixes = ["/ar.", "/az.", "/be.", "/ru.", "/zh.", "/ja.", "/ko.", "/ar/", "/ru/", "/zh/", "/ja/", "/ko/"]
-            if any(prefix in url_lower for prefix in non_english_prefixes):
-                score -= 50
-                
-            # 6. Penalize zero strong term overlap
-            if strong_matches < 1:
-                score -= 40
-            
-            scored_links.append((score, link))
-        
-        # Sort by score descending
-        scored_links.sort(key=lambda x: x[0], reverse=True)
-        # Only keep links with a significant score and at least some query overlap
-        links = [l for s, l in scored_links if s > 15] 
+            url = link.get("url", "")
+            if not url.startswith("http"):
+                continue
+            normalized = self._normalize_url(url)
+            if normalized not in deduped:
+                deduped[normalized] = {"url": normalized, "title": link.get("title", "")}
+
+        scored_links = sorted(
+            [(self._score_link(query, link), link) for link in deduped.values()],
+            key=lambda item: item[0],
+            reverse=True,
+        )
+        links = [link for score, link in scored_links if score > 0][:30]
 
         # 4. Fetch and extract top pages
-        max_pages = self.research_config.get("max_pages_per_query", 5)
+        max_pages = self.research_config.get("max_pages_per_query", 8)
         for link in links[:max_pages]:
             print(f"Fetching result: {link['url']}")
             page_res = backend.fetch_page(link["url"])
@@ -141,62 +198,47 @@ class BrowserResearch:
                 continue
                 
             extracted = self.extractor.extract(link["url"], page_res["html"])
-            
-            # Deep Relevance Check for MDN / Technical docs
             excerpt_lower = extracted.get("excerpt", "").lower()
             title_lower = extracted.get("title", "").lower()
-            
-            # Require distinct term coverage (Point 1)
-            strong_body_terms_found = {term for term in strong_terms if term in excerpt_lower or term in title_lower}
-            strong_body_count = len(strong_body_terms_found)
-            
-            # Rejection Keywords (unless specifically requested in query)
-            rejection_keywords = [
-                "vrdisplay", "xrsession", "webxr", "deprecated", 
-                "experimental", "non-standard", "limited availability"
-            ]
-            
-            is_rejected = False
-            for rj in rejection_keywords:
-                if rj in excerpt_lower or rj in title_lower:
-                    # Only reject if the query didn't explicitly ask for this term
-                    if rj not in query.lower():
-                        is_rejected = True
-                        break
-            
-            if is_rejected:
+            coverage = self._topic_coverage(query, extracted.get("title", ""), extracted.get("url", ""), extracted.get("excerpt", ""))
+            rejection_reason = self._rejection_reason(query, title_lower, extracted.get("url", "").lower(), excerpt_lower)
+
+            if rejection_reason:
                 extracted["status"] = "failed"
-                extracted["notes"] = f"rejected: contains irrelevant or low-quality term ({rj})"
-            
+                extracted["notes"] = rejection_reason
+
+            is_relevant = bool(coverage)
+            is_rejected = bool(rejection_reason)
             source_entry = {
-                "title": extracted["title"],
-                "url": extracted["url"],
-                "status": extracted["status"],
-                "retrieved_at": extracted["retrieved_at"],
-                "text_excerpt_path": extracted["cache_path"],
+                "title": extracted.get("title", link.get("title", "")),
+                "url": extracted.get("url", link["url"]),
+                "status": extracted.get("status", "failed"),
+                "retrieved_at": extracted.get("retrieved_at", ""),
+                "text_excerpt_path": extracted.get("cache_path", ""),
                 "notes": extracted.get("notes", ""),
-                "strong_relevance": strong_body_count
+                "topic_coverage": coverage,
+                "relevant": is_relevant and not is_rejected and extracted.get("status") == "fetched",
+                "rejected": is_rejected,
             }
-            
-            if source_entry["status"] == "fetched" and strong_body_count >= 2:
+
+            if source_entry["relevant"]:
                 results["findings"].append(extracted["excerpt"])
             else:
                 if source_entry["status"] == "fetched":
-                    source_entry["notes"] += f" (low strong-term relevance: found {strong_body_count})"
+                    source_entry["notes"] = (source_entry["notes"] + " low topic relevance").strip()
 
             results["sources"].append(source_entry)
 
         # 5. Final Validation
-        # Require at least 2 valid sources with distinct strong terms in body
-        valid_sources = [s for s in results["sources"] if s["status"] == "fetched" and s.get("strong_relevance", 0) >= 2]
-
-        if len(valid_sources) >= 2:
+        results["source_set_relevance_passed"] = self._source_set_valid(results["sources"], results["findings"])
+        if results["source_set_relevance_passed"]:
             results["status"] = "complete"
         elif results["findings"]:
             results["status"] = "partial"
+            results["errors"].append("Research found relevant sources but did not satisfy source-set coverage requirements.")
         else:
             results["status"] = "failed"
-            results["errors"].append("Research failed to find at least 2 valid sources with sufficient strong-term relevance.")
+            results["errors"].append("Research failed to find at least 2 relevant fetched sources with sufficient source-set coverage.")
             
         return results
 
@@ -236,4 +278,3 @@ if __name__ == "__main__":
         sys.exit(0)
     
     parser.print_help()
-

@@ -6,6 +6,37 @@ class ArtifactValidator:
     def __init__(self, base_path):
         self.base_path = base_path
 
+    def validate_research_result(self, result):
+        errors = []
+        if result.get("status") != "complete":
+            errors.append(f"Research status is not complete: {result.get('status')}")
+
+        fetched_relevant_sources = [
+            source for source in result.get("sources", [])
+            if source.get("status") == "fetched"
+            and source.get("relevant", True)
+            and not source.get("rejected", False)
+        ]
+        if len(fetched_relevant_sources) < 2:
+            errors.append("Research has fewer than 2 fetched relevant sources.")
+        if len(result.get("findings", [])) < 2:
+            errors.append("Research has fewer than 2 findings.")
+
+        artifact_path = result.get("artifact_path")
+        if not artifact_path:
+            errors.append("Research has no artifact_path.")
+        else:
+            full_artifact_path = artifact_path
+            if not os.path.isabs(full_artifact_path):
+                full_artifact_path = os.path.join(self.base_path, full_artifact_path)
+            if not os.path.exists(full_artifact_path):
+                errors.append(f"Research artifact_path does not exist: {artifact_path}")
+
+        if result.get("source_set_relevance_passed") is not True:
+            errors.append("Research source-set relevance validation failed.")
+
+        return errors
+
     def validate(self, stage, actions, execution_results, validation_rules, state):
         errors = []
         warnings = []
@@ -83,16 +114,11 @@ class ArtifactValidator:
             if not all_research:
                 errors.append("Research was required but not requested or performed.")
             else:
-                success_research = any(
-                    r.get("status") == "complete"
-                    and len(r.get("sources", [])) >= 2
-                    and len(r.get("findings", [])) >= 2
-                    and r.get("artifact_path")
-                    for r in all_research
-                )
+                success_research = any(not self.validate_research_result(r) for r in all_research)
                 
                 if not success_research:
-                    errors.append("Mandatory research failed to meet quality metrics (Status: complete, Sources >= 2, Findings >= 2).")
+                    latest_errors = self.validate_research_result(all_research[-1])
+                    errors.append("Mandatory research failed to meet quality metrics: " + "; ".join(latest_errors))
 
         return {
             "valid": len(errors) == 0,

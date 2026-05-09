@@ -32,17 +32,17 @@ This consolidated skill file contains all core capabilities required for the Des
 
 ---
 
-## 3. Visual Regression Testing
-**Description**: Using browser capabilities to compare UI screenshots across different build states to prevent "UI Drift."
+## 3. Visual Regression Planning
+**Description**: Defining manual visual checks and testable CSS/token criteria to prevent UI drift.
 
 ### Instructions
-1. **Baseline Generation**: Capture "Golden Master" screenshots of key UI states (Main Menu, HUD, Settings).
-2. **Build Comparison**: Run the same sequence on the new build and capture matching screenshots.
-3. **Difference Analysis**: Identify pixel-level differences or layout shifts.
+1. **Baseline Criteria**: Define key UI states and the visual properties that must remain stable.
+2. **Build Comparison Plan**: Specify manual comparison steps and measurable CSS/token criteria.
+3. **Difference Analysis**: Identify likely layout shifts or contrast risks from source context.
 4. **Report**: Categorize changes as "Intended" (Design Update) or "Regressions" (Bugs).
 
 ### Orchestrator Actions
-- **Browser visual audit is currently unavailable.** Producing design specs and testable CSS criteria only. Do not request browser screenshots.
+- **Browser visual checks are currently unavailable.** Producing design specs and testable CSS criteria only. Do not request screenshots.
 
 ---
 
