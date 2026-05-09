@@ -1,6 +1,8 @@
 import os
 import glob
 import sys
+import json
+import shutil
 
 def verify_clean_runtime():
     base_path = os.getcwd()
@@ -62,4 +64,46 @@ def verify_clean_runtime():
                     # Proof Validation
                     if "docs/verification" in path.replace("\\", "/"):
                         if "Status: blocked" in content and "blocked_expected" not in path:
-                            dirty.append(f"Invalid proof artifact 
+                            dirty.append(f"Invalid proof artifact (Status: blocked): {path}")
+                        if "No findings recorded" in content and "blocked_expected" not in path:
+                            dirty.append(f"Invalid proof artifact (Empty findings): {path}")
+            except: pass
+
+    # 3. Allowlist Integrity
+    allowlist_path = os.path.join(base_path, ".agent/orchestrator/command_allowlist.json")
+    if os.path.exists(allowlist_path):
+        with open(allowlist_path, 'r') as f:
+            allowlist = json.load(f)
+            for cmd in allowlist.get("allowed_commands", []):
+                parts = cmd["command"]
+                # Check if the primary executable exists or is in path
+                exe = parts[0].replace("{drive}", "C:")
+                found = os.path.exists(os.path.join(base_path, exe)) or shutil.which(exe)
+                
+                # Resilient check for absolute portable paths
+                if not found and ":" in exe:
+                    basename = os.path.basename(exe)
+                    found = shutil.which(basename)
+                
+                if not found:
+                    dirty.append(f"Allowlisted command executable missing: {exe}")
+                
+                # If it's a relative path to a script in the repo, check its full path
+                if not found and "/" in exe and not ":" in exe:
+                    if not os.path.exists(os.path.join(base_path, exe)):
+                        dirty.append(f"Allowlisted script missing: {exe}")
+
+    if dirty:
+        print("FAIL: Dirty runtime or codebase detected!")
+        for item in dirty:
+            print(f"  {item}")
+        sys.exit(1)
+    
+    print("PASS: Runtime is clean.")
+    return True
+
+if __name__ == "__main__":
+    if verify_clean_runtime():
+        sys.exit(0)
+    else:
+        sys.exit(1)

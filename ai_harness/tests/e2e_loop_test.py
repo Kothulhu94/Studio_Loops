@@ -47,20 +47,30 @@ class TestFullLoop(unittest.TestCase):
         }
         
         # 2. Researcher Response
-        res_response = {
+        # 2a. Researcher Response (Pass 1: Request Research)
+        res_response_1 = {
+            "actions": {
+                "stage": "researcher",
+                "status": "blocked",
+                "summary": "Requesting research on Pattern A",
+                "research_requests": [{"query": "pattern A", "reason": "Implementation detail"}]
+            }
+        }
+        
+        # 2b. Researcher Response (Pass 2: Complete)
+        res_response_2 = {
             "actions": {
                 "stage": "researcher",
                 "status": "complete",
-                "summary": "Research for Feature X",
+                "summary": "Research complete for Feature X",
                 "writes": [
-                    {"path": ".agent/Loop_Flow/implement_feature_x_blueprint.md", "content": "\n# Technical Audit\nUse patterns A and B.\n# Implementation Blueprint\nSteps...\n# Context Pruning Map\nMap...\n# Implementation Checklist\n- [ ] Task 1\n", "mode": "append"},
+                    {"path": ".agent/Loop_Flow/implement_feature_x_blueprint.md", "content": "# Technical Audit\nUse patterns A and B.\n# Implementation Blueprint\nSteps...\n# Context Pruning Map\nMap...\n# Implementation Checklist\n- [ ] Task 1\n", "mode": "append"},
                     {"path": ".agent/Loop_Flow/context_map.json", "content": "{}"}
                 ],
                 "artifacts": [
                     {"name": ".agent/Loop_Flow/implement_feature_x_blueprint.md", "type": "blueprint"},
                     {"name": ".agent/Loop_Flow/context_map.json", "type": "context_map"}
-                ],
-                "research_requests": [{"query": "pattern A", "reason": "Implementation detail"}]
+                ]
             }
         }
         
@@ -92,8 +102,8 @@ class TestFullLoop(unittest.TestCase):
         # Sequence of model responses
         self.orchestrator.client.call.side_effect = [
             f"Thinking...\nACTIONS_JSON:\n{json.dumps(cp_response['actions'])}",
-            f"Thinking...\nACTIONS_JSON:\n{json.dumps(res_response['actions'])}",
-            f"Thinking...\nACTIONS_JSON:\n{json.dumps(res_response['actions'])}", # Second pass after research
+            f"Thinking...\nACTIONS_JSON:\n{json.dumps(res_response_1['actions'])}",
+            f"Thinking...\nACTIONS_JSON:\n{json.dumps(res_response_2['actions'])}", 
             f"Thinking...\nACTIONS_JSON:\n{json.dumps(dev_response['actions'])}",
             f"Thinking...\nACTIONS_JSON:\n{json.dumps(qa_response['actions'])}"
         ]
@@ -103,8 +113,8 @@ class TestFullLoop(unittest.TestCase):
             "status": "complete",
             "query": "pattern A",
             "findings": ["Pattern A found"],
-            "sources": [{"title": "Source A", "url": "http://a.com", "status": "fetched"}],
-            "artifact_path": ".agent/Loop_Flow/research/latest_pattern_a_research_brief.md"
+            "sources": [{"title": "Source A", "url": "https://developer.mozilla.org/docs/Web/API/Canvas_API", "status": "fetched"}],
+            "artifact_path": os.path.join(self.base_dir, ".agent/Loop_Flow/research/latest_pattern_a_research_brief.md")
         }
         
         # Mock test runner to succeed

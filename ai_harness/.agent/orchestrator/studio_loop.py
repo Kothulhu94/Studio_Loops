@@ -217,12 +217,13 @@ class StudioLoopOrchestrator:
             self.state_store.set_current_stage(next_stage)
             
             # Trigger hook
-            self.hooks.trigger("after_transition", {
-                "slug": state.get("feature_slug"),
-                "stage": stage_name,
-                "state": state,
-                "next_stage": next_stage
-            })
+            if state:
+                self.hooks.trigger("after_transition", {
+                    "slug": state.get("feature_slug"),
+                    "stage": stage_name,
+                    "state": state,
+                    "next_stage": next_stage
+                })
             
             return True
 

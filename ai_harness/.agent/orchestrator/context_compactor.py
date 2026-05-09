@@ -8,6 +8,8 @@ class ContextCompactor:
         self.memory_dir = os.path.join(self.workspace_root, ".agent/Loop_Flow/context_packs")
 
     def compact(self, feature_slug, stage, state):
+        if not state or not feature_slug:
+            return None
         os.makedirs(self.memory_dir, exist_ok=True)
         
         # 1. Generate Stage Summary
