@@ -6,6 +6,7 @@ import sys
 
 
 PROOF_PATH = os.path.join("docs", "verification", "browser_research_mdn_requestanimationframe.md")
+BUNDLE_PATH = "ai_harness_bundle.txt"
 
 RUNTIME_PATTERNS = [
     ".agent/Loop_Flow/*.md",
@@ -34,20 +35,31 @@ PROOF_FORBIDDEN = [
 ]
 
 MOJIBAKE_MARKERS = [
-    "�",
-    "Ã",
-    "Â",
-    "â€",
-    "â€™",
-    "â€œ",
-    "â€",
-    "â€”",
-    "â€“",
-    "ðŸ",
-    "Ø",
-    "Ù",
-    "Ð",
-    "Ñ",
+    "\ufffd",
+    "\u00c3",
+    "\u00c2",
+    "\u00e2\u20ac",
+    "\u00e2\u20ac\u2122",
+    "\u00e2\u20ac\u0153",
+    "\u00e2\u20ac\u009d",
+    "\u00e2\u20ac\u201d",
+    "\u00e2\u20ac\u201c",
+    "\u00f0\u0178",
+    "\u00d8",
+    "\u00d9",
+    "\u00d0",
+    "\u00d1",
+]
+
+NON_ASCII_PUNCTUATION = [
+    "\u2018",
+    "\u2019",
+    "\u201c",
+    "\u201d",
+    "\u2014",
+    "\u2013",
+    "\u2026",
+    "\u00a0",
 ]
 
 PROOF_REQUIRED = [
@@ -71,7 +83,7 @@ PRODUCTION_FORBIDDEN = [
 
 
 def _read_text(path):
-    with open(path, "r", encoding="utf-8", errors="ignore") as handle:
+    with open(path, "r", encoding="utf-8", errors="replace") as handle:
         return handle.read()
 
 
@@ -83,14 +95,15 @@ def _verify_runtime_clean(base_path, dirty):
     live_research = glob.glob(os.path.join(base_path, ".agent/Loop_Flow/research/*_research_brief.md"))
     for pattern in RUNTIME_PATTERNS:
         for match in glob.glob(os.path.join(base_path, pattern), recursive=True):
-            if not _is_gitkeep(match):
-                rel = os.path.relpath(match, base_path).replace("\\", "/")
-                if live_research and (
-                    rel.startswith(".agent/Loop_Flow/research/")
-                    or rel.startswith(".agent/logs/research/cache/")
-                ):
-                    continue
-                dirty.append(f"Generated runtime artifact remains: {match}")
+            if _is_gitkeep(match):
+                continue
+            rel = os.path.relpath(match, base_path).replace("\\", "/")
+            if live_research and (
+                rel.startswith(".agent/Loop_Flow/research/")
+                or rel.startswith(".agent/logs/research/cache/")
+            ):
+                continue
+            dirty.append(f"Generated runtime artifact remains: {match}")
 
 
 def _verify_proof(base_path, dirty):
@@ -118,7 +131,25 @@ def _verify_proof(base_path, dirty):
 
     for marker in MOJIBAKE_MARKERS:
         if marker in content:
-            dirty.append(f"Proof contains mojibake marker: {marker}")
+            dirty.append(f"Proof contains mojibake marker: {marker.encode('unicode_escape').decode('ascii')}")
+
+    for marker in NON_ASCII_PUNCTUATION:
+        if marker in content:
+            dirty.append(f"Proof contains non-ASCII punctuation: {marker.encode('unicode_escape').decode('ascii')}")
+
+
+def _verify_bundle(base_path, dirty):
+    bundle = os.path.join(base_path, BUNDLE_PATH)
+    if not os.path.exists(bundle):
+        return
+
+    content = _read_text(bundle)
+    for marker in MOJIBAKE_MARKERS:
+        if marker in content:
+            dirty.append(f"Bundle contains mojibake marker: {marker.encode('unicode_escape').decode('ascii')}")
+    for marker in NON_ASCII_PUNCTUATION:
+        if marker in content:
+            dirty.append(f"Bundle contains non-ASCII punctuation: {marker.encode('unicode_escape').decode('ascii')}")
 
 
 def _iter_production_text_files(base_path):
@@ -131,7 +162,7 @@ def _iter_production_text_files(base_path):
         if not os.path.isdir(full):
             continue
         for dirpath, dirnames, filenames in os.walk(full):
-            dirnames[:] = [d for d in dirnames if d != "__pycache__"]
+            dirnames[:] = [dirname for dirname in dirnames if dirname != "__pycache__"]
             for filename in filenames:
                 if filename.endswith((".md", ".py", ".json", ".txt")):
                     yield os.path.join(dirpath, filename)
@@ -170,10 +201,10 @@ def _verify_allowlist_targets(base_path, dirty):
         allowlist = json.load(handle)
 
     drive = os.path.splitdrive(base_path)[0] or "C:"
-    for cmd in allowlist.get("allowed_commands", []):
-        command_parts = cmd.get("command", [])
+    for command in allowlist.get("allowed_commands", []):
+        command_parts = command.get("command", [])
         if not command_parts:
-            dirty.append(f"Allowlisted command has no command parts: {cmd.get('name')}")
+            dirty.append(f"Allowlisted command has no command parts: {command.get('name')}")
             continue
         exe = command_parts[0].replace("{drive}", drive)
         if not (os.path.exists(exe) or shutil.which(exe) or shutil.which(os.path.basename(exe))):
@@ -191,6 +222,7 @@ def verify_clean_runtime():
 
     _verify_runtime_clean(base_path, dirty)
     _verify_proof(base_path, dirty)
+    _verify_bundle(base_path, dirty)
     _verify_production_terms(base_path, dirty)
     _verify_allowlist_targets(base_path, dirty)
 

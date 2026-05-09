@@ -10,13 +10,13 @@ python .agent/orchestrator/studio_loop.py auto "Describe task here"
 
 Runtime folders:
 
-* `.agent/orchestrator/` — controller and tools
-* `.agent/workflows/` — role instructions
-* `.agent/skills/` — role skill packs
-* `.agent/state/` — active state
-* `.agent/Loop_Flow/` — artifacts/context packs
-* `.agent/logs/` — model, command, patch, validation logs
-* `tools/` — local helper scripts
+* `.agent/orchestrator/` - controller and tools
+* `.agent/workflows/` - role instructions
+* `.agent/skills/` - role skill packs
+* `.agent/state/` - active state
+* `.agent/Loop_Flow/` - artifacts/context packs
+* `.agent/logs/` - model, command, patch, validation logs
+* `tools/` - local helper scripts
 
 This project uses local models and a machine-readable JSON protocol at runtime.
 

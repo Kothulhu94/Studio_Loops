@@ -3,6 +3,25 @@ import json
 from datetime import datetime
 from browser_research import BrowserResearch
 
+ASCII_REPLACEMENTS = {
+    "\u2019": "'",
+    "\u2018": "'",
+    "\u201c": '"',
+    "\u201d": '"',
+    "\u2014": "-",
+    "\u2013": "-",
+    "\u2026": "...",
+    "\u00a0": " ",
+}
+
+
+def normalize_ascii_text(value):
+    text = str(value)
+    for source, replacement in ASCII_REPLACEMENTS.items():
+        text = text.replace(source, replacement)
+    return text
+
+
 class ResearchClient:
     """Research client for the Studio Loop Orchestrator. 
     Uses local Playwright browser automation for web research.
@@ -45,13 +64,13 @@ class ResearchClient:
         return research_data
 
     def generate_artifact(self, research_data):
-        query = research_data.get('query', 'Unknown')
-        status = research_data.get('status', 'complete')
+        query = normalize_ascii_text(research_data.get('query', 'Unknown'))
+        status = normalize_ascii_text(research_data.get('status', 'complete'))
         
         content = f"# Research Brief: {query}\n\n"
         content += f"## Status\n{status}\n\n"
         content += f"## Query\n{query}\n\n"
-        content += f"## Reason\n{research_data.get('reason', 'N/A')}\n\n"
+        content += f"## Reason\n{normalize_ascii_text(research_data.get('reason', 'N/A'))}\n\n"
         
         content += "## Sources\n\n"
         content += "| Title | URL | Status | Retrieved | Notes |\n"
@@ -64,17 +83,17 @@ class ResearchClient:
             ]
         for src in sources:
             coverage = ", ".join(src.get("topic_coverage", []))
-            notes = src.get("notes", "")
+            notes = normalize_ascii_text(src.get("notes", ""))
             if coverage:
                 notes = f"{notes} coverage: {coverage}".strip()
-            title = str(src.get("title", "")).replace("|", "\\|")
-            url = str(src.get("url", "")).replace("|", "%7C")
+            title = normalize_ascii_text(src.get("title", "")).replace("|", "\\|")
+            url = normalize_ascii_text(src.get("url", "")).replace("|", "%7C")
             content += f"| {title} | {url} | {src.get('status', 'unknown')} | {src.get('retrieved_at', 'N/A')} | {notes.replace('|', '/')} |\n"
         
         content += "\n## Extracted Findings\n\n"
         if research_data.get("findings"):
             for finding in research_data["findings"]:
-                content += f"### Finding\n{finding}\n\n"
+                content += f"### Finding\n{normalize_ascii_text(finding)}\n\n"
         else:
             content += "No findings recorded.\n"
         

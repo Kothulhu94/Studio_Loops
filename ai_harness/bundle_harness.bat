@@ -7,7 +7,7 @@ echo ============================================================
 echo.
 echo Packaging all harness files into ai_harness_bundle.txt...
 echo.
-powershell -NoProfile -ExecutionPolicy Bypass -Command "iex ((Get-Content '%~f0' | Out-String))"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "iex (Get-Content -LiteralPath '%~f0' -Raw -Encoding UTF8)"
 echo.
 echo ============================================================
 echo   SUCCESS: ai_harness_bundle.txt has been created.
@@ -17,9 +17,28 @@ pause
 exit /b
 #>
 
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $outfile = "ai_harness_bundle.txt"
 $exclude = @("logs", "bin", ".git", "node_modules", "__pycache__")
 $extensions = @(".json", ".md", ".py", ".bat", ".ps1", ".txt", ".yml", ".yaml", ".sh", ".skill", ".workflow")
+
+function Normalize-AsciiText([string]$text) {
+    if ($null -eq $text) { return "" }
+    $text = $text.Replace([string][char]0x2018, "'")
+    $text = $text.Replace([string][char]0x2019, "'")
+    $text = $text.Replace([string][char]0x201C, '"')
+    $text = $text.Replace([string][char]0x201D, '"')
+    $text = $text.Replace([string][char]0x2014, "-")
+    $text = $text.Replace([string][char]0x2013, "-")
+    $text = $text.Replace([string][char]0x2026, "...")
+    $text = $text.Replace([string][char]0x00A0, " ")
+    return $text
+}
+
+function Add-BundleText([string]$text) {
+    $normalized = Normalize-AsciiText $text
+    [System.IO.File]::AppendAllText((Resolve-Path $outfile), $normalized + [Environment]::NewLine, $OutputEncoding)
+}
 
 $files = Get-ChildItem -Path . -Recurse -File | Where-Object {
     $path = $_.FullName
@@ -37,7 +56,7 @@ $files = Get-ChildItem -Path . -Recurse -File | Where-Object {
 }
 
 $header = "AI HARNESS COMPLETE BUNDLE - Generated on $(Get-Date)"
-$header | Out-File -FilePath $outfile -Encoding utf8
+[System.IO.File]::WriteAllText((Join-Path (Get-Location) $outfile), $header + [Environment]::NewLine, $OutputEncoding)
 
 $total = $files.Count
 $count = 0
@@ -49,15 +68,16 @@ foreach ($file in $files) {
     
     Write-Host "[$count/$total] Adding $relPath" -ForegroundColor Cyan
     
-    "--------------------------------------------------------------------------------" | Out-File -FilePath $outfile -Append -Encoding utf8
-    "FILE: $relPath" | Out-File -FilePath $outfile -Append -Encoding utf8
-    "--------------------------------------------------------------------------------" | Out-File -FilePath $outfile -Append -Encoding utf8
+    Add-BundleText "--------------------------------------------------------------------------------"
+    Add-BundleText "FILE: $relPath"
+    Add-BundleText "--------------------------------------------------------------------------------"
     
     try {
-        Get-Content $file.FullName -Raw | Out-File -FilePath $outfile -Append -Encoding utf8
+        $content = [System.IO.File]::ReadAllText($file.FullName, [System.Text.Encoding]::UTF8)
+        Add-BundleText $content
     } catch {
-        "ERROR: Could not read file content." | Out-File -FilePath $outfile -Append -Encoding utf8
+        Add-BundleText "ERROR: Could not read file content."
     }
     
-    "`n`n" | Out-File -FilePath $outfile -Append -Encoding utf8
+    Add-BundleText "`n"
 }

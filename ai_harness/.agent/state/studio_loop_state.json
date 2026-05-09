@@ -11,6 +11,7 @@
   "research_briefs": [],
   "research_results": [],
   "research_request_history": [],
+  "research_duplicate_warnings": {},
   "writes": [],
   "patches": [],
   "commands": [],
@@ -25,5 +26,5 @@
   "last_transition": null,
   "capabilities": {},
   "created_at": null,
-  "updated_at": "2026-05-09T13:28:15.799078"
+  "updated_at": "2026-05-09T14:36:46.275629"
 }

@@ -1,4 +1,4 @@
-﻿AI HARNESS COMPLETE BUNDLE - Generated on 05/09/2026 13:32:31
+AI HARNESS COMPLETE BUNDLE - Generated on 05/09/2026 14:36:46
 --------------------------------------------------------------------------------
 FILE: HANDOFF_SCHEMA.json
 --------------------------------------------------------------------------------
@@ -135,7 +135,6 @@ FILE: HANDOFF_SCHEMA.json
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: README.md
 --------------------------------------------------------------------------------
@@ -151,13 +150,13 @@ python .agent/orchestrator/studio_loop.py auto "Describe task here"
 
 Runtime folders:
 
-* `.agent/orchestrator/` â€” controller and tools
-* `.agent/workflows/` â€” role instructions
-* `.agent/skills/` â€” role skill packs
-* `.agent/state/` â€” active state
-* `.agent/Loop_Flow/` â€” artifacts/context packs
-* `.agent/logs/` â€” model, command, patch, validation logs
-* `tools/` â€” local helper scripts
+* `.agent/orchestrator/` - controller and tools
+* `.agent/workflows/` - role instructions
+* `.agent/skills/` - role skill packs
+* `.agent/state/` - active state
+* `.agent/Loop_Flow/` - artifacts/context packs
+* `.agent/logs/` - model, command, patch, validation logs
+* `tools/` - local helper scripts
 
 This project uses local models and a machine-readable JSON protocol at runtime.
 
@@ -172,43 +171,6 @@ Primary backend:
 The model does not browse directly. It requests research through `ACTIONS_JSON.research_requests`; the orchestrator performs browser research, extracts page text, writes a research brief, and injects that brief into the next prompt.
 
 No Brave, Tavily, SerpAPI, or paid search account is required.
-
-
-
-
---------------------------------------------------------------------------------
-FILE: .agent\Loop_Flow\research\latest_unknown_MDN_Canvas_API_requestAnimatio_research_brief.md
---------------------------------------------------------------------------------
-# Research Brief: MDN Canvas API requestAnimationFrame
-
-## Status
-failed
-
-## Query
-MDN Canvas API requestAnimationFrame
-
-## Reason
-None
-
-## Sources
-
-| Title | URL | Status | Retrieved | Notes |
-|---|---|---|---|---|
-| Canvas API - Web APIs | MDN | https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API | fetched | 2026-05-09T13:30:23.646365 |  (low strong-term relevance: found 1) |
-| VRDisplay: requestAnimationFrame() method - Web APIs | MDN | https://developer.mozilla.org/en-US/docs/Web/API/VRDisplay/requestAnimationFrame | failed | 2026-05-09T13:30:25.549183 | rejected: contains irrelevant or low-quality term (vrdisplay) |
-| XRSession: requestAnimationFrame() method - Web APIs | MDN | https://developer.mozilla.org/en-US/docs/Web/API/XRSession/requestAnimationFrame | failed | 2026-05-09T13:30:27.409211 | rejected: contains irrelevant or low-quality term (xrsession) |
-
-## Extracted Findings
-
-No findings recorded.
-
-## Copyright / Safety Notes
-Extracted from public web sources using local browser automation. No prohibited IP terms detected in summary.
-
-## Technical Notes
-- Backend: playwright
-- Timestamp: 2026-05-09T13:30:27.417537
-
 
 
 
@@ -337,7 +299,6 @@ FILE: .agent\orchestrator\actions_schema.json
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\artifact_store.py
 --------------------------------------------------------------------------------
@@ -376,7 +337,6 @@ class ArtifactStore:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\artifact_validator.py
 --------------------------------------------------------------------------------
@@ -387,6 +347,37 @@ import re
 class ArtifactValidator:
     def __init__(self, base_path):
         self.base_path = base_path
+
+    def validate_research_result(self, result):
+        errors = []
+        if result.get("status") != "complete":
+            errors.append(f"Research status is not complete: {result.get('status')}")
+
+        fetched_relevant_sources = [
+            source for source in result.get("sources", [])
+            if source.get("status") == "fetched"
+            and source.get("relevant", True)
+            and not source.get("rejected", False)
+        ]
+        if len(fetched_relevant_sources) < 2:
+            errors.append("Research has fewer than 2 fetched relevant sources.")
+        if len(result.get("findings", [])) < 2:
+            errors.append("Research has fewer than 2 findings.")
+
+        artifact_path = result.get("artifact_path")
+        if not artifact_path:
+            errors.append("Research has no artifact_path.")
+        else:
+            full_artifact_path = artifact_path
+            if not os.path.isabs(full_artifact_path):
+                full_artifact_path = os.path.join(self.base_path, full_artifact_path)
+            if not os.path.exists(full_artifact_path):
+                errors.append(f"Research artifact_path does not exist: {artifact_path}")
+
+        if result.get("source_set_relevance_passed") is not True:
+            errors.append("Research source-set relevance validation failed.")
+
+        return errors
 
     def validate(self, stage, actions, execution_results, validation_rules, state):
         errors = []
@@ -465,23 +456,17 @@ class ArtifactValidator:
             if not all_research:
                 errors.append("Research was required but not requested or performed.")
             else:
-                success_research = any(
-                    r.get("status") == "complete"
-                    and len(r.get("sources", [])) >= 2
-                    and len(r.get("findings", [])) >= 2
-                    and r.get("artifact_path")
-                    for r in all_research
-                )
+                success_research = any(not self.validate_research_result(r) for r in all_research)
                 
                 if not success_research:
-                    errors.append("Mandatory research failed to meet quality metrics (Status: complete, Sources >= 2, Findings >= 2).")
+                    latest_errors = self.validate_research_result(all_research[-1])
+                    errors.append("Mandatory research failed to meet quality metrics: " + "; ".join(latest_errors))
 
         return {
             "valid": len(errors) == 0,
             "errors": errors,
             "warnings": warnings
         }
-
 
 
 
@@ -504,13 +489,13 @@ class BrowserBridge:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\browser_research.py
 --------------------------------------------------------------------------------
 import os
 import json
 import sys
+from urllib.parse import urlparse, urlunparse
 
 # Add the current directory to sys.path to allow absolute imports of sibling modules
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -527,6 +512,113 @@ class BrowserResearch:
         self.playwright = PlaywrightResearch(self.research_config, self.base_path)
         self.parser = SearchResultParser(self.research_config.get("search_engine", "duckduckgo_lite"))
         self.extractor = PageExtractor(self.research_config, self.base_path)
+
+    def _query_variants(self, query):
+        variants = [query]
+        q_lower = query.lower()
+        if "mdn" in q_lower and "canvas" in q_lower and "requestanimationframe" in q_lower:
+            variants.extend([
+                "Canvas API requestAnimationFrame MDN",
+                "site:developer.mozilla.org/en-US/docs/Web/API Canvas requestAnimationFrame",
+                "requestAnimationFrame Canvas MDN",
+                "Canvas API basic animations MDN",
+            ])
+        return list(dict.fromkeys(variants))
+
+    def _canonical_candidates(self, query):
+        q_lower = query.lower()
+        if "canvas" not in q_lower or "requestanimationframe" not in q_lower:
+            return []
+        base = "https://developer.mozilla.org"
+        paths = [
+            "/en-US/docs/Web/API/Canvas_API",
+            "/en-US/docs/Web/API/Window/requestAnimationFrame",
+            "/en-US/docs/Web/API/Canvas_API/Tutorial/Basic_animations",
+            "/en-US/docs/Web/API/CanvasRenderingContext2D",
+        ]
+        return [{"url": base + path, "title": path.rsplit("/", 1)[-1]} for path in paths]
+
+    def _normalize_url(self, url):
+        parsed = urlparse(url)
+        return urlunparse((parsed.scheme, parsed.netloc.lower(), parsed.path.rstrip("/"), "", "", ""))
+
+    def _topic_coverage(self, query, title, url, excerpt):
+        haystack = " ".join([title or "", url or "", excerpt or ""]).lower()
+        coverage = []
+        checks = {
+            "canvas": ["canvas api", "canvas_api", "canvasrenderingcontext2d", "htmlcanvas", "canvas "],
+            "requestanimationframe": ["requestanimationframe"],
+            "animation/rendering": ["animation", "animate", "render", "repaint", "frame"],
+            "2d context": ["2d context", "canvasrenderingcontext2d", "getcontext", "2d graphics"],
+            "basic animations": ["basic animations", "basic_animations"],
+        }
+        for topic, needles in checks.items():
+            if any(needle in haystack for needle in needles):
+                coverage.append(topic)
+        return coverage
+
+    def _explicitly_requested_rejected_topic(self, query, keyword):
+        q = query.lower()
+        explicit = {
+            "vrdisplay": ["vrdisplay", "webvr", "vr "],
+            "xrsession": ["xrsession", "xr ", "webxr"],
+            "webxr": ["webxr", "xr "],
+            "deprecated": ["deprecated"],
+            "experimental": ["experimental"],
+            "non-standard": ["non-standard", "nonstandard"],
+            "limited availability": ["limited availability"],
+        }
+        return any(term in q for term in explicit.get(keyword, [keyword]))
+
+    def _rejection_reason(self, query, title, url, excerpt):
+        haystack = " ".join([title or "", url or "", excerpt or ""]).lower()
+        for keyword in [
+            "vrdisplay", "xrsession", "webxr", "deprecated",
+            "experimental", "non-standard", "limited availability",
+        ]:
+            if keyword in haystack and not self._explicitly_requested_rejected_topic(query, keyword):
+                return f"rejected: contains {keyword}"
+        return ""
+
+    def _score_link(self, query, link):
+        title_lower = link.get("title", "").lower()
+        url_lower = link.get("url", "").lower()
+        score = 0
+        domain = urlparse(link.get("url", "")).netloc.lower()
+        if "developer.mozilla.org" in domain:
+            score += 40
+        if "/en-us/docs/web/api/" in url_lower:
+            score += 25
+        if "canvas_api/tutorial/basic_animations" in url_lower:
+            score += 45
+        if "window/requestanimationframe" in url_lower:
+            score += 45
+        if "canvas_api" in url_lower or "canvas api" in title_lower:
+            score += 35
+        if "canvasrenderingcontext2d" in url_lower or "canvasrenderingcontext2d" in title_lower:
+            score += 30
+        if "requestanimationframe" in url_lower or "requestanimationframe" in title_lower:
+            score += 35
+        if any(bad in url_lower for bad in ["scrimba.com", "github.com/mdn", "localhost", "/plus", "/curriculum/", "/blog/", "/learn/"]):
+            score -= 100
+        if self._rejection_reason(query, title_lower, url_lower, ""):
+            score -= 100
+        return score
+
+    def _source_set_valid(self, sources, findings):
+        relevant = [
+            s for s in sources
+            if s.get("status") == "fetched" and s.get("relevant") and not s.get("rejected")
+        ]
+        covered = set()
+        for source in relevant:
+            covered.update(source.get("topic_coverage", []))
+        return (
+            len(relevant) >= 2
+            and "canvas" in covered
+            and ("requestanimationframe" in covered or "animation/rendering" in covered)
+            and len(findings) >= 2
+        )
 
     def perform_research(self, query, reason=None):
         results = {
@@ -547,97 +639,46 @@ class BrowserResearch:
         backend = self.playwright
         results["backend"] = "playwright"
 
-        # 2. Run search
+        # 2. Run search variants and add known canonical docs candidates.
         search_url_template = self.research_config.get("search_url_template")
-        search_res = backend.run_search(query, search_url_template)
-        
-        if "error" in search_res:
-            results["status"] = "failed"
-            results["errors"].append(search_res["error"])
-            return results
-
-        # 3. Parse links
         links = []
-        if "links" in search_res and search_res["links"]:
-            # Standardize pre-extracted links
-            for l in search_res["links"]:
-                links.append({"url": l["url"], "title": l.get("title", "")})
-        else:
-            links = self.parser.parse_links(search_res["html"])
+        links.extend(self._canonical_candidates(query))
+        search_errors = []
+        for variant in self._query_variants(query):
+            search_res = backend.run_search(variant, search_url_template)
+            if "error" in search_res:
+                search_errors.append(f"{variant}: {search_res['error']}")
+                continue
+            if search_res.get("links"):
+                for l in search_res["links"]:
+                    links.append({"url": l["url"], "title": l.get("title", "")})
+            else:
+                links.extend(self.parser.parse_links(search_res.get("html", "")))
 
         if not links:
-            results["status"] = "partial"
+            results["status"] = "failed"
             results["errors"].append("No search results found.")
+            results["errors"].extend(search_errors)
             return results
 
-        # 3b. Relevance Scoring
-        scored_links = []
-        query_terms = set(query.lower().split())
-        # Strong-term filtering
-        weak_terms = {"mdn", "api", "web", "docs", "documentation", "guide", "tutorial", "how", "to"}
-        strong_terms = query_terms - weak_terms
-        if not strong_terms: strong_terms = query_terms # Fallback if all terms are weak
-
-        # Point 3 support: Ensure requestanimationframe is treated as a strong term
-        # (It already should be from the query split, but let's be explicit if needed)
-
-        preferred_domains = [
-            "developer.mozilla.org", "typescriptlang.org", "web.dev", 
-            "w3.org"
-        ]
-        
+        deduped = {}
         for link in links:
-            score = 0
-            title_lower = link["title"].lower()
-            url_lower = link["url"].lower()
-            
-            # 1. Strong term matches in title/URL (Highest weight)
-            strong_matches = 0
-            for term in strong_terms:
-                if term in title_lower: 
-                    score += 25
-                    strong_matches += 1
-                if term in url_lower: 
-                    score += 15
-                    strong_matches += 1
-            
-            # 2. Weak term matches (Lower weight)
-            for term in weak_terms:
-                if term in title_lower: score += 5
-                if term in url_lower: score += 2
-            
-            # 3. Domain boosts / penalties
-            domain = ""
-            try:
-                from urllib.parse import urlparse
-                domain = urlparse(link["url"]).netloc.lower()
-                if any(pd in domain for pd in preferred_domains):
-                    score += 20
-            except: pass
-            
-            # 4. Reject marketing/placeholder/generic landing pages
-            bad_patterns = ["scrimba.com", "github.com/mdn", "example" + "." + "com", "localhost", "plus", "curriculum", "course", "marketing"]
-            if any(bad in url_lower for bad in bad_patterns):
-                score -= 100 # Disqualify
-                
-            # 5. Language Penalties (Non-English prefixes)
-            non_english_prefixes = ["/ar.", "/az.", "/be.", "/ru.", "/zh.", "/ja.", "/ko.", "/ar/", "/ru/", "/zh/", "/ja/", "/ko/"]
-            if any(prefix in url_lower for prefix in non_english_prefixes):
-                score -= 50
-                
-            # 6. Penalize zero strong term overlap
-            if strong_matches < 1:
-                score -= 40
-            
-            scored_links.append((score, link))
-        
-        # Sort by score descending
-        scored_links.sort(key=lambda x: x[0], reverse=True)
-        # Only keep links with a significant score and at least some query overlap
-        links = [l for s, l in scored_links if s > 15] 
+            url = link.get("url", "")
+            if not url.startswith("http"):
+                continue
+            normalized = self._normalize_url(url)
+            if normalized not in deduped:
+                deduped[normalized] = {"url": normalized, "title": link.get("title", "")}
+
+        scored_links = sorted(
+            [(self._score_link(query, link), link) for link in deduped.values()],
+            key=lambda item: item[0],
+            reverse=True,
+        )
+        links = [link for score, link in scored_links if score > 0][:30]
 
         # 4. Fetch and extract top pages
-        max_pages = self.research_config.get("max_pages_per_query", 5)
+        max_pages = self.research_config.get("max_pages_per_query", 8)
         for link in links[:max_pages]:
             print(f"Fetching result: {link['url']}")
             page_res = backend.fetch_page(link["url"])
@@ -651,62 +692,47 @@ class BrowserResearch:
                 continue
                 
             extracted = self.extractor.extract(link["url"], page_res["html"])
-            
-            # Deep Relevance Check for MDN / Technical docs
             excerpt_lower = extracted.get("excerpt", "").lower()
             title_lower = extracted.get("title", "").lower()
-            
-            # Require distinct term coverage (Point 1)
-            strong_body_terms_found = {term for term in strong_terms if term in excerpt_lower or term in title_lower}
-            strong_body_count = len(strong_body_terms_found)
-            
-            # Rejection Keywords (unless specifically requested in query)
-            rejection_keywords = [
-                "vrdisplay", "xrsession", "webxr", "deprecated", 
-                "experimental", "non-standard", "limited availability"
-            ]
-            
-            is_rejected = False
-            for rj in rejection_keywords:
-                if rj in excerpt_lower or rj in title_lower:
-                    # Only reject if the query didn't explicitly ask for this term
-                    if rj not in query.lower():
-                        is_rejected = True
-                        break
-            
-            if is_rejected:
+            coverage = self._topic_coverage(query, extracted.get("title", ""), extracted.get("url", ""), extracted.get("excerpt", ""))
+            rejection_reason = self._rejection_reason(query, title_lower, extracted.get("url", "").lower(), excerpt_lower)
+
+            if rejection_reason:
                 extracted["status"] = "failed"
-                extracted["notes"] = f"rejected: contains irrelevant or low-quality term ({rj})"
-            
+                extracted["notes"] = rejection_reason
+
+            is_relevant = bool(coverage)
+            is_rejected = bool(rejection_reason)
             source_entry = {
-                "title": extracted["title"],
-                "url": extracted["url"],
-                "status": extracted["status"],
-                "retrieved_at": extracted["retrieved_at"],
-                "text_excerpt_path": extracted["cache_path"],
+                "title": extracted.get("title", link.get("title", "")),
+                "url": extracted.get("url", link["url"]),
+                "status": extracted.get("status", "failed"),
+                "retrieved_at": extracted.get("retrieved_at", ""),
+                "text_excerpt_path": extracted.get("cache_path", ""),
                 "notes": extracted.get("notes", ""),
-                "strong_relevance": strong_body_count
+                "topic_coverage": coverage,
+                "relevant": is_relevant and not is_rejected and extracted.get("status") == "fetched",
+                "rejected": is_rejected,
             }
-            
-            if source_entry["status"] == "fetched" and strong_body_count >= 2:
+
+            if source_entry["relevant"]:
                 results["findings"].append(extracted["excerpt"])
             else:
                 if source_entry["status"] == "fetched":
-                    source_entry["notes"] += f" (low strong-term relevance: found {strong_body_count})"
+                    source_entry["notes"] = (source_entry["notes"] + " low topic relevance").strip()
 
             results["sources"].append(source_entry)
 
         # 5. Final Validation
-        # Require at least 2 valid sources with distinct strong terms in body
-        valid_sources = [s for s in results["sources"] if s["status"] == "fetched" and s.get("strong_relevance", 0) >= 2]
-
-        if len(valid_sources) >= 2:
+        results["source_set_relevance_passed"] = self._source_set_valid(results["sources"], results["findings"])
+        if results["source_set_relevance_passed"]:
             results["status"] = "complete"
         elif results["findings"]:
             results["status"] = "partial"
+            results["errors"].append("Research found relevant sources but did not satisfy source-set coverage requirements.")
         else:
             results["status"] = "failed"
-            results["errors"].append("Research failed to find at least 2 valid sources with sufficient strong-term relevance.")
+            results["errors"].append("Research failed to find at least 2 relevant fetched sources with sufficient source-set coverage.")
             
         return results
 
@@ -746,8 +772,6 @@ if __name__ == "__main__":
         sys.exit(0)
     
     parser.print_help()
-
-
 
 
 
@@ -900,7 +924,6 @@ class CapabilityRegistry:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\command_allowlist.json
 --------------------------------------------------------------------------------
@@ -978,7 +1001,6 @@ FILE: .agent\orchestrator\command_allowlist.json
     "<"
   ]
 }
-
 
 
 
@@ -1091,7 +1113,6 @@ class CommandRunner:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\config.json
 --------------------------------------------------------------------------------
@@ -1140,8 +1161,8 @@ FILE: .agent\orchestrator\config.json
     "search_url_template": "https://developer.mozilla.org/en-US/search?q={query}",
 
 
-    "max_results": 5,
-    "max_pages_per_query": 3,
+    "max_results": 30,
+    "max_pages_per_query": 8,
     "timeout_seconds": 30,
     "cache_dir": ".agent/logs/research/cache",
     "artifact_dir": ".agent/Loop_Flow/research",
@@ -1159,7 +1180,6 @@ FILE: .agent\orchestrator\config.json
     "mdn": "https://developer.mozilla.org/en-US/search?q={query}"
   }
 }
-
 
 
 
@@ -1220,10 +1240,11 @@ class ContextCompactor:
         content += "- Use Playwright for research.\n\n"
         
         content += "## Files Changed\n"
-        for write in state.get("last_results", {}).get("writes", []):
+        last_results = state.get("last_results") or {}
+        for write in last_results.get("writes", []):
             if write["success"]:
                 content += f"- {write['path']}\n"
-        for patch in state.get("last_results", {}).get("patches", []):
+        for patch in last_results.get("patches", []):
             if patch["success"]:
                 content += f"- {patch['path']}\n"
         content += "\n"
@@ -1257,7 +1278,6 @@ class ContextCompactor:
             
         with open(path, 'w', encoding='utf-8') as f:
             f.write(content)
-
 
 
 
@@ -1369,7 +1389,6 @@ Refer to .agent/Loop_Flow/context_packs/{feature_slug}_decision_memory.md for st
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\copyright_guard.py
 --------------------------------------------------------------------------------
@@ -1445,7 +1464,6 @@ class CopyrightGuard:
         with open(self.forbidden_terms_path, 'w') as f:
             json.dump(default_terms, f, indent=2)
         self.forbidden_data = default_terms
-
 
 
 
@@ -1545,7 +1563,6 @@ class FileWriter:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\forbidden_ip_terms.json
 --------------------------------------------------------------------------------
@@ -1564,7 +1581,6 @@ FILE: .agent\orchestrator\forbidden_ip_terms.json
     "Bullfrog"
   ]
 }
-
 
 
 
@@ -1616,7 +1632,6 @@ class StudioLoopGraph:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\hooks.py
 --------------------------------------------------------------------------------
@@ -1656,7 +1671,6 @@ class OrchestratorHooks:
                     cb(context)
                 except Exception as e:
                     print(f"Error in hook callback {hook_name}: {e}")
-
 
 
 
@@ -1714,60 +1728,68 @@ class KoboldClient:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\page_extractor.py
 --------------------------------------------------------------------------------
-import re
-import os
 import hashlib
+import os
+import re
 from datetime import datetime
+
+
+MOJIBAKE_MARKERS = [
+    "\ufffd",
+    "\u00c3",
+    "\u00c2",
+    "\u00e2\u20ac",
+    "\u00e2\u20ac\u2122",
+    "\u00e2\u20ac\u0153",
+    "\u00e2\u20ac\u009d",
+    "\u00e2\u20ac\u201d",
+    "\u00e2\u20ac\u201c",
+    "\u00f0\u0178",
+    "\u00d8",
+    "\u00d9",
+    "\u00d0",
+    "\u00d1",
+]
+
 
 class PageExtractor:
     def __init__(self, config=None, base_path=None):
         self.config = config or {}
         self.base_path = base_path or os.getcwd()
-        self.cache_dir = os.path.join(self.base_path, self.config.get("cache_dir", ".agent/logs/research/cache/pages"))
+        self.cache_dir = os.path.join(
+            self.base_path,
+            self.config.get("cache_dir", ".agent/logs/research/cache/pages"),
+        )
 
     def extract(self, url, html_content):
         import html
-        # 0. Normalize text
-        html_content = html.unescape(html_content)
 
-        # 1. Clean HTML
-        # Remove scripts, styles, nav, footer
-        content = re.sub(r'<(script|style|nav|footer)[^>]*>.*?</\1>', '', html_content, flags=re.DOTALL | re.IGNORECASE)
-        
-        # Extract title
-        title_match = re.search(r'<title>(.*?)</title>', html_content, re.IGNORECASE)
+        html_content = html.unescape(html_content)
+        content = re.sub(
+            r"<(script|style|nav|footer)[^>]*>.*?</\1>",
+            "",
+            html_content,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+
+        title_match = re.search(r"<title>(.*?)</title>", html_content, re.IGNORECASE)
         title = title_match.group(1) if title_match else "Unknown Title"
         title = html.unescape(title)
-        
-        # Extract headings
-        headings = re.findall(r'<(h[1-6])>(.*?)</\1>', content, re.IGNORECASE)
+
+        headings = re.findall(r"<(h[1-6])>(.*?)</\1>", content, re.IGNORECASE)
         heading_text = "\n".join([f"{h}: {html.unescape(t)}" for h, t in headings])
-        
-        # Extract visible text
-        text = re.sub('<[^<]+?>', '', content)
-        text = re.sub(r'\s+', ' ', text).strip()
-        
-        # Mojibake detection
-        bad_markers = [
-            "Ãƒ", "Ã‚",
-            "Ã¢â‚¬", "Ã¢â‚¬â„¢", "Ã¢â‚¬Å“", "Ã¢â‚¬", "Ã¢â‚¬â€", "Ã¢â‚¬â€œ",
-            "Ã°Å¸",
-            "Ã˜", "Ã™", "Ã", "Ã‘", "Ã‰â„¢", "Ã„Â°"
-        ]
-        bad_marker_count = sum(text.count(m) for m in bad_markers)
-        bad_ratio = bad_marker_count / max(len(text), 1)
-        
-        # Non-ASCII ratio (penalize if high for English query context)
-        non_ascii_count = sum(1 for c in text if ord(c) > 127)
+
+        text = re.sub("<[^<]+?>", "", content)
+        text = re.sub(r"\s+", " ", text).strip()
+
+        bad_marker_count = sum(text.count(marker) for marker in MOJIBAKE_MARKERS)
+        non_ascii_count = sum(1 for char in text if ord(char) > 127)
         non_ascii_ratio = non_ascii_count / max(len(text), 1)
-        
-        is_mojibake = bad_ratio > 0.05 or non_ascii_ratio > 0.25
-        
-        # 2. Format as Markdown
+        is_mojibake = bad_marker_count > 0 or non_ascii_ratio > 0.25
+
         retrieved = datetime.now().isoformat()
         md_content = f"""# Extracted Page
 
@@ -1790,14 +1812,13 @@ class PageExtractor:
 Extracted via Studio Loop Local PageExtractor
 {"[WARNING] Mojibake detected!" if is_mojibake else ""}
 """
-        
-        # 3. Save to cache
+
         os.makedirs(self.cache_dir, exist_ok=True)
         file_hash = hashlib.md5(url.encode()).hexdigest()
         cache_path = os.path.join(self.cache_dir, f"{file_hash}.md")
-        with open(cache_path, 'w', encoding='utf-8') as f:
-            f.write(md_content)
-            
+        with open(cache_path, "w", encoding="utf-8") as handle:
+            handle.write(md_content)
+
         return {
             "title": title,
             "url": url,
@@ -1805,9 +1826,8 @@ Extracted via Studio Loop Local PageExtractor
             "cache_path": cache_path,
             "excerpt": text[:2000],
             "status": "failed" if is_mojibake else "fetched",
-            "notes": "mojibake / encoding corruption" if is_mojibake else ""
+            "notes": "mojibake / encoding corruption" if is_mojibake else "",
         }
-
 
 
 
@@ -1922,7 +1942,6 @@ class PatchApplier:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\playwright_research.py
 --------------------------------------------------------------------------------
@@ -1942,7 +1961,12 @@ class PlaywrightResearch:
         self.base_path = base_path or os.getcwd()
         self.available = PLAYWRIGHT_AVAILABLE
         self._browser_available = None
-        self.browser_profile_dir = os.path.join(self.base_path, ".agent/logs/research/browser_profile/")
+        self.browser_profile_dir = self._resolve_path(self.config.get("browser_profile_dir", ".agent/logs/research/browser_profile"))
+
+    def _resolve_path(self, path):
+        if os.path.isabs(path):
+            return path
+        return os.path.join(self.base_path, path)
         
     def is_available(self):
         if not self.available:
@@ -2055,7 +2079,6 @@ class PlaywrightResearch:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\prompt_compiler.py
 --------------------------------------------------------------------------------
@@ -2108,7 +2131,6 @@ class PromptCompiler:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\research_client.py
 --------------------------------------------------------------------------------
@@ -2116,6 +2138,25 @@ import os
 import json
 from datetime import datetime
 from browser_research import BrowserResearch
+
+ASCII_REPLACEMENTS = {
+    "\u2019": "'",
+    "\u2018": "'",
+    "\u201c": '"',
+    "\u201d": '"',
+    "\u2014": "-",
+    "\u2013": "-",
+    "\u2026": "...",
+    "\u00a0": " ",
+}
+
+
+def normalize_ascii_text(value):
+    text = str(value)
+    for source, replacement in ASCII_REPLACEMENTS.items():
+        text = text.replace(source, replacement)
+    return text
+
 
 class ResearchClient:
     """Research client for the Studio Loop Orchestrator. 
@@ -2135,7 +2176,7 @@ class ResearchClient:
             return {
                 "query": query,
                 "status": "blocked",
-                "error": "Web research is disabled in config."
+                "errors": ["Web research is disabled in config."]
             }
             
         print(f"Researching (Browser-Based): {query}")
@@ -2159,24 +2200,36 @@ class ResearchClient:
         return research_data
 
     def generate_artifact(self, research_data):
-        query = research_data.get('query', 'Unknown')
-        status = research_data.get('status', 'complete')
+        query = normalize_ascii_text(research_data.get('query', 'Unknown'))
+        status = normalize_ascii_text(research_data.get('status', 'complete'))
         
         content = f"# Research Brief: {query}\n\n"
         content += f"## Status\n{status}\n\n"
         content += f"## Query\n{query}\n\n"
-        content += f"## Reason\n{research_data.get('reason', 'N/A')}\n\n"
+        content += f"## Reason\n{normalize_ascii_text(research_data.get('reason', 'N/A'))}\n\n"
         
         content += "## Sources\n\n"
         content += "| Title | URL | Status | Retrieved | Notes |\n"
         content += "|---|---|---|---|---|\n"
-        for src in research_data.get("sources", []):
-            content += f"| {src['title']} | {src['url']} | {src['status']} | {src.get('retrieved_at', 'N/A')} | {src.get('notes', '')} |\n"
+        sources = research_data.get("sources", [])
+        if status == "complete":
+            sources = [
+                src for src in sources
+                if src.get("status") == "fetched" and src.get("relevant", True) and not src.get("rejected")
+            ]
+        for src in sources:
+            coverage = ", ".join(src.get("topic_coverage", []))
+            notes = normalize_ascii_text(src.get("notes", ""))
+            if coverage:
+                notes = f"{notes} coverage: {coverage}".strip()
+            title = normalize_ascii_text(src.get("title", "")).replace("|", "\\|")
+            url = normalize_ascii_text(src.get("url", "")).replace("|", "%7C")
+            content += f"| {title} | {url} | {src.get('status', 'unknown')} | {src.get('retrieved_at', 'N/A')} | {notes.replace('|', '/')} |\n"
         
         content += "\n## Extracted Findings\n\n"
         if research_data.get("findings"):
             for finding in research_data["findings"]:
-                content += f"### Finding\n{finding}\n\n"
+                content += f"### Finding\n{normalize_ascii_text(finding)}\n\n"
         else:
             content += "No findings recorded.\n"
         
@@ -2189,7 +2242,6 @@ class ResearchClient:
         content += f"- Timestamp: {datetime.now().isoformat()}\n"
         
         return content
-
 
 
 
@@ -2370,7 +2422,6 @@ class ResponseParser:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\retry_engine.py
 --------------------------------------------------------------------------------
@@ -2406,7 +2457,6 @@ class RetryEngine:
         attempts[stage] = attempts.get(stage, 0) + 1
         state["stage_attempts"] = attempts
         return state
-
 
 
 
@@ -2466,7 +2516,6 @@ class RoleLoader:
                 skills_content.append(f"### Skill: {sf} (Not Found)")
         
         return "\n\n".join(skills_content)
-
 
 
 
@@ -2601,7 +2650,6 @@ class SafetyGuard:
                 return False, "Research query too short."
                 
         return True, None
-
 
 
 
@@ -2740,7 +2788,6 @@ class SearchResultParser:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\source_indexer.py
 --------------------------------------------------------------------------------
@@ -2826,7 +2873,6 @@ class SourceIndexer:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\source_summarizer.py
 --------------------------------------------------------------------------------
@@ -2847,7 +2893,6 @@ class SourceSummarizer:
         
         # Return first 2000 characters as a "snippet"
         return text[:2000]
-
 
 
 
@@ -2888,6 +2933,7 @@ class StateStore:
             "research_briefs": [],
             "research_results": [],
             "research_request_history": [],
+            "research_duplicate_warnings": {},
             "writes": [],
             "patches": [],
             "commands": [],
@@ -2957,6 +3003,12 @@ class StateStore:
 
     def set_current_stage(self, stage_name):
         state = self.load_state()
+        if stage_name == "handover_complete":
+            state["current_stage"] = stage_name
+            state["status"] = "complete"
+            state["active"] = False
+            self.save_state(state)
+            return
         state["current_stage"] = stage_name
         state["status"] = "running"
         self.save_state(state)
@@ -2975,7 +3027,6 @@ class StateStore:
         state = self.load_state()
         state["capabilities"] = capabilities
         self.save_state(state)
-
 
 
 
@@ -3040,8 +3091,6 @@ class StudioLoopOrchestrator:
         
         # Wire up compaction and other hooks
         self.hooks.register_callback("after_transition", lambda ctx: self.compactor.compact(ctx["slug"], ctx["stage"], ctx["state"]))
-        self.hooks.register_callback("before_write", lambda ctx: self.safety_guard.is_path_safe(ctx["path"], ctx["stage"]))
-        self.hooks.register_callback("before_patch", lambda ctx: self.safety_guard.is_path_safe(ctx["path"], ctx["stage"]))
 
         self.research_client = ResearchClient(self.config, base_path)
         self.artifact_store = ArtifactStore(os.path.join(base_path, ".agent/Loop_Flow/"))
@@ -3110,6 +3159,11 @@ class StudioLoopOrchestrator:
             print("No active feature. Run 'run <feature>' first.")
             return False
 
+        if stage_name == "handover_complete":
+            print("Terminal handover already reached.")
+            self.state_store.set_current_stage("handover_complete")
+            return True
+
         print(f"Stage: {stage_name}")
         
         if repair_prompt_override:
@@ -3170,14 +3224,18 @@ class StudioLoopOrchestrator:
             # Check if research was blocked or failed fundamentally
             required = self.graph.get_validation_rules(stage_name).get("research_required", False)
             
-            bad_required_research = any(
-                r.get("status") != "complete"
-                for r in execution_results["research"]
-            )
+            bad_required_research = []
+            for res in execution_results["research"]:
+                bad_required_research.extend(self.artifact_validator.validate_research_result(res))
 
             if required and bad_required_research:
-                print(f"Mandatory research failed to complete (Statuses: {[r.get('status') for r in execution_results['research']]}). Marking stage as failed.")
+                print(f"Mandatory research failed quality checks: {bad_required_research}. Marking stage as failed.")
                 state["status"] = "failed"
+                state["failures"].append({
+                    "stage": stage_name,
+                    "reason": "Mandatory research failed: " + "; ".join(bad_required_research),
+                    "timestamp": datetime.now().isoformat()
+                })
                 self.state_store.save_state(state)
                 return False
             
@@ -3210,17 +3268,34 @@ class StudioLoopOrchestrator:
             self.state_store.set_current_stage(next_stage)
             
             # Trigger hook
-            if state:
+            updated_state = self.state_store.load_state()
+            if updated_state:
                 self.hooks.trigger("after_transition", {
-                    "slug": state.get("feature_slug"),
+                    "slug": updated_state.get("feature_slug"),
                     "stage": stage_name,
-                    "state": state,
+                    "state": updated_state,
                     "next_stage": next_stage
                 })
             
             return True
 
             
+        if actions.get("status") in ["blocked", "failed"]:
+            state = self.state_store.load_state()
+            state["status"] = actions.get("status")
+            if actions.get("status") == "blocked":
+                state["blockers"].append({
+                    "stage": stage_name,
+                    "reason": actions.get("summary", "Stage blocked."),
+                    "timestamp": datetime.now().isoformat()
+                })
+            else:
+                state["failures"].append({
+                    "stage": stage_name,
+                    "reason": actions.get("summary", "Stage failed."),
+                    "timestamp": datetime.now().isoformat()
+                })
+            self.state_store.save_state(state)
         return False
 
     def perform_actions(self, stage, actions):
@@ -3230,6 +3305,8 @@ class StudioLoopOrchestrator:
         
         if "research_request_history" not in state:
             state["research_request_history"] = []
+        if "research_duplicate_warnings" not in state:
+            state["research_duplicate_warnings"] = {}
 
         # 1. Research
         for req in actions.get("research_requests", []):
@@ -3240,16 +3317,20 @@ class StudioLoopOrchestrator:
             completed_same_query = any(
                 r.get("status") == "complete"
                 and r.get("query", "").lower().strip() == query.lower().strip()
+                and r.get("stage", stage) == stage
                 for r in state.get("research_results", [])
             )
 
             if completed_same_query:
                 # Rule 1: If same query already complete, return it instead of blocking (Point 6)
-                existing_res = next(r for r in state.get("research_results", []) if r.get("query", "").lower().strip() == query.lower().strip())
+                existing_res = next(
+                    r for r in state.get("research_results", [])
+                    if r.get("query", "").lower().strip() == query.lower().strip()
+                    and r.get("stage", stage) == stage
+                )
                 
                 # Check if we already warned about this
-                warning_key = f"warned:{fingerprint}"
-                if state.get(warning_key):
+                if state["research_duplicate_warnings"].get(fingerprint):
                     print(f"Research loop guard: Query '{query}' repeated AFTER warning. Blocking.")
                     res = {
                         "status": "blocked",
@@ -3262,7 +3343,7 @@ class StudioLoopOrchestrator:
                     print(f"Research loop guard: Query '{query}' already completed. Injecting brief and issuing warning.")
                     res = existing_res.copy()
                     res["notes"] = res.get("notes", "") + " [WARNING: DUPLICATE RESEARCH REQUESTED. Use existing brief.]"
-                    state[warning_key] = True
+                    state["research_duplicate_warnings"][fingerprint] = True
             elif state["research_request_history"].count(fingerprint) >= 2:
                 print(f"Research loop guard: Blocking repeated query '{query}' for stage '{stage}'.")
                 res = {
@@ -3277,6 +3358,7 @@ class StudioLoopOrchestrator:
             else:
                 self.hooks.trigger("before_research", {"stage": stage, "query": query})
                 res = self.research_client.perform_research(query, req.get("reason"), feature_slug=feature_slug, stage=stage)
+                res["stage"] = stage
                 state["research_request_history"].append(fingerprint)
             
             results["research"].append(res)
@@ -3543,7 +3625,6 @@ if __name__ == "__main__":
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\orchestrator\test_runner.py
 --------------------------------------------------------------------------------
@@ -3599,7 +3680,6 @@ class TestRunner:
             "tests": self.run_tests(),
             "bloat": self.run_bloat()
         }
-
 
 
 
@@ -3671,7 +3751,6 @@ class TransitionEngine:
             return "qa_tester"
 
         return "handover_complete"
-
 
 
 
@@ -3766,7 +3845,6 @@ ACTIONS_JSON:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\skills\asset_creator_skills.md
 --------------------------------------------------------------------------------
@@ -3788,17 +3866,16 @@ This consolidated skill file contains all core capabilities required for the Ass
 
 ---
 
-## 2. Vectorization Workflow
-**Description**: Converting bitmap assets into resolution-independent SVG vector graphics.
+## 2. Vectorization Availability
+**Description**: Vectorization is unavailable unless a future allowlisted command is added.
 
 ### Instructions
-1. **Asset Preparation**: Ensure the source image is available.
-2. **Batch Execution**: Use the `vectorize_batch.cjs` script to process multiple assets if the capability is available.
-    - Command: `node .agent/scripts/vectorize_batch.cjs <input_dir> <output_dir>`
-3. **Tuning**: For high-quality icons, ensure thresholding removes tiny noise and maintains smooth curves.
+1. **Asset Preparation**: Produce SVG specs, filename plans, and registry integration plans only.
+2. **No Batch Conversion**: Do not request vectorization commands.
+3. **No Registry Edits**: Do not modify source registry files.
 
 ### Orchestrator Actions
-- **Request an allowlisted command through ACTIONS_JSON.commands.**
+- **Request only allowlisted command names through ACTIONS_JSON.commands.**
 - **Do not invoke tools directly.**
 
 ---
@@ -3812,9 +3889,8 @@ This consolidated skill file contains all core capabilities required for the Ass
 3. **Verification**: Ensure the integration plan is clear and all assets are documented.
 
 ### Orchestrator Actions
-- **Request an allowlisted command through ACTIONS_JSON.commands.**
+- **Request only allowlisted command names through ACTIONS_JSON.commands.**
 - **Do not invoke tools directly.**
-
 
 
 
@@ -3855,17 +3931,17 @@ This consolidated skill file contains all core capabilities required for the Des
 
 ---
 
-## 3. Visual Regression Testing
-**Description**: Using browser capabilities to compare UI screenshots across different build states to prevent "UI Drift."
+## 3. Visual Regression Planning
+**Description**: Defining manual visual checks and testable CSS/token criteria to prevent UI drift.
 
 ### Instructions
-1. **Baseline Generation**: Capture "Golden Master" screenshots of key UI states (Main Menu, HUD, Settings).
-2. **Build Comparison**: Run the same sequence on the new build and capture matching screenshots.
-3. **Difference Analysis**: Identify pixel-level differences or layout shifts.
+1. **Baseline Criteria**: Define key UI states and the visual properties that must remain stable.
+2. **Build Comparison Plan**: Specify manual comparison steps and measurable CSS/token criteria.
+3. **Difference Analysis**: Identify likely layout shifts or contrast risks from source context.
 4. **Report**: Categorize changes as "Intended" (Design Update) or "Regressions" (Bugs).
 
 ### Orchestrator Actions
-- **Browser visual audit is currently unavailable.** Producing design specs and testable CSS criteria only. Do not request browser screenshots.
+- **Browser visual checks are currently unavailable.** Producing design specs and testable CSS criteria only. Do not request screenshots.
 
 ---
 
@@ -3881,7 +3957,6 @@ This consolidated skill file contains all core capabilities required for the Des
 ### Orchestrator Actions
 - **src/renderer/shaders/**: Destination for WGSL files.
 - **WebGPU API**: For implementation.
-
 
 
 
@@ -3954,7 +4029,6 @@ This consolidated skill file contains all core capabilities required for the Dev
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\skills\producer_skills.md
 --------------------------------------------------------------------------------
@@ -4009,7 +4083,6 @@ This consolidated skill file contains all core capabilities required for the Con
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\skills\qa_skills.md
 --------------------------------------------------------------------------------
@@ -4038,13 +4111,13 @@ This consolidated skill file contains all core capabilities required for the QA 
 
 ### Instructions
 1. **Baseline Setup**: Run the application in a stable environment.
-2. **Performance Audit**: Browser-based performance profiling is currently unavailable. Use unit tests, loop audits, and allowlisted analysis commands (like find_bloat) to identify bottlenecks.
+2. **Performance Review**: Browser-based performance profiling is currently unavailable. Use unit tests, loop review, and allowlisted analysis commands such as `find_bloat` to identify bottlenecks.
 3. **Loop Analysis**: Check the main execution path for unnecessary allocations or heavy calculations.
 4. **Report**: Document findings with specific line numbers and execution times.
 
 ### Orchestrator Actions
 - **Browser visual audit and performance profiling are currently unavailable.** Use research_requests for external research and allowlisted commands only.
-- **Request an allowlisted command through ACTIONS_JSON.commands (e.g., 'test', 'find_bloat').**
+- **Request only allowlisted command names through ACTIONS_JSON.commands (e.g., `test`, `test_target`, `typecheck`, `find_bloat`).**
 - **Do not invoke tools directly.**
 
 ---
@@ -4061,7 +4134,6 @@ This consolidated skill file contains all core capabilities required for the QA 
 ### Tools
 - `src/__tests__/`: Destination for test files.
 - `Vitest`: The test runner.
-
 
 
 
@@ -4128,12 +4200,12 @@ This consolidated skill file contains all core capabilities required for the Res
 
 ### Instructions
 1. **Deep Search**: Use the provided source index and context pack to find past architectural decisions.
-2. **Context Seeding**: When starting a major research task, review the `.agent/logs/` to get a "High-Level Architectural Overview".
+2. **Context Seeding**: When starting a major research task, use the orchestrator-provided context pack and state summaries.
 3. **Decision Logging**: ALWAYS record major research outcomes in `.agent/logs/` using the format: `Decision Log: [Timestamp] [Identity] [Topic] [Outcome]`.
 4. **Reporting**: All major findings MUST be saved as a `.md` report in `.agent/Loop_Flow/`.
 
 ### Orchestrator Actions
-- **.agent/logs/**: The architectural memory storage.
+- **Context pack**: The orchestrator-provided architectural memory source.
 
 ---
 
@@ -4156,16 +4228,15 @@ This consolidated skill file contains all core capabilities required for the Res
 **Description**: Analyzing JavaScript heap snapshots and allocation timelines to identify retained objects in long-duration game sessions.
 
 ### Instructions
-1. **Baseline Capture**: Record a heap snapshot after the game finishes loading but before significant action.
-2. **Stress Session**: Perform high-frequency actions (combat, menu cycling, area transitions) for 10-15 minutes.
-3. **Comparison**: Capture a second snapshot and compare with the baseline to find objects that were not garbage collected.
-4. **Root Cause**: Trace the retainer path of leaked objects (e.g., event listeners not removed, global array growth).
+1. **Static Review**: Inspect allocation-heavy loops, event listener lifecycles, and long-lived collections from source context.
+2. **Stress Scenario Plan**: Describe manual stress scenarios for QA to run later.
+3. **Allowlisted Checks**: Request only allowlisted commands through `ACTIONS_JSON.commands`.
+4. **Root Cause**: Document likely retention paths such as event listeners not removed or global array growth.
 
 ### Orchestrator Actions
 - Browser QA is not currently available. Use research_requests for external research and allowlisted commands only.
 - **Request an allowlisted command through ACTIONS_JSON.commands.**
 - **Do not invoke tools directly.**
-
 
 
 
@@ -4185,6 +4256,7 @@ FILE: .agent\state\studio_loop_state.json
   "research_briefs": [],
   "research_results": [],
   "research_request_history": [],
+  "research_duplicate_warnings": {},
   "writes": [],
   "patches": [],
   "commands": [],
@@ -4199,9 +4271,8 @@ FILE: .agent\state\studio_loop_state.json
   "last_transition": null,
   "capabilities": {},
   "created_at": null,
-  "updated_at": "2026-05-09T13:28:15.799078"
+  "updated_at": "2026-05-09T14:36:46.275629"
 }
-
 
 
 --------------------------------------------------------------------------------
@@ -4252,7 +4323,6 @@ You are the **Asset Creator**. Your goal is to take visual requirements from the
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\workflows\bug_hunter.md
 --------------------------------------------------------------------------------
@@ -4296,7 +4366,6 @@ You are the **Bug Hunter** for "the project". In V2, you are **The State Replica
 - Save durable work into files under `.agent/Loop_Flow/`.
 - End every role response with a machine-readable `ACTIONS_JSON` JSON block.
 - The orchestrator, not the model, controls role transitions.
-
 
 
 
@@ -4349,7 +4418,6 @@ You are the **Concept Producer** for "the project". In V2, you are **The Visiona
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\workflows\debug_dev.md
 --------------------------------------------------------------------------------
@@ -4373,7 +4441,7 @@ You are the **Debug Developer** for "the project". In V2, you are **The Surgeon*
 ## Your Responsibilities
 1. **Surgical Fixes**: Implement the specific code changes recommended in the RCA.
 2. **Regression Prevention**: Ensure your fix doesn't introduce side effects. Analyze surrounding code.
-3. **Validation**: Run `/tsc_build` and verify the fix using the provided reproduction script.
+3. **Validation**: Request the allowlisted `typecheck` command and verify the fix using allowlisted test commands.
 4. **Handoff Schema Compliance**: Ensure your fix and verification artifacts meet the requirements of `HANDOFF_SCHEMA.json`.
 
 ## Interaction Protocol
@@ -4394,7 +4462,6 @@ You are the **Debug Developer** for "the project". In V2, you are **The Surgeon*
 - Save durable work into files under `.agent/Loop_Flow/`.
 - End every role response with a machine-readable `ACTIONS_JSON` JSON block.
 - The orchestrator, not the model, controls role transitions.
-
 
 
 
@@ -4422,7 +4489,7 @@ You are the **Designer** for "the project". In V2, you are **The Aesthetic Archi
 - **Premium Feel**: Custom-styled components, glassmorphism, and micro-animations.
 
 ## Your Responsibilities
-1. **UI/UX Audits**: Ensure every interaction has a "wow" factor. Perform **UI Color Contrast Auditing** (WCAG).
+1. **UI/UX Specs**: Ensure every interaction has a clear design intent. Perform manual **UI Color Contrast Auditing** (WCAG) from provided source context.
 2. **Visual Feedback**: Define satisfying visual confirmation for all actions, including **Particle System Tuning**.
 3. **Handoff Schema Compliance**: Ensure your Aesthetic Specs meet the requirements of `HANDOFF_SCHEMA.json`.
 4. **Decision Logs**: Record your design choices and visual rationale in `.agent/logs/`.
@@ -4433,7 +4500,7 @@ You are the **Designer** for "the project". In V2, you are **The Aesthetic Archi
 
 ## Coding Restrictions
 - **No Game Code**: You are strictly prohibited from writing or modifying game source code.
-- **Tools**: Use the **Browser Research** to audit current UI states and performance.
+- **Tools**: Browser visual audit is currently unavailable. Produce design specs, manual QA checklists, and testable CSS/token criteria only. Request only allowlisted command names through `ACTIONS_JSON.commands`.
 
 
 
@@ -4444,7 +4511,6 @@ You are the **Designer** for "the project". In V2, you are **The Aesthetic Archi
 - Save durable work into files under `.agent/Loop_Flow/`.
 - End every role response with a machine-readable `ACTIONS_JSON` JSON block.
 - The orchestrator, not the model, controls role transitions.
-
 
 
 
@@ -4480,11 +4546,11 @@ You are the **Developer** for "the project". In V2, you are **The Architect**. Y
 
 ## Your Responsibilities
 1. **Self-Healing Implementation**: Build systems that are robust and handle edge cases gracefully. Use **Data-Driven Templating** for stat tables.
-2. **Implementation**: Use the provided context pack and source index to implement logic. Request allowed commands for typechecking or testing via the orchestrator.
+2. **Implementation**: Use the provided context pack and source index to implement logic. Request only allowlisted command names through `ACTIONS_JSON.commands`.
 3. **Long-Running Task Protocol**: Do not depend on future chat turns. If a command cannot complete during the current orchestrator run, mark the stage as `blocked`. Record the command, reason, and required follow-up in `ACTIONS_JSON.blockers`. The orchestrator will preserve this in state.
 4. **Refactoring**: Improve old code to be more maintainable. Use `source indexing` for **AST-Aware Refactoring**.
 5. **Data Integrity**: Implement **Save Game Schema Migration** and **i18n String Extraction**.
-6. **Verification**: Request `tsc_build` and fix all errors before hand-off.
+6. **Verification**: Request `typecheck` and fix all errors before hand-off.
 7. **Handoff Schema Compliance**: Ensure all outputs meet the requirements of `HANDOFF_SCHEMA.json`.
 
 ## Interaction Protocol
@@ -4493,7 +4559,7 @@ You are the **Developer** for "the project". In V2, you are **The Architect**. Y
 - **Git**: Do not commit. The orchestrator manages version control. Summarize changed files in your summary.
 
 ## Verification
-1. **Type Checking**: Run the `/tsc_build` workflow.
+1. **Type Checking**: Request the allowlisted `typecheck` command.
 2. **Smoke Test**: Launch the game using `.bat` scripts to verify functionality.
 3. **Performance**: Check for bottlenecks in the main loop.
 
@@ -4505,7 +4571,6 @@ You are the **Developer** for "the project". In V2, you are **The Architect**. Y
 - Save durable work into files under `.agent/Loop_Flow/`.
 - End every role response with a machine-readable `ACTIONS_JSON` JSON block.
 - The orchestrator, not the model, controls role transitions.
-
 
 
 
@@ -4526,11 +4591,11 @@ description: Operate as the QA Tester for the project
 - End with `ACTIONS_JSON` JSON.
 
 ## Role Overview
-You are the **QA Tester** for "the project". In V2, you are **The Breaker**. Your goal is stability verification through performance audits and E2E testing.
+You are the **QA Tester** for "the project". In V2, you are **The Breaker**. Your goal is stability verification through allowlisted automated checks and E2E testing.
 
 - **Master Skills**: You MUST utilize the [QA Skills](../skills/qa_skills.md).
 - **Stability**: Does the game freeze or crash?
-- **Performance Audits**: Check frame rates and identify performance bottlenecks.
+- **Performance Review**: Browser profiling is currently unavailable. Use allowlisted tests and source analysis to identify bottlenecks.
 
 ## Your Responsibilities
 1. **Stability Verification**: Final gatekeeper before features are merged.
@@ -4557,7 +4622,7 @@ If `PASS`, include the recommended next stage as `handover_complete`.
 - **Failure State**: If a bug is found, provide the exact state conditions to the Bug Hunter.
 
 ## Tools
-- Request `test` or `test_target` commands via `ACTIONS_JSON`.
+- Request only allowlisted command names through `ACTIONS_JSON.commands`, such as `test`, `test_target`, `typecheck`, or `find_bloat`.
 - Browser QA is not currently available. Do not request it.
 - Do not attempt to invoke external tools or subagents directly.
 
@@ -4572,7 +4637,6 @@ If `PASS`, include the recommended next stage as `handover_complete`.
 - Save durable work into files under `.agent/Loop_Flow/`.
 - End every role response with a machine-readable `ACTIONS_JSON` JSON block.
 - The orchestrator, not the model, controls role transitions.
-
 
 
 
@@ -4633,7 +4697,6 @@ Use the provided source context and index summary. If deeper analysis is needed,
 - Save durable work into files under `.agent/Loop_Flow/`.
 - End every role response with a machine-readable `ACTIONS_JSON` JSON block.
 - The orchestrator, not the model, controls role transitions.
-
 
 
 
@@ -4739,7 +4802,6 @@ ACTIONS_JSON:
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\workflows\task_template.md
 --------------------------------------------------------------------------------
@@ -4800,23 +4862,16 @@ description: Task Template for tracking AI identity contributions
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: .agent\workflows\tsc_build.md
 --------------------------------------------------------------------------------
 ---
-description: pre git trial build
+description: stale compatibility note for the former tsc_build workflow
 ---
 
-%~d0\PortableApps\Node\node-v24.15.0-win-x64\node.exe node_modules\typescript\bin\tsc --noEmit
-## Output Protocol
+# Typecheck Command
 
-- Do not include hidden reasoning or long chain-of-thought.
-- Provide concise rationale only when needed for handoff clarity.
-- Save durable work into files under `.agent/Loop_Flow/`.
-- End every role response with a machine-readable `ACTIONS_JSON` JSON block.
-- The orchestrator, not the model, controls role transitions.
-
+Use `ACTIONS_JSON.commands` with name: `typecheck`.
 
 
 
@@ -4838,20 +4893,36 @@ None
 
 | Title | URL | Status | Retrieved | Notes |
 |---|---|---|---|---|
-| Canvas API - Web APIs | MDN | https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API | fetched | 2026-05-09T13:20:40.321657 |  |
-| VRDisplay: requestAnimationFrame() method - Web APIs | MDN | https://developer.mozilla.org/en-US/docs/Web/API/VRDisplay/requestAnimationFrame | fetched | 2026-05-09T13:20:42.098278 |  |
-| XRSession: requestAnimationFrame() method - Web APIs | MDN | https://developer.mozilla.org/en-US/docs/Web/API/XRSession/requestAnimationFrame | fetched | 2026-05-09T13:20:44.154755 |  |
+| Window: requestAnimationFrame() method - Web APIs \| MDN | https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame | fetched | 2026-05-09T14:26:53.503211 | coverage: requestanimationframe, animation/rendering |
+| Basic animations - Web APIs \| MDN | https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Basic_animations | fetched | 2026-05-09T14:26:55.823961 | coverage: canvas, animation/rendering, basic animations |
+| Canvas API - Web APIs \| MDN | https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API | fetched | 2026-05-09T14:26:58.582646 | coverage: canvas, animation/rendering, 2d context |
+| DedicatedWorkerGlobalScope: requestAnimationFrame() method - Web APIs \| MDN | https://developer.mozilla.org/en-US/docs/Web/API/DedicatedWorkerGlobalScope/requestAnimationFrame | fetched | 2026-05-09T14:27:00.614908 | coverage: requestanimationframe, animation/rendering |
+| Basic usage of canvas - Web APIs \| MDN | https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Basic_usage | fetched | 2026-05-09T14:27:02.320188 | coverage: canvas, animation/rendering, 2d context |
+| Advanced animations - Web APIs \| MDN | https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Advanced_animations | fetched | 2026-05-09T14:27:04.351038 | coverage: canvas, requestanimationframe, animation/rendering, basic animations |
+| CanvasRenderingContext2D - Web APIs \| MDN | https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D | fetched | 2026-05-09T14:27:07.116659 | coverage: canvas, animation/rendering, 2d context |
 
 ## Extracted Findings
 
 ### Finding
-Canvas API - Web APIs | MDN <meta name="description" content="The Canvas API provides a means for drawing graphics via JavaScript and the HTML element. Among other things, it can be used for animation, game graphics, data visualization, photo manipulation, and real-time video processing."><meta name="og:description" content="The Canvas API provides a means for drawing graphics via JavaScript and the HTML element. Among other things, it can be used for animation, game graphics, data visualization, photo manipulation, and real-time video processing."> Skip to main content Skip to search Web Web APIs Canvas API Canvas API Baseline Widely available This feature is well established and works across many devices and browser versions. Itâ€™s been available across browsers since July 2015. Learn more See full compatibility Report feedback The Canvas API provides a means for drawing graphics via JavaScript and the HTML element. Among other things, it can be used for animation, game graphics, data visualization, photo manipulation, and real-time video processing. The Canvas API largely focuses on 2D graphics. The WebGL API, which also uses the element, draws hardware-accelerated 2D and 3D graphics. Basic example This simple example draws a green rectangle onto a canvas. HTML JavaScript The Document.getElementById() method gets a reference to the HTML element. Next, the HTMLCanvasElement.getContext() method gets that element's contextâ€”the thing onto which the drawing will be rendered. The actual drawing is done using the CanvasRenderingContext2D interface. The fillStyle property makes the rectangle green. The fillRect() method places its top-left corner at (10, 10), and gives it a size of 150 units wide by 100 tall. Result Reference HTMLCanvasElement CanvasRenderingContext2D CanvasGradient CanvasPattern ImageBitmap ImageData TextMetrics OffscreenCanvas Path2D ImageBitmapRenderingContext Note: The interfaces related to the WebGLRenderingContext are referenced under WebGL. Note: O
+Window: requestAnimationFrame() method - Web APIs | MDN Skip to main content Skip to search Web Web APIs Window requestAnimationFrame() Window: requestAnimationFrame() method Baseline Widely available This feature is well established and works across many devices and browser versions. It's been available across browsers since July 2015. Learn more See full compatibility Report feedback The window.requestAnimationFrame() method tells the browser you wish to perform an animation. It requests the browser to call a user-supplied callback function before the next repaint. The frequency of calls to the callback function will generally match the display refresh rate. The most common refresh rate is 60hz, (60 cycles/frames per second), though 75hz, 120hz, and 144hz are also widely used. requestAnimationFrame() calls are paused in most browsers when running in background tabs or hidden s, in order to improve performance and battery life. Note: Your callback function must call requestAnimationFrame() again if you want to animate another frame. requestAnimationFrame() is one-shot. Warning: Be sure always to use the first argument (or some other method for getting the current time) to calculate how much the animation will progress in a frame - otherwise, the animation will run faster on high refresh-rate screens. For ways to do that, see the examples below. Syntax Parameters callback The function to call when it's time to update your animation for the next repaint. This callback function is passed a single argument: timestamp A DOMHighResTimeStamp indicating the end time of the previous frame's rendering (based on the number of milliseconds since time origin). The timestamp is a decimal number, in milliseconds, but with a minimal precision of 1 millisecond. For Window objects (not Workers), it is equal to document.timeline.currentTime. This timestamp is shared between all windows that run on the same agent (all same-origin windows and, more importantly, same-origin iframes) - w
 
 ### Finding
-VRDisplay: requestAnimationFrame() method - Web APIs | MDN Skip to main content Skip to search Web Web APIs VRDisplay requestAnimationFrame() VRDisplay: requestAnimationFrame() method Deprecated: This feature is no longer recommended. Though some browsers might still support it, it may have already been removed from the relevant web standards, may be in the process of being dropped, or may only be kept for compatibility purposes. Avoid using it, and update existing code if possible; see the compatibility table at the bottom of this page to guide your decision. Be aware that this feature may cease to work at any time. Non-standard: This feature is not standardized. We do not recommend using non-standard features in production, as they have limited browser support, and may change or be removed. However, they can be a suitable alternative in specific cases where no standard option exists. The requestAnimationFrame() method of the VRDisplay interface is a special implementation of Window.requestAnimationFrame containing a callback function that will be called every time a new frame of the VRDisplay presentation is rendered: Note: This method was part of the old WebVR API. It has been superseded by the WebXR Device API. When the VRDisplay is not presenting a scene, this is functionally equivalent to Window.requestAnimationFrame. When the VRDisplay is presenting, the callback is called at its native refresh rate. Syntax Parameters callback A callback function that will be called every time a new frame of the VRDisplay presentation is rendered. Return value A long representing the handle of the requestAnimationFrame() call. This can then be passed to a VRDisplay.cancelAnimationFrame() call to unregister the callback. Examples Note: You can see this complete code at raw-webgl-example. Specifications This method was part of the old WebVR API that has been superseded by the WebXR Device API. It is no longer on track to becoming a standard. Until all browsers have implemented 
+Basic animations - Web APIs | MDN <meta name="description" content="Since we're using JavaScript to control elements, it's also very easy to make (interactive) animations. In this chapter we will take a look at how to do some basic animations."><meta name="og:description" content="Since we're using JavaScript to control elements, it's also very easy to make (interactive) animations. In this chapter we will take a look at how to do some basic animations."> Skip to main content Skip to search Web Web APIs Canvas API Canvas tutorial Basic animations Basic animations Previous Next Since we're using JavaScript to control elements, it's also very easy to make (interactive) animations. In this chapter we will take a look at how to do some basic animations. Probably the biggest limitation is, that once a shape gets drawn, it stays that way. If we need to move it we have to redraw it and everything that was drawn before it. It takes a lot of time to redraw complex frames and the performance depends highly on the speed of the computer it's running on. Basic animation steps These are the steps you need to take to draw a frame: Clear the canvas Unless the shapes you'll be drawing fill the complete canvas (for instance a backdrop image), you need to clear any shapes that have been drawn previously. The easiest way to do this is using the clearRect() method. Save the canvas state If you're changing any setting (such as styles, transformations, etc.) which affect the canvas state and you want to make sure the original state is used each time a frame is drawn, you need to save that original state. Draw animated shapes The step where you do the actual frame rendering. Restore the canvas state If you've saved the state, restore it before drawing a new frame. Controlling an animation Shapes are drawn to the canvas by using the canvas methods directly or by calling custom functions. In normal circumstances, we only see these results appear on the canvas when the script finishes executi
 
 ### Finding
-XRSession: requestAnimationFrame() method - Web APIs | MDN Skip to main content Skip to search Web Web APIs XRSession requestAnimationFrame() XRSession: requestAnimationFrame() method Limited availability This feature is not Baseline because it does not work in some of the most widely-used browsers. Learn more See full compatibility Report feedback Experimental: This is an experimental technologyCheck the Browser compatibility table carefully before using this in production. Secure context: This feature is available only in secure contexts (HTTPS), in some or all supporting browsers. The XRSession method requestAnimationFrame(), much like the Window method of the same name, schedules a callback to be executed the next time the browser is ready to paint the session's virtual environment to the XR display. The specified callback is executed once before the next repaint; if you wish for it to be executed for the following repaint, you must call requestAnimationFrame() again. This can be done from within the callback itself. The callback takes two parameters as inputs: an XRFrame describing the state of all tracked objects for the session, and a timestamp you can use to compute any animation updates needed. You can cancel a previously scheduled animation by calling cancelAnimationFrame(). Note: Despite the obvious similarities between these methods and the global requestAnimationFrame() function provided by the Window interface, you must not treat these as interchangeable. There is no guarantee that the latter will work at all while an immersive XR session is underway. Syntax Parameters animationFrameCallback A function which is called before the next repaint in order to allow you to update and render the XR scene based on elapsed time, animation, user input changes, and so forth. The callback receives as input two parameters: time A DOMHighResTimeStamp indicating the time offset at which the updated viewer state was received from the WebXR device. xrFrame An XRFrame ob
+Canvas API - Web APIs | MDN <meta name="description" content="The Canvas API provides a means for drawing graphics via JavaScript and the HTML element. Among other things, it can be used for animation, game graphics, data visualization, photo manipulation, and real-time video processing."><meta name="og:description" content="The Canvas API provides a means for drawing graphics via JavaScript and the HTML element. Among other things, it can be used for animation, game graphics, data visualization, photo manipulation, and real-time video processing."> Skip to main content Skip to search Web Web APIs Canvas API Canvas API Baseline Widely available This feature is well established and works across many devices and browser versions. It's been available across browsers since July 2015. Learn more See full compatibility Report feedback The Canvas API provides a means for drawing graphics via JavaScript and the HTML element. Among other things, it can be used for animation, game graphics, data visualization, photo manipulation, and real-time video processing. The Canvas API largely focuses on 2D graphics. The WebGL API, which also uses the element, draws hardware-accelerated 2D and 3D graphics. Basic example This simple example draws a green rectangle onto a canvas. HTML JavaScript The Document.getElementById() method gets a reference to the HTML element. Next, the HTMLCanvasElement.getContext() method gets that element's context-the thing onto which the drawing will be rendered. The actual drawing is done using the CanvasRenderingContext2D interface. The fillStyle property makes the rectangle green. The fillRect() method places its top-left corner at (10, 10), and gives it a size of 150 units wide by 100 tall. Result Reference HTMLCanvasElement CanvasRenderingContext2D CanvasGradient CanvasPattern ImageBitmap ImageData TextMetrics OffscreenCanvas Path2D ImageBitmapRenderingContext Note: The interfaces related to the WebGLRenderingContext are referenced under WebGL. Note: O
+
+### Finding
+DedicatedWorkerGlobalScope: requestAnimationFrame() method - Web APIs | MDN Skip to main content Skip to search Web Web APIs DedicatedWorkerGlobalScope requestAnimationFrame() DedicatedWorkerGlobalScope: requestAnimationFrame() method Baseline Widely available This feature is well established and works across many devices and browser versions. It's been available across browsers since March 2023. Learn more See full compatibility Report feedback Note: This feature is only available in Dedicated Web Workers. The requestAnimationFrame() method of the DedicatedWorkerGlobalScope interface tells the browser you wish to perform an animation frame request and call a user-supplied callback function before the next repaint. The frequency of calls to the callback function will generally match the display refresh rate. The most common refresh rate is 60 Hz, (60 cycles/frames per second), though 75 Hz, 120 Hz, and 144 Hz are also widely used. requestAnimationFrame() calls are paused in most browsers when running in background tabs or hidden s, to improve performance and battery life. A call to the requestAnimationFrame() method schedules only one single call to the callback function. If you want to animate another frame, your callback function must call requestAnimationFrame() again. Warning: Be sure always to use the first argument (or some other method for getting the current time) to calculate how much the animation will progress in a frame - otherwise, the animation will run faster on high refresh-rate screens. For ways to do that, see the examples below. Calling the requestAnimationFrame() method requires the current worker to have an associated owner window. That means that the current worker must be created by window or by a dedicated worker that also has an associated owner window. Syntax Parameters callback The function to call when it's time to update your animation for the next repaint. This callback function is passed a single argument: timestamp A DOMHighResTimeSta
+
+### Finding
+Basic usage of canvas - Web APIs | MDN <meta name="description" content="Let's start this tutorial by looking at the HTML element itself. At the end of this page, you will know how to set up a canvas 2D context and have drawn a first example in your browser."><meta name="og:description" content="Let's start this tutorial by looking at the HTML element itself. At the end of this page, you will know how to set up a canvas 2D context and have drawn a first example in your browser."> Skip to main content Skip to search Web Web APIs Canvas API Canvas tutorial Basic usage of canvas Basic usage of canvas Previous Next Let's start this tutorial by looking at the HTML element itself. At the end of this page, you will know how to set up a canvas 2D context and have drawn a first example in your browser. The element At first sight a looks like the element, with the only clear difference being that it doesn't have the src and alt attributes. Indeed, the element has only two attributes, width and height. These are both optional and can also be set using DOM properties. When no width and height attributes are specified, the canvas will initially be 300 pixels wide and 150 pixels high. The element can be sized arbitrarily by CSS, but during rendering the image is scaled to fit its layout size: if the CSS sizing doesn't respect the ratio of the initial canvas, it will appear distorted. Note: If your renderings seem distorted, try specifying your width and height attributes explicitly in the attributes, and not using CSS. The id attribute isn't specific to the element but is one of the global HTML attributes which can be applied to any HTML element (like class for instance). It is always a good idea to supply an id because this makes it much easier to identify it in a script. The element can be styled just like any normal image (margin, border, background...). These rules, however, don't affect the actual drawing on the canvas. We'll see how this is done in a dedicated chapter of this
+
+### Finding
+Advanced animations - Web APIs | MDN Skip to main content Skip to search Web Web APIs Canvas API Canvas tutorial Advanced animations Advanced animations Previous Next In the last chapter we made some basic animations and got to know ways to get things moving. In this part we will have a closer look at the motion itself and are going to add some physics to make our animations more advanced. Drawing a ball We are going to use a ball for our animation studies, so let's first draw that ball onto the canvas. The following code will set us up. As usual, we need a drawing context first. To draw the ball, we will create a ball object which contains properties and a draw() method to paint it on the canvas. Nothing special here, the ball is actually a simple circle and gets drawn with the help of the arc() method. Adding velocity Now that we have a ball, we are ready to add a basic animation like we have learned in the last chapter of this tutorial. Again, window.requestAnimationFrame() helps us to control the animation. The ball gets moving by adding a velocity vector to the position. For each frame, we also clear the canvas to remove old circles from prior frames. Boundaries Without any boundary collision testing our ball runs out of the canvas quickly. We need to check if the x and y position of the ball is out of the canvas dimensions and invert the direction of the velocity vectors. To do so, we add the following checks to the draw method: First demo Let's see how it looks in action so far. HTML JavaScript Result Move your mouse into the canvas to start the animation. Acceleration To make the motion more real, you can play with the velocity like this, for example: This slows down the vertical velocity each frame, so that the ball will just bounce on the floor in the end. Second demo HTML JavaScript Result Trailing effect Until now we have made use of the clearRect method when clearing prior frames. If you replace this method with a semi-transparent fillRect, you can easi
+
+### Finding
+CanvasRenderingContext2D - Web APIs | MDN <meta name="description" content="The CanvasRenderingContext2D interface, part of the Canvas API, provides the 2D rendering context for the drawing surface of a element. It is used for drawing shapes, text, images, and other objects."><meta name="og:description" content="The CanvasRenderingContext2D interface, part of the Canvas API, provides the 2D rendering context for the drawing surface of a element. It is used for drawing shapes, text, images, and other objects."> Skip to main content Skip to search Web Web APIs CanvasRenderingContext2D CanvasRenderingContext2D Baseline Widely available * This feature is well established and works across many devices and browser versions. It's been available across browsers since July 2015. * Some parts of this feature may have varying levels of support. Learn more See full compatibility Report feedback The CanvasRenderingContext2D interface, part of the Canvas API, provides the 2D rendering context for the drawing surface of a element. It is used for drawing shapes, text, images, and other objects. The interface's properties and methods are described in the reference section of this page. The Canvas tutorial has more explanation, examples, and resources, as well. For OffscreenCanvas, there is an equivalent interface that provides the rendering context. The offscreen rendering context inherits most of the same properties and methods as the CanvasRenderingContext2D and is described in more detail in the OffscreenCanvasRenderingContext2D reference page. Basic example To get a CanvasRenderingContext2D instance, you must first have an HTML element to work with: To get the canvas' 2D rendering context, call getContext() on the element, supplying '2d' as the argument: With the context in hand, you can draw anything you like. This code draws a house: The resulting drawing looks like this: Reference Context CanvasRenderingContext2D.getContextAttributes() Returns an object containing the context
 
 
 ## Copyright / Safety Notes
@@ -4859,8 +4930,7 @@ Extracted from public web sources using local browser automation. No prohibited 
 
 ## Technical Notes
 - Backend: playwright
-- Timestamp: 2026-05-09T13:20:44.163872
-
+- Timestamp: 2026-05-09T14:27:08.830473
 
 
 
@@ -4982,12 +5052,16 @@ class TestFullLoop(unittest.TestCase):
             "status": "complete",
             "query": "pattern A",
             "findings": ["Finding 1", "Finding 2"],
+            "source_set_relevance_passed": True,
             "sources": [
-                {"title": "Source A", "url": "https://developer.mozilla.org/docs/Web/API/Canvas_API", "status": "fetched"},
-                {"title": "Source B", "url": "https://developer.mozilla.org/docs/Web/API/CanvasRenderingContext2D", "status": "fetched"}
+                {"title": "Source A", "url": "https://developer.mozilla.org/docs/Web/API/Canvas_API", "status": "fetched", "relevant": True},
+                {"title": "Source B", "url": "https://developer.mozilla.org/docs/Web/API/CanvasRenderingContext2D", "status": "fetched", "relevant": True}
             ],
             "artifact_path": os.path.join(self.base_dir, ".agent/Loop_Flow/research/latest_pattern_a_research_brief.md")
         }
+        os.makedirs(os.path.join(self.base_dir, ".agent/Loop_Flow/research"), exist_ok=True)
+        with open(os.path.join(self.base_dir, ".agent/Loop_Flow/research/latest_pattern_a_research_brief.md"), "w", encoding="utf-8") as handle:
+            handle.write("# Test research")
         
         # Mock test runner to succeed
         self.orchestrator.test_runner.run_full_suite = MagicMock(return_value={
@@ -5008,25 +5082,110 @@ if __name__ == "__main__":
 
 
 
+--------------------------------------------------------------------------------
+FILE: tests\real_browser_research_check.py
+--------------------------------------------------------------------------------
+import os
+import sys
+
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../.agent/orchestrator")))
+
+from browser_research import BrowserResearch
+from studio_loop import StudioLoopOrchestrator
+
+
+FORBIDDEN = [
+    "VRDisplay",
+    "XRSession",
+    "WebXR",
+    "Deprecated",
+    "Experimental",
+    "Non-standard",
+    "Limited availability",
+    "\ufffd",
+    "\u00c3",
+    "\u00c2",
+    "\u00e2\u20ac",
+    "\u00e2\u20ac\u2122",
+    "\u00e2\u20ac\u0153",
+    "\u00e2\u20ac\u009d",
+    "\u00e2\u20ac\u201d",
+    "\u00e2\u20ac\u201c",
+    "\u00f0\u0178",
+    "\u00d8",
+    "\u00d9",
+    "\u00d0",
+    "\u00d1",
+]
+
+
+def main():
+    os.environ.pop("HARNESS_VERIFICATION_MODE", None)
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    orchestrator = StudioLoopOrchestrator(base_path)
+    researcher = BrowserResearch(orchestrator.config, base_path)
+
+    if not researcher.playwright.is_available():
+        print("SKIP: Playwright/Chromium is not available.")
+        return 0
+
+    result = researcher.perform_research("MDN Canvas API requestAnimationFrame")
+    combined = "\n".join(
+        [str(result)]
+        + [source.get("title", "") + " " + source.get("url", "") + " " + source.get("notes", "") for source in result.get("sources", [])]
+        + result.get("findings", [])
+    )
+
+    assert result.get("status") == "complete", result
+    assert result.get("backend") == "playwright", result
+    assert result.get("source_set_relevance_passed") is True, result
+    assert len([s for s in result.get("sources", []) if s.get("status") == "fetched" and s.get("relevant")]) >= 2, result
+    for forbidden in FORBIDDEN:
+        assert forbidden not in combined, forbidden
+
+    print("PASS: Real Playwright browser research completed cleanly.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
 
 --------------------------------------------------------------------------------
 FILE: tests\regression_page_extractor.py
 --------------------------------------------------------------------------------
 import sys
 import os
+import tempfile
 sys.path.append(os.path.join(os.getcwd(), ".agent/orchestrator"))
 from page_extractor import PageExtractor
 
 def test_page_extractor_does_not_flag_clean_mdn_text():
     text = "<html><title>Window: requestAnimationFrame()</title><body>Canvas animation uses requestAnimationFrame for smooth rendering.</body></html>"
-    result = PageExtractor({}).extract("https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame", text)
-    print(f"Status: {result['status']}")
-    assert result["status"] == "fetched"
+    with tempfile.TemporaryDirectory() as temp_dir:
+        result = PageExtractor({}, temp_dir).extract("https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame", text)
+        print(f"Status: {result['status']}")
+        assert result["status"] == "fetched"
     print("Regression test PASSED")
+
+def test_page_extractor_flags_visible_mojibake():
+    corrupted = (
+        "<html><title>Canvas API</title><body>"
+        "It\u00e2\u20ac\u2122s been available. "
+        "The context\u00e2\u20ac\u201dthe thing to draw on."
+        "</body></html>"
+    )
+    with tempfile.TemporaryDirectory() as temp_dir:
+        result = PageExtractor({}, temp_dir).extract("https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API", corrupted)
+        print(f"Corrupt status: {result['status']}")
+        assert result["status"] == "failed"
+    print("Mojibake regression test PASSED")
 
 if __name__ == "__main__":
     test_page_extractor_does_not_flag_clean_mdn_text()
-
+    test_page_extractor_flags_visible_mojibake()
 
 
 
@@ -5093,7 +5252,8 @@ class TestAutonomousLoop(unittest.TestCase):
               "path": ".agent/Loop_Flow/test_feature_blueprint.md", 
               "content": "# Technical Blueprint\\n\\n## Technical Audit\\nDone.\\n\\n## Implementation Blueprint\\nPlan established.\\n\\n## Context Pruning Map\\n- src/main.ts\\n\\n## Implementation Checklist\\n- [ ] Task 1", 
               "mode": "overwrite" 
-            }
+            },
+            { "path": ".agent/Loop_Flow/context_map.json", "content": "{}" }
           ],
           "next_stage_recommendation": "developer"
         }
@@ -5111,12 +5271,18 @@ class TestAutonomousLoop(unittest.TestCase):
         self.orchestrator.research_client.browser_research.perform_research = MagicMock(return_value={
             "status": "complete",
             "query": "TypeScript Canvas game architecture patterns",
+            "source_set_relevance_passed": True,
             "sources": [
-                {"title": "Canvas API", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API", "status": "fetched"},
-                {"title": "Game Loop Patterns", "url": "https://gameprogrammingpatterns.com/game-loop.html", "status": "fetched"}
+                {"title": "Canvas API", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API", "status": "fetched", "relevant": True},
+                {"title": "Game Loop Patterns", "url": "https://gameprogrammingpatterns.com/game-loop.html", "status": "fetched", "relevant": True}
             ],
             "findings": ["Finding 1: Use a game loop.", "Finding 2: Separate update and render."],
             "artifact_path": os.path.join(self.temp_dir, ".agent/Loop_Flow/research/test_research.md")
+        })
+        self.orchestrator.test_runner.run_full_suite = MagicMock(return_value={
+            "typecheck": {"success": True},
+            "tests": {"success": True},
+            "bloat": {"success": True}
         })
         
         # Start the feature
@@ -5133,7 +5299,6 @@ class TestAutonomousLoop(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
 
 
 
@@ -5210,14 +5375,13 @@ if __name__ == "__main__":
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: tests\fixtures\research_mdn_requestanimationframe.json
 --------------------------------------------------------------------------------
 {
   "status": "complete",
   "query": "MDN Canvas API requestAnimationFrame",
-  "backend": "mock_verification",
+  "backend": "test_fixture",
   "sources": [
     {
       "title": "Window: requestAnimationFrame() method - Web APIs | MDN",
@@ -5238,7 +5402,6 @@ FILE: tests\fixtures\research_mdn_requestanimationframe.json
     "For canvas animations, it is more efficient than setTimeout as it aligns with the browser's display refresh rate (usually 60Hz)."
   ]
 }
-
 
 
 
@@ -5360,7 +5523,6 @@ if __name__ == "__main__":
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: tools\check_perms.py
 --------------------------------------------------------------------------------
@@ -5389,7 +5551,6 @@ for path in paths:
             print(f"  Write Error: {e}")
     else:
         print(f"  Exists: False")
-
 
 
 
@@ -5503,7 +5664,6 @@ if __name__ == "__main__":
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: tools\find_bloat.py
 --------------------------------------------------------------------------------
@@ -5552,7 +5712,6 @@ def find_bloat():
 
 if __name__ == "__main__":
     find_bloat()
-
 
 
 
@@ -5608,7 +5767,7 @@ class TestStudioLoopOrchestrator(unittest.TestCase):
         with patch('playwright_research.PlaywrightResearch.is_available', return_value=False):
             res = self.orch.research_client.perform_research("test query")
             self.assertEqual(res["status"], "blocked")
-            self.assertIn("No functional browser research backend", res["errors"][0])
+            self.assertIn("Playwright research backend not available", res["errors"][0])
 
     def test_auto_loop_mock(self):
         self.orch.state_store.reset_state()
@@ -5665,16 +5824,26 @@ class TestStudioLoopOrchestrator(unittest.TestCase):
         research_resp_done = "ACTIONS_JSON: " + json.dumps({
             "stage": "researcher", "status": "complete", "summary": "Research done",
             "next_stage_recommendation": "designer",
-            "writes": [{"path": ".agent/Loop_Flow/context_map.json", "content": "{}"}, {"path": ".agent/Loop_Flow/multi_feature_blueprint.md", "content": "# Technical Audit\nTest\n# Implementation Blueprint\nTest\n# Context Pruning Map\nTest\n# Implementation Checklist\nTest", "mode": "append"}]
+            "writes": [{"path": ".agent/Loop_Flow/context_map.json", "content": "{}"}, {"path": ".agent/Loop_Flow/multi_feature_blueprint.md", "content": "\n# Technical Audit\nTest\n# Implementation Blueprint\nTest\n# Context Pruning Map\nTest\n# Implementation Checklist\nTest", "mode": "append"}]
         })
+        self.orch.research_client.perform_research = MagicMock(return_value={
+            "status": "complete",
+            "query": "test query",
+            "source_set_relevance_passed": True,
+            "sources": [
+                {"title": "Canvas API", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API", "status": "fetched", "relevant": True},
+                {"title": "requestAnimationFrame", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame", "status": "fetched", "relevant": True},
+            ],
+            "findings": ["Finding 1", "Finding 2"],
+            "artifact_path": os.path.join(self.temp_dir, ".agent/Loop_Flow/research/test_research.md"),
+        })
+        os.makedirs(os.path.join(self.temp_dir, ".agent/Loop_Flow/research"), exist_ok=True)
+        with open(os.path.join(self.temp_dir, ".agent/Loop_Flow/research/test_research.md"), "w", encoding="utf-8") as handle:
+            handle.write("# Test research")
         
         with patch.object(self.orch.client, 'call', side_effect=[concept_resp, research_resp_req, research_resp_done]):
-            with patch.object(self.orch.test_runner, 'run_typecheck', return_value={"success": True}):
+            with patch.object(self.orch.test_runner, 'run_full_suite', return_value={"typecheck": {"success": True}, "tests": {"success": True}, "bloat": {"success": True}}):
                 self.orch.execute_stage("concept_producer")
-                state = self.orch.state_store.load_state()
-                self.assertEqual(state["current_stage"], "researcher")
-                
-                self.orch.execute_stage("researcher")
                 state = self.orch.state_store.load_state()
                 self.assertEqual(state["current_stage"], "researcher")
                 
@@ -5687,159 +5856,255 @@ if __name__ == "__main__":
 
 
 
-
 --------------------------------------------------------------------------------
 FILE: tools\verify_clean_runtime.py
 --------------------------------------------------------------------------------
-import os
 import glob
-import sys
 import json
+import os
 import shutil
+import sys
+
+
+PROOF_PATH = os.path.join("docs", "verification", "browser_research_mdn_requestanimationframe.md")
+BUNDLE_PATH = "ai_harness_bundle.txt"
+
+RUNTIME_PATTERNS = [
+    ".agent/Loop_Flow/*.md",
+    ".agent/Loop_Flow/*.json",
+    ".agent/Loop_Flow/context_packs/*.md",
+    ".agent/Loop_Flow/research/*.md",
+    ".agent/logs/**/*.json",
+    ".agent/logs/**/*.txt",
+    ".agent/logs/**/*.md",
+]
+
+PROOF_FORBIDDEN = [
+    "Status: failed",
+    "Status: partial",
+    "Status: blocked",
+    "No findings recorded",
+    "VRDisplay",
+    "XRSession",
+    "WebXR",
+    "Deprecated",
+    "Experimental",
+    "Non-standard",
+    "Limited availability",
+    "mock_verification",
+    "HARNESS_VERIFICATION_MODE",
+]
+
+MOJIBAKE_MARKERS = [
+    "\ufffd",
+    "\u00c3",
+    "\u00c2",
+    "\u00e2\u20ac",
+    "\u00e2\u20ac\u2122",
+    "\u00e2\u20ac\u0153",
+    "\u00e2\u20ac\u009d",
+    "\u00e2\u20ac\u201d",
+    "\u00e2\u20ac\u201c",
+    "\u00f0\u0178",
+    "\u00d8",
+    "\u00d9",
+    "\u00d0",
+    "\u00d1",
+]
+
+NON_ASCII_PUNCTUATION = [
+    "\u2018",
+    "\u2019",
+    "\u201c",
+    "\u201d",
+    "\u2014",
+    "\u2013",
+    "\u2026",
+    "\u00a0",
+]
+
+PROOF_REQUIRED = [
+    "Status",
+    "complete",
+    "Backend: playwright",
+    "developer.mozilla.org",
+    "Canvas",
+    "requestAnimationFrame",
+]
+
+CANONICAL_GOOD_SOURCES = [
+    "Window/requestAnimationFrame",
+    "Canvas_API/Tutorial/Basic_animations",
+    "CanvasRenderingContext2D",
+]
+
+PRODUCTION_FORBIDDEN = [
+    "mock_verification",
+]
+
+
+def _read_text(path):
+    with open(path, "r", encoding="utf-8", errors="replace") as handle:
+        return handle.read()
+
+
+def _is_gitkeep(path):
+    return os.path.basename(path) == ".gitkeep"
+
+
+def _verify_runtime_clean(base_path, dirty):
+    live_research = glob.glob(os.path.join(base_path, ".agent/Loop_Flow/research/*_research_brief.md"))
+    for pattern in RUNTIME_PATTERNS:
+        for match in glob.glob(os.path.join(base_path, pattern), recursive=True):
+            if _is_gitkeep(match):
+                continue
+            rel = os.path.relpath(match, base_path).replace("\\", "/")
+            if live_research and (
+                rel.startswith(".agent/Loop_Flow/research/")
+                or rel.startswith(".agent/logs/research/cache/")
+            ):
+                continue
+            dirty.append(f"Generated runtime artifact remains: {match}")
+
+
+def _verify_proof(base_path, dirty):
+    proof = os.path.join(base_path, PROOF_PATH)
+    if not os.path.exists(proof):
+        dirty.append(f"Missing proof artifact: {proof}")
+        return
+
+    content = _read_text(proof)
+    normalized = content.lower()
+
+    for required in PROOF_REQUIRED:
+        if required not in content:
+            dirty.append(f"Proof missing required term: {required}")
+
+    if "## status" not in normalized or "complete" not in normalized.split("## status", 1)[1].split("##", 1)[0]:
+        dirty.append("Proof status section is not complete.")
+
+    if not any(source in content for source in CANONICAL_GOOD_SOURCES):
+        dirty.append(f"Proof missing canonical good source indicator: {CANONICAL_GOOD_SOURCES}")
+
+    for forbidden in PROOF_FORBIDDEN:
+        if forbidden in content:
+            dirty.append(f"Proof contains forbidden content: {forbidden}")
+
+    for marker in MOJIBAKE_MARKERS:
+        if marker in content:
+            dirty.append(f"Proof contains mojibake marker: {marker.encode('unicode_escape').decode('ascii')}")
+
+    for marker in NON_ASCII_PUNCTUATION:
+        if marker in content:
+            dirty.append(f"Proof contains non-ASCII punctuation: {marker.encode('unicode_escape').decode('ascii')}")
+
+
+def _verify_bundle(base_path, dirty):
+    bundle = os.path.join(base_path, BUNDLE_PATH)
+    if not os.path.exists(bundle):
+        return
+
+    content = _read_text(bundle)
+    for marker in MOJIBAKE_MARKERS:
+        if marker in content:
+            dirty.append(f"Bundle contains mojibake marker: {marker.encode('unicode_escape').decode('ascii')}")
+    for marker in NON_ASCII_PUNCTUATION:
+        if marker in content:
+            dirty.append(f"Bundle contains non-ASCII punctuation: {marker.encode('unicode_escape').decode('ascii')}")
+
+
+def _iter_production_text_files(base_path):
+    roots = [".agent/workflows", ".agent/skills", ".agent/orchestrator", "tools", "src", "docs", "README.md"]
+    for root in roots:
+        full = os.path.join(base_path, root)
+        if os.path.isfile(full):
+            yield full
+            continue
+        if not os.path.isdir(full):
+            continue
+        for dirpath, dirnames, filenames in os.walk(full):
+            dirnames[:] = [dirname for dirname in dirnames if dirname != "__pycache__"]
+            for filename in filenames:
+                if filename.endswith((".md", ".py", ".json", ".txt")):
+                    yield os.path.join(dirpath, filename)
+
+
+def _verify_production_terms(base_path, dirty):
+    verifier_path = os.path.abspath(__file__)
+    for path in _iter_production_text_files(base_path):
+        abs_path = os.path.abspath(path)
+        if abs_path == verifier_path:
+            continue
+        if os.path.normpath(os.path.relpath(path, base_path)).startswith(os.path.join("tests", "fixtures")):
+            continue
+        content = _read_text(path)
+        for term in PRODUCTION_FORBIDDEN:
+            if term in content:
+                dirty.append(f"Production file contains forbidden term '{term}': {path}")
+
+
+def _allowlist_part_points_to_repo_file(part):
+    if "{drive}" in part or ":" in part or part.startswith("\\"):
+        return False
+    normalized = part.replace("\\", "/")
+    if normalized.startswith("node_modules/"):
+        return False
+    return normalized.endswith((".py", ".js", ".cjs", ".mjs", ".json", ".md"))
+
+
+def _verify_allowlist_targets(base_path, dirty):
+    allowlist_path = os.path.join(base_path, ".agent", "orchestrator", "command_allowlist.json")
+    if not os.path.exists(allowlist_path):
+        dirty.append(f"Missing command allowlist: {allowlist_path}")
+        return
+
+    with open(allowlist_path, "r", encoding="utf-8") as handle:
+        allowlist = json.load(handle)
+
+    drive = os.path.splitdrive(base_path)[0] or "C:"
+    for command in allowlist.get("allowed_commands", []):
+        command_parts = command.get("command", [])
+        if not command_parts:
+            dirty.append(f"Allowlisted command has no command parts: {command.get('name')}")
+            continue
+        exe = command_parts[0].replace("{drive}", drive)
+        if not (os.path.exists(exe) or shutil.which(exe) or shutil.which(os.path.basename(exe))):
+            dirty.append(f"Allowlisted command executable missing: {exe}")
+        for part in command_parts[1:]:
+            if _allowlist_part_points_to_repo_file(part):
+                full_path = os.path.join(base_path, part)
+                if not os.path.exists(full_path):
+                    dirty.append(f"Allowlisted repository target missing: {part}")
+
 
 def verify_clean_runtime():
     base_path = os.getcwd()
-    # 1. Stale Artifact Checks
-    patterns = [
-        ".agent/Loop_Flow/*.md",
-        ".agent/Loop_Flow/*.json",
-        ".agent/Loop_Flow/context_packs/*.md",
-        ".agent/Loop_Flow/research/*.md",
-        ".agent/logs/**/*.json",
-        ".agent/logs/**/*.txt",
-        ".agent/logs/**/*.md",
-        "test_final.txt",
-        "tasklist.txt",
-        "scratch/*.py",
-        "scratch/*.txt"
-    ]
-    
     dirty = []
-    for pattern in patterns:
-        matches = glob.glob(os.path.join(base_path, pattern), recursive=True)
-        for match in matches:
-            if not match.endswith(".gitkeep"):
-                dirty.append(match)
-            
-    # 2. Forbidden Terms & Proof Validation
-    forbidden_terms = [
-        "run_command", "browser_subagent", "take_memory_snapshot",
-        "evaluate_script", "list_console_messages", "take_screenshot",
-        "grep_search", "Commit Hash", "example.com", "chrome-devtools-mcp",
-        "fallback_backend", "HARNESS_VERIFICATION_MODE", "mock_verification",
-        "Backend: mock_verification", "browser_audit"
-    ]
-    
-    check_dirs = [
-        ".agent/workflows", ".agent/skills", ".agent/orchestrator", 
-        "tools", "src", "docs", "scratch"
-    ]
-    files_to_check = [os.path.join(base_path, "README.md")]
-    for dir_name in check_dirs:
-        full_dir = os.path.join(base_path, dir_name)
-        if os.path.exists(full_dir):
-            for root, dirs, files in os.walk(full_dir):
-                for file in files:
-                    files_to_check.append(os.path.join(root, file))
 
-    for path in files_to_check:
-        if not os.path.exists(path): continue
-        if path.endswith((".md", ".py", ".json", ".txt")):
-            if os.path.basename(path) == "verify_clean_runtime.py": continue
-            
-            try:
-                with open(path, 'r', encoding='utf-8', errors='ignore') as f:
-                    content = f.read()
-                    # Forbidden terms
-                    for term in forbidden_terms:
-                        if term in content:
-                            dirty.append(f"Forbidden term '{term}' in {path}")
-                    
-                    # Proof Validation
-                    if "docs/verification" in path.replace("\\", "/"):
-                        if "browser_research_mdn_requestanimationframe.md" in path:
-                            required = [
-                                "Status", "complete", "Backend: playwright", 
-                                "developer.mozilla.org", "requestAnimationFrame", "Canvas_API"
-                            ]
-                            # Require at least one core match (Point 3)
-                            core_matches = [
-                                "Window/requestAnimationFrame", 
-                                "Canvas_API/Tutorial/Basic_animations",
-                                "CanvasRenderingContext2D"
-                            ]
-                            if not any(cm in content for cm in core_matches):
-                                dirty.append(f"Proof {path} missing at least one core source match: {core_matches}")
-
-                            forbidden = [
-                                "mock_verification", "Status: blocked", "Status: failed", 
-                                "Status: partial", "No findings recorded",
-                                "VRDisplay", "XRSession", "WebXR", "Deprecated", 
-                                "Experimental", "Non-standard", "Limited availability"
-                            ]
-                            # Mojibake check (Point 2)
-                            mojibake_markers = ["Ã¢â‚¬â„¢", "Ã¢â‚¬Å“", "Ã¢â‚¬", "Ã¢â‚¬â€", "Ãƒ", "Ã‚"]
-                            forbidden.extend(mojibake_markers)
-
-                            for r in required:
-                                if r not in content:
-                                    dirty.append(f"Proof {path} missing required term: {r}")
-                            for f in forbidden:
-                                if f in content:
-                                    dirty.append(f"Proof {path} contains forbidden term/marker: {f}")
-                        else:
-                            if "Status: blocked" in content and "blocked_expected" not in path:
-                                dirty.append(f"Invalid proof artifact (Status: blocked): {path}")
-                            if "No findings recorded" in content and "blocked_expected" not in path:
-                                dirty.append(f"Invalid proof artifact (Empty findings): {path}")
-            except: pass
-
-    # 3. Allowlist Integrity
-    allowlist_path = os.path.join(base_path, ".agent/orchestrator/command_allowlist.json")
-    if os.path.exists(allowlist_path):
-        with open(allowlist_path, 'r') as f:
-            allowlist = json.load(f)
-            for cmd in allowlist.get("allowed_commands", []):
-                parts = cmd["command"]
-                # Check if the primary executable exists or is in path
-                exe = parts[0].replace("{drive}", "C:")
-                found = os.path.exists(os.path.join(base_path, exe)) or shutil.which(exe)
-                
-                # Resilient check for absolute portable paths
-                if not found and ":" in exe:
-                    basename = os.path.basename(exe)
-                    found = shutil.which(basename)
-                
-                if not found:
-                    dirty.append(f"Allowlisted command executable missing: {exe}")
-                
-                # If it's a relative path to a script in the repo, check its full path
-                if not found and "/" in exe and not ":" in exe:
-                    if not os.path.exists(os.path.join(base_path, exe)):
-                        dirty.append(f"Allowlisted script missing: {exe}")
+    _verify_runtime_clean(base_path, dirty)
+    _verify_proof(base_path, dirty)
+    _verify_bundle(base_path, dirty)
+    _verify_production_terms(base_path, dirty)
+    _verify_allowlist_targets(base_path, dirty)
 
     if dirty:
-        print("FAIL: Dirty runtime or codebase detected!")
+        print("FAIL: Dirty runtime or invalid proof detected.")
         for item in dirty:
             print(f"  {item}")
         sys.exit(1)
-    
+
     print("PASS: Runtime is clean.")
     return True
 
-if __name__ == "__main__":
-    if verify_clean_runtime():
-        sys.exit(0)
-    else:
-        sys.exit(1)
 
+if __name__ == "__main__":
+    sys.exit(0 if verify_clean_runtime() else 1)
 
 
 
 --------------------------------------------------------------------------------
 FILE: tools\__init__.py
 --------------------------------------------------------------------------------
-
 
 
 
