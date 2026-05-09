@@ -37,9 +37,10 @@ class ArtifactValidator:
 
         return errors
 
-    def validate(self, stage, actions, execution_results, validation_rules, state):
+    def validate(self, stage, actions, execution_results, validation_rules, state, skill_manifests=None):
         errors = []
         warnings = []
+        skill_manifests = skill_manifests or []
 
         if not actions:
             errors.append("Missing ACTIONS_JSON.")
@@ -57,12 +58,7 @@ class ArtifactValidator:
         feature_slug = state.get("feature_slug", "")
         for req_file in validation_rules.get("required_files", []):
             req_file_processed = req_file.replace("{feature}", feature_slug)
-            full_path = os.path.join(self.base_path, req_file_processed)
-            
-            if not os.path.exists(full_path):
-                # Fallback check in Loop_Flow
-                full_path = os.path.join(self.base_path, ".agent/Loop_Flow", os.path.basename(req_file_processed))
-            
+            full_path = self._resolve_existing_artifact(req_file_processed)
             if not os.path.exists(full_path):
                 errors.append(f"Required file missing: {req_file_processed}")
                 continue
@@ -79,6 +75,28 @@ class ArtifactValidator:
                                 errors.append(f"Required section '{section}' missing in {req_file_processed}")
                     except Exception as e:
                         errors.append(f"Failed to read {req_file_processed} for section validation: {str(e)}")
+
+        for manifest in skill_manifests:
+            for artifact in manifest.get("expected_artifacts", []):
+                path_template = artifact.get("path")
+                if not path_template:
+                    continue
+                artifact_path = path_template.replace("{feature}", feature_slug)
+                full_path = self._resolve_existing_artifact(artifact_path)
+                if not os.path.exists(full_path):
+                    if artifact.get("required", True):
+                        errors.append(f"Expected skill artifact missing for {manifest['id']}: {artifact_path}")
+                    continue
+                required_sections = artifact.get("required_sections", [])
+                if required_sections and full_path.endswith(".md"):
+                    try:
+                        with open(full_path, "r", encoding="utf-8") as f:
+                            content = f.read()
+                        for section in required_sections:
+                            if not re.search(f"^#+\\s+.*?{re.escape(section)}", content, re.MULTILINE | re.IGNORECASE):
+                                errors.append(f"Expected skill artifact section '{section}' missing in {artifact_path}")
+                    except Exception as e:
+                        errors.append(f"Failed to read expected artifact {artifact_path}: {str(e)}")
 
         # 4. Check writes/patches (Safety & Line Limits)
         for w in execution_results.get("writes", []):
@@ -120,8 +138,24 @@ class ArtifactValidator:
                     latest_errors = self.validate_research_result(all_research[-1])
                     errors.append("Mandatory research failed to meet quality metrics: " + "; ".join(latest_errors))
 
+        validators = {
+            validator
+            for manifest in skill_manifests
+            for validator in manifest.get("validators", [])
+        }
+        if "research_quality" in validators and (stage == "researcher" or actions.get("research_requests")):
+            all_research = execution_results.get("research", []) + state.get("research_results", [])
+            if all_research and not any(not self.validate_research_result(r) for r in all_research):
+                errors.append("Skill validator research_quality failed.")
+
         return {
             "valid": len(errors) == 0,
             "errors": errors,
             "warnings": warnings
         }
+
+    def _resolve_existing_artifact(self, rel_path):
+        full_path = os.path.join(self.base_path, rel_path)
+        if os.path.exists(full_path):
+            return full_path
+        return os.path.join(self.base_path, ".agent/Loop_Flow", os.path.basename(rel_path))

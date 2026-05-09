@@ -5,6 +5,8 @@ import re
 class SafetyGuard:
     def __init__(self, workspace_root):
         self.workspace_root = workspace_root
+        self.stage_write_policy = {}
+        self.session_workspace_roots = []
         self.allowed_roots = [
             "src/", "tests/", "tools/", "data/", "docs/", 
             ".agent/Loop_Flow/", ".agent/logs/", ".agent/state/", 
@@ -18,6 +20,10 @@ class SafetyGuard:
         ]
         self.allowlist_path = os.path.join(workspace_root, ".agent/orchestrator/command_allowlist.json")
         self._allowlist = None
+
+    def set_policy_context(self, stage_write_policy=None, session_workspace_roots=None):
+        self.stage_write_policy = stage_write_policy or {}
+        self.session_workspace_roots = session_workspace_roots or []
 
     @property
     def allowlist(self):
@@ -60,8 +66,8 @@ class SafetyGuard:
         if basename in lock_files:
             return False
 
-        # Stage-specific permissions
-        permissions = {
+        # Stage-specific permissions supplied by active skill/session policy.
+        permissions = self.stage_write_policy or {
             "concept_producer": [".agent/Loop_Flow", "docs/adr"],
             "researcher": [".agent/Loop_Flow", "docs/adr"],
             "designer": [".agent/Loop_Flow"],
@@ -77,7 +83,7 @@ class SafetyGuard:
             for root in allowed_for_stage:
                 root = root.rstrip("/")
                 if path == root or path.startswith(root + "/"):
-                    return True
+                    return self._within_session_workspace(path)
             return False
 
         # Fallback to global allowed roots if no stage provided (for general safety)
@@ -86,6 +92,15 @@ class SafetyGuard:
             if path == root or path.startswith(root + "/"):
                 return True
                 
+        return False
+
+    def _within_session_workspace(self, path):
+        if not self.session_workspace_roots:
+            return True
+        for root in self.session_workspace_roots:
+            root = root.rstrip("/")
+            if path == root or path.startswith(root + "/"):
+                return True
         return False
 
     def validate_actions(self, stage, actions):

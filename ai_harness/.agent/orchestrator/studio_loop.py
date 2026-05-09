@@ -29,6 +29,7 @@ from artifact_store import ArtifactStore
 from source_indexer import SourceIndexer
 from hooks import OrchestratorHooks
 from context_compactor import ContextCompactor
+from session_router import SessionRouter
 
 
 class StudioLoopOrchestrator:
@@ -68,6 +69,7 @@ class StudioLoopOrchestrator:
         self.safety_guard = SafetyGuard(base_path)
         self.retry_engine = RetryEngine(max_retries=self.config.get("automation", {}).get("max_stage_retries", 3))
         self.artifact_validator = ArtifactValidator(base_path)
+        self.session_router = SessionRouter(base_path)
 
     def load_config(self):
         with open(self.config_path, 'r') as f:
@@ -80,12 +82,14 @@ class StudioLoopOrchestrator:
             print(f"Transformed (copyright-safe): {safe_feature}")
             
         slug = self.pruner.generate_slug(safe_feature)
-        start_stage = self.transition_engine.determine_initial_stage(safe_feature)
-        state = self.state_store.start_feature(safe_feature, slug, start_stage)
+        kind = self.session_router.infer_kind(safe_feature)
+        start_stage = self.session_router.route_initial_stage(safe_feature, kind)
+        state = self.state_store.start_feature(safe_feature, slug, start_stage, kind=kind)
         
         self.detect_capabilities()
         
         print(f"Starting feature: {safe_feature} (slug: {slug})")
+        print(f"Session: {state.get('session_id')} ({kind})")
         print(f"Initial stage: {start_stage}")
         
         if mode == "auto":
@@ -130,6 +134,13 @@ class StudioLoopOrchestrator:
             return True
 
         print(f"Stage: {stage_name}")
+        allowed_roles = state.get("allowed_roles")
+        if allowed_roles and stage_name not in allowed_roles:
+            print(f"Stage {stage_name} is not allowed for session {state.get('session_id')}.")
+            return False
+        skill_manifests = self.role_loader.load_role_skill_manifests(stage_name)
+        self.state_store.record_skills_used(stage_name, skill_manifests)
+        self._apply_policy_context(state)
         
         if repair_prompt_override:
             prompt = repair_prompt_override
@@ -265,6 +276,7 @@ class StudioLoopOrchestrator:
 
     def perform_actions(self, stage, actions):
         state = self.state_store.load_state()
+        self._apply_policy_context(state)
         feature_slug = state.get("feature_slug")
         results = {"writes": [], "patches": [], "commands": [], "research": []}
         
@@ -368,10 +380,11 @@ class StudioLoopOrchestrator:
 
     def validate_stage(self, stage_name, actions, results):
         state = self.state_store.load_state()
+        skill_manifests = self.role_loader.load_role_skill_manifests(stage_name)
         val_rules = self.graph.get_validation_rules(stage_name)
         
         # 1. Structural & File Validation
-        report = self.artifact_validator.validate(stage_name, actions, results, val_rules, state)
+        report = self.artifact_validator.validate(stage_name, actions, results, val_rules, state, skill_manifests=skill_manifests)
         errors = report["errors"]
         
         # 2. Copyright Scan
@@ -437,9 +450,26 @@ class StudioLoopOrchestrator:
         report_path = os.path.join(self.base_path, f".agent/logs/validation/{timestamp}_{state['feature_slug']}_{stage_name}.json")
         os.makedirs(os.path.dirname(report_path), exist_ok=True)
         with open(report_path, 'w', encoding='utf-8') as f:
-            json.dump({"valid": len(errors) == 0, "errors": errors, "actions": actions, "results": results}, f, indent=2)
+            json.dump({
+                "valid": len(errors) == 0,
+                "errors": errors,
+                "actions": actions,
+                "results": results,
+                "skills_used": state.get("skills_used", {}).get(stage_name, [])
+            }, f, indent=2)
 
         return {"valid": len(errors) == 0, "errors": errors}
+
+    def _apply_policy_context(self, state):
+        stage_write_policy = {}
+        for role in self.graph.schema.get("stages", {}).keys():
+            roots = self.role_loader.skill_registry.allowed_write_paths_for_role(role)
+            if roots:
+                stage_write_policy[role] = roots
+        workspace_roots = state.get("workspace_roots", []) if state else []
+        self.safety_guard.set_policy_context(stage_write_policy, workspace_roots)
+        self.file_writer.set_policy_context(stage_write_policy)
+        self.patch_applier.set_policy_context(stage_write_policy)
 
     def detect_capabilities(self):
         caps = self.capability_registry.detect_all()
@@ -461,6 +491,33 @@ class StudioLoopOrchestrator:
     def status(self):
         state = self.state_store.load_state()
         print(json.dumps(state, indent=2))
+
+    def sessions(self):
+        sessions = self.state_store.list_sessions()
+        rows = [
+            {
+                "session_id": s.get("session_id"),
+                "kind": s.get("kind"),
+                "title": s.get("title"),
+                "status": s.get("status"),
+                "current_stage": s.get("current_stage"),
+                "updated_at": s.get("updated_at"),
+            }
+            for s in sessions
+        ]
+        print(json.dumps(rows, indent=2))
+
+    def session_status(self, session_id):
+        state = self.state_store.get_session(session_id)
+        print(json.dumps(state, indent=2))
+
+    def resume_session(self, session_id):
+        state = self.state_store.resume_session(session_id)
+        print(f"Resumed session {session_id} at stage {state.get('current_stage')}.")
+
+    def archive_session(self, session_id):
+        self.state_store.archive_session(session_id)
+        print(f"Archived session {session_id}.")
 
     def reset(self):
         self.state_store.reset_state()
@@ -525,7 +582,7 @@ class StudioLoopOrchestrator:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Studio Loop Orchestrator 4.0")
-    parser.add_argument("command", choices=["run", "auto", "continue", "step", "retry", "repair", "status", "reset", "validate", "context", "research", "capabilities"])
+    parser.add_argument("command", choices=["run", "auto", "continue", "step", "retry", "repair", "status", "reset", "validate", "context", "research", "capabilities", "sessions", "session-status", "resume-session", "archive-session"])
     parser.add_argument("payload", nargs="?", help="Task description or query")
     
     args = parser.parse_args()
@@ -560,6 +617,23 @@ if __name__ == "__main__":
             print("No active feature to repair.")
     elif args.command == "status":
         orchestrator.status()
+    elif args.command == "sessions":
+        orchestrator.sessions()
+    elif args.command == "session-status":
+        if args.payload:
+            orchestrator.session_status(args.payload)
+        else:
+            print("session-status requires a session id.")
+    elif args.command == "resume-session":
+        if args.payload:
+            orchestrator.resume_session(args.payload)
+        else:
+            print("resume-session requires a session id.")
+    elif args.command == "archive-session":
+        if args.payload:
+            orchestrator.archive_session(args.payload)
+        else:
+            print("archive-session requires a session id.")
     elif args.command == "reset":
         orchestrator.reset()
     elif args.command == "validate":

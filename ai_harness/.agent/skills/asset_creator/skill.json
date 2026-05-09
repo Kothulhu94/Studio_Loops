@@ -1,0 +1,15 @@
+{
+  "id": "studio-loop.asset_creator",
+  "name": "Studio Loop Asset Creator",
+  "version": "1.0.0",
+  "roles": ["asset_creator"],
+  "required_tools": ["file_writer", "research_requests", "git_status"],
+  "allowed_write_paths": [".agent/Loop_Flow", "src/assets", "data/assets", "src/SVG"],
+  "expected_artifacts": [
+    {"type": "asset_plan", "path": ".agent/Loop_Flow/{feature}_asset_plan.md", "required": false, "required_sections": ["Asset Specs", "Integration Plan"]}
+  ],
+  "validators": ["required_sections", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/asset_creator_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/asset_creator_skills.md"
+}

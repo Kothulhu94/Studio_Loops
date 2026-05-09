@@ -1,0 +1,20 @@
+{
+  "id": "studio-loop.designer",
+  "name": "Studio Loop Designer",
+  "version": "1.0.0",
+  "roles": ["designer"],
+  "required_tools": ["file_writer", "research_requests", "git_status"],
+  "allowed_write_paths": [".agent/Loop_Flow"],
+  "expected_artifacts": [
+    {
+      "type": "design_spec",
+      "path": ".agent/Loop_Flow/{feature}_design_spec.md",
+      "required": true,
+      "required_sections": ["Aesthetic Spec", "Interaction Spec", "CSS Tokens"]
+    }
+  ],
+  "validators": ["required_sections", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/designer_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/designer_skills.md"
+}

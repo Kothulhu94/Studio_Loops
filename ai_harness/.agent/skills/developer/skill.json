@@ -1,0 +1,15 @@
+{
+  "id": "studio-loop.developer",
+  "name": "Studio Loop Developer",
+  "version": "1.0.0",
+  "roles": ["developer"],
+  "required_tools": ["file_writer", "patch_applier", "typecheck", "test", "find_bloat", "git_diff"],
+  "allowed_write_paths": ["src", "tests", "tools", "data", ".agent/Loop_Flow", "docs/adr"],
+  "expected_artifacts": [
+    {"type": "implementation_report", "path": ".agent/Loop_Flow/{feature}_implementation_report.md", "required": false, "required_sections": ["Implementation Summary", "Files Changed", "Verification"]}
+  ],
+  "validators": ["full_test_suite", "bloat_check", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/developer_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/developer_skills.md"
+}

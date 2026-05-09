@@ -1,0 +1,20 @@
+{
+  "id": "studio-loop.qa",
+  "name": "Studio Loop QA Tester",
+  "version": "1.0.0",
+  "roles": ["qa_tester"],
+  "required_tools": ["file_writer", "typecheck", "test", "test_target", "find_bloat", "git_status"],
+  "allowed_write_paths": [".agent/Loop_Flow", "tests"],
+  "expected_artifacts": [
+    {
+      "type": "qa_report",
+      "path": ".agent/Loop_Flow/{feature}_qa_report.md",
+      "required": true,
+      "required_sections": ["Test Cases", "Result", "Risks"]
+    }
+  ],
+  "validators": ["required_sections", "full_test_suite", "bloat_check", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/qa_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/qa_skills.md"
+}

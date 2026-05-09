@@ -1,0 +1,20 @@
+{
+  "id": "studio-loop.producer",
+  "name": "Studio Loop Concept Producer",
+  "version": "1.0.0",
+  "roles": ["concept_producer"],
+  "required_tools": ["file_writer", "research_requests", "git_status"],
+  "allowed_write_paths": [".agent/Loop_Flow", "docs/adr"],
+  "expected_artifacts": [
+    {
+      "type": "blueprint",
+      "path": ".agent/Loop_Flow/{feature}_blueprint.md",
+      "required": true,
+      "required_sections": ["Vision", "Target User Experience", "Thematic Alignment"]
+    }
+  ],
+  "validators": ["required_sections", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/producer_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/producer_skills.md"
+}

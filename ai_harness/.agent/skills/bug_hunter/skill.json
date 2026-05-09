@@ -1,0 +1,20 @@
+{
+  "id": "studio-loop.bug_hunter",
+  "name": "Studio Loop Bug Hunter",
+  "version": "1.0.0",
+  "roles": ["bug_hunter"],
+  "required_tools": ["file_writer", "research_requests", "test_target", "find_bloat", "git_diff"],
+  "allowed_write_paths": [".agent/Loop_Flow", "tools"],
+  "expected_artifacts": [
+    {
+      "type": "root_cause_analysis",
+      "path": ".agent/Loop_Flow/{feature}_root_cause_analysis.md",
+      "required": true,
+      "required_sections": ["Root Cause", "Reproduction Steps", "Fix Strategy"]
+    }
+  ],
+  "validators": ["required_sections", "research_quality", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/qa_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/qa_skills.md"
+}

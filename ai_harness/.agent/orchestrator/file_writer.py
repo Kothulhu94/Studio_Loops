@@ -19,8 +19,12 @@ class FileWriter:
         self.logs_dir = os.path.join(self.workspace_root, logs_dir)
         self.blocked_targets = [
             ".git", "node_modules", "dist", "build", ".env", 
-            "package-lock.json", "pnpm-lock.yaml", "yarn.lock"
+            "package.json", "tsconfig.json", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb"
         ]
+        self.stage_write_policy = {}
+
+    def set_policy_context(self, stage_write_policy=None):
+        self.stage_write_policy = stage_write_policy or {}
 
     def write(self, stage, path, content, mode="overwrite"):
         # 1. Normalize and validate path
@@ -57,7 +61,7 @@ class FileWriter:
         normalized_path = os.path.normpath(path).replace("\\", "/")
         
         # Check stage-specific permissions
-        allowed_roots = self.STAGE_PERMISSIONS.get(stage, [])
+        allowed_roots = self.stage_write_policy.get(stage) or self.STAGE_PERMISSIONS.get(stage, [])
         is_allowed = False
         for root in allowed_roots:
             root = root.rstrip("/")

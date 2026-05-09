@@ -99,11 +99,9 @@ class TestFullLoop(unittest.TestCase):
             }
         }
 
-        # Sequence of model responses
+        # Sequence of model responses. Direct implementation requests now route
+        # straight to developer sessions.
         self.orchestrator.client.call.side_effect = [
-            f"Thinking...\nACTIONS_JSON:\n{json.dumps(cp_response['actions'])}",
-            f"Thinking...\nACTIONS_JSON:\n{json.dumps(res_response_1['actions'])}",
-            f"Thinking...\nACTIONS_JSON:\n{json.dumps(res_response_2['actions'])}", 
             f"Thinking...\nACTIONS_JSON:\n{json.dumps(dev_response['actions'])}",
             f"Thinking...\nACTIONS_JSON:\n{json.dumps(qa_response['actions'])}"
         ]

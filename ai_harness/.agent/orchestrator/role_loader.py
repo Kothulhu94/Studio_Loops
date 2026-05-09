@@ -1,4 +1,5 @@
 import os
+from skill_registry import SkillRegistry
 
 class RoleLoader:
     ROLE_MAPPING = {
@@ -25,6 +26,7 @@ class RoleLoader:
 
     def __init__(self, base_path):
         self.base_path = base_path
+        self.skill_registry = SkillRegistry(base_path)
 
     def load_role_workflow(self, role_name):
         rel_path = self.ROLE_MAPPING.get(role_name)
@@ -39,6 +41,18 @@ class RoleLoader:
             return f.read()
 
     def load_role_skills(self, role_name):
+        manifests = self.load_role_skill_manifests(role_name)
+        if manifests:
+            skills_content = []
+            for manifest in manifests:
+                summary = self.skill_registry.summarize_manifest(manifest)
+                markdown = self.skill_registry.load_skill_markdown(manifest)
+                skills_content.append(
+                    f"### Skill: {manifest['id']}@{manifest['version']}\n"
+                    f"Manifest:\n```json\n{summary}\n```\n\n{markdown}"
+                )
+            return "\n\n".join(skills_content)
+
         skill_files = self.SKILL_MAPPING.get(role_name, [])
         skills_content = []
         
@@ -51,3 +65,9 @@ class RoleLoader:
                 skills_content.append(f"### Skill: {sf} (Not Found)")
         
         return "\n\n".join(skills_content)
+
+    def load_role_skill_manifests(self, role_name):
+        try:
+            return self.skill_registry.get_role_skills(role_name)
+        except FileNotFoundError:
+            return []

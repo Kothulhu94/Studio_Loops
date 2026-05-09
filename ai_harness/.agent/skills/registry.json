@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "skills": [
+    {"id": "studio-loop.producer", "manifest": ".agent/skills/producer/skill.json"},
+    {"id": "studio-loop.researcher", "manifest": ".agent/skills/researcher/skill.json"},
+    {"id": "studio-loop.designer", "manifest": ".agent/skills/designer/skill.json"},
+    {"id": "studio-loop.asset_creator", "manifest": ".agent/skills/asset_creator/skill.json"},
+    {"id": "studio-loop.developer", "manifest": ".agent/skills/developer/skill.json"},
+    {"id": "studio-loop.qa", "manifest": ".agent/skills/qa/skill.json"},
+    {"id": "studio-loop.bug_hunter", "manifest": ".agent/skills/bug_hunter/skill.json"},
+    {"id": "studio-loop.debug_dev", "manifest": ".agent/skills/debug_dev/skill.json"}
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "studio-loop.debug_dev",
+  "name": "Studio Loop Debug Developer",
+  "version": "1.0.0",
+  "roles": ["debug_dev"],
+  "required_tools": ["file_writer", "patch_applier", "typecheck", "test", "test_target", "git_diff"],
+  "allowed_write_paths": ["src", "tests", "tools", ".agent/Loop_Flow"],
+  "expected_artifacts": [
+    {"type": "fix_report", "path": ".agent/Loop_Flow/{feature}_fix_report.md", "required": false, "required_sections": ["Fix Summary", "Regression Check"]}
+  ],
+  "validators": ["full_test_suite", "bloat_check", "copyright_scan"],
+  "provenance": {"source": "local legacy markdown", "legacy_file": ".agent/skills/developer_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/developer_skills.md"
+}
