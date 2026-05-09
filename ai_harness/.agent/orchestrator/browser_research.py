@@ -68,6 +68,9 @@ class BrowserResearch:
         strong_terms = query_terms - weak_terms
         if not strong_terms: strong_terms = query_terms # Fallback if all terms are weak
 
+        # Point 3 support: Ensure requestanimationframe is treated as a strong term
+        # (It already should be from the query split, but let's be explicit if needed)
+
         preferred_domains = [
             "developer.mozilla.org", "typescriptlang.org", "web.dev", 
             "w3.org"
@@ -124,7 +127,7 @@ class BrowserResearch:
         links = [l for s, l in scored_links if s > 15] 
 
         # 4. Fetch and extract top pages
-        max_pages = self.research_config.get("max_pages_per_query", 3)
+        max_pages = self.research_config.get("max_pages_per_query", 5)
         for link in links[:max_pages]:
             print(f"Fetching result: {link['url']}")
             page_res = backend.fetch_page(link["url"])

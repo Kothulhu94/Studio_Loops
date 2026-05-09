@@ -110,15 +110,10 @@ class SearchResultParser:
         for l in links:
             try:
                 url = l["url"]
-                domain = urllib.parse.urlparse(url).netloc
+                # Dedupe by normalized URL path (Point 1/3 fix)
+                dedupe_key = url.split("?")[0].split("#")[0].rstrip("/")
                 
-                if self.engine == "mdn":
-                    # Dedupe by normalized URL path
-                    dedupe_key = url.split("?")[0].split("#")[0].rstrip("/")
-                else:
-                    dedupe_key = domain
-                    
-                if dedupe_key not in seen_keys and domain:
+                if dedupe_key not in seen_keys:
                     unique_links.append(l)
                     seen_keys.add(dedupe_key)
             except:

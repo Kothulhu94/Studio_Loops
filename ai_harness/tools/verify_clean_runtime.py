@@ -85,7 +85,7 @@ def verify_clean_runtime():
                                 "Experimental", "Non-standard", "Limited availability"
                             ]
                             # Mojibake check (Point 2)
-                            mojibake_markers = ["â€™", "â€œ", "â€", "â€”", "Ã", "Â", ""]
+                            mojibake_markers = ["â€™", "â€œ", "â€", "â€”", "Ã", "Â"]
                             forbidden.extend(mojibake_markers)
 
                             for r in required:

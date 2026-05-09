@@ -7,7 +7,7 @@ Window: requestAnimationFrame()
 https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame
 
 ## Retrieved
-2026-05-09T13:28:23.823002
+2026-05-09T13:28:47.540426
 
 ## Headings
 
@@ -17,4 +17,4 @@ Window: requestAnimationFrame()Canvas animation uses requestAnimationFrame for s
 
 ## Notes
 Extracted via Studio Loop Local PageExtractor
-[WARNING] Mojibake detected!
+
