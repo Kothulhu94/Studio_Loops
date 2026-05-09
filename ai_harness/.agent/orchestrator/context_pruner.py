@@ -3,11 +3,13 @@ import subprocess
 import json
 
 class ContextPruner:
-    def __init__(self, config):
+    def __init__(self, config, workspace_root):
         self.config = config
+        self.workspace_root = workspace_root
 
     def build_context_pack(self, feature_slug, stage, user_request, state):
         pack_path = os.path.join(
+            self.workspace_root,
             self.config["paths"]["loop_flow"],
             "context_packs",
             f"{feature_slug}_{stage}_context.md"
@@ -69,7 +71,7 @@ Refer to .agent/Loop_Flow/context_packs/{feature_slug}_decision_memory.md for st
     def run_culler(self, keywords):
         try:
             cmd = ["python", "tools/context_culler.py"] + keywords
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.workspace_root)
             return result.stdout if result.returncode == 0 else "Culler failed."
         except Exception as e:
             return f"Culler error: {str(e)}"

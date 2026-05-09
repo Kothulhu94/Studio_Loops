@@ -76,8 +76,11 @@ class TestAutonomousLoop(unittest.TestCase):
         self.orchestrator.research_client.browser_research.perform_research = MagicMock(return_value={
             "status": "complete",
             "query": "TypeScript Canvas game architecture patterns",
-            "sources": [{"title": "Pattern 1", "url": "https://developer.mozilla.org/docs/Web/API/Canvas_API", "status": "fetched"}],
-            "findings": ["Use a game loop."],
+            "sources": [
+                {"title": "Canvas API", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API", "status": "fetched"},
+                {"title": "Game Loop Patterns", "url": "https://gameprogrammingpatterns.com/game-loop.html", "status": "fetched"}
+            ],
+            "findings": ["Finding 1: Use a game loop.", "Finding 2: Separate update and render."],
             "artifact_path": os.path.join(self.temp_dir, ".agent/Loop_Flow/research/test_research.md")
         })
         

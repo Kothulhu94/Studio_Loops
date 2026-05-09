@@ -26,7 +26,7 @@ This consolidated skill file contains all core capabilities required for the Res
 
 ### Instructions
 1. **Define Scope**: Identify the relevant files for the current task.
-2. **Execute Culling**: Run `python .agent/scripts/context_compiler.py` on the relevant files to generate Markdown context payloads.
+2. **Execute Culling**: Use the context pack and source index supplied by the orchestrator. Do not request context_compiler unless it exists in the allowlist.
 3. **Map Construction**: Create a "Context Pruning Map" for the Developer/Designer.
 4. **Validation**: Ensure no critical dependencies or definitions were pruned out.
 
@@ -92,23 +92,6 @@ This consolidated skill file contains all core capabilities required for the Res
 4. **Root Cause**: Trace the retainer path of leaked objects (e.g., event listeners not removed, global array growth).
 
 ### Orchestrator Actions
-- **Request browser audit only if browser_bridge capability is available.**
-- **Request an allowlisted command through ACTIONS_JSON.commands.**
-- **Do not invoke tools directly.**
-
----
-
-## 7. Browser-Based Audit
-**Description**: Using the orchestrator's browser capabilities to perform live browser inspection.
-**Description**: Using `browser_bridge` to perform live browser inspection as part of architectural research. This enables the Researcher to gather ground-truth data on actual rendering performance, DOM structure, and console errors before writing a blueprint.
-
-### Instructions
-1. **Connect**: Ensure the game dev server is running and browser capability is active.
-2. **DOM Snapshot**: Request a DOM/A11y snapshot through the orchestrator.
-3. **Console Check**: Request console message listing to check for errors.
-4. **Baseline Perf**: Request performance traces through the orchestrator.
-
-### Orchestrator Actions
-- **Request browser audit only if browser_bridge capability is available.**
+- Browser audit is not currently available. Do not request browser_audit. Use research_requests for external research and allowlisted commands only.
 - **Request an allowlisted command through ACTIONS_JSON.commands.**
 - **Do not invoke tools directly.**

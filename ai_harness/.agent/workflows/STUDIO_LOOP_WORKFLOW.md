@@ -33,7 +33,7 @@ The Studio Loop Orchestrator moves through the following stages automatically:
 
 ### 2. Research & Audit Stage (Researcher)
 *   **Goal**: Define technical architecture and implementation steps.
-*   **Action**: Evolve the blueprint into a technical audit with injection points and a checklist. Uses `context_compiler.py` for source analysis.
+*   **Action**: Evolve the blueprint into a technical audit with injection points and a checklist. Uses the orchestrator-generated source index and context_culler.py output for source analysis.
 
 ### 3. Design Stage (Designer)
 *   **Goal**: Define UI/UX aesthetics and interaction tokens.

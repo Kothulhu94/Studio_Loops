@@ -1,0 +1,8 @@
+[0509/131731.279:INFO:CONSOLE:6] "%cairgap.js%c Report-only mode enabled font-size:larger;font-weight:bold;border-radius:0.25em;padding:0.08em 0.25em;;color:amber;background-color:#6e3e00 ", source: https://transcend-cdn.com/cm/d556c3a1-e57c-4bdf-a490-390a1aebf6dd/airgap.js (6)
+[0509/131731.342:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 9970d578-0d82-447d-8c01-864571973c28 successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0509/131732.102:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 973ec572-a833-449b-9e3d-22eba7e8db8e successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0509/131732.105:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping fd289647-9146-439a-9fdd-d136efd42f0c successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0509/131733.127:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 7aa3922c-8c70-418b-9be8-45a6ce8b1f69 successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0509/131735.816:INFO:CONSOLE:2] "DEBUG: Starting extraction script", source:  (2)
+[0509/131735.816:INFO:CONSOLE:20] "DEBUG: Found 149 links", source:  (20)
+[0509/131735.818:INFO:CONSOLE:33] "DEBUG: Appended 149 links to dump", source:  (33)

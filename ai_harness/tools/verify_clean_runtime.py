@@ -33,12 +33,13 @@ def verify_clean_runtime():
         "run_command", "browser_subagent", "take_memory_snapshot",
         "evaluate_script", "list_console_messages", "take_screenshot",
         "grep_search", "Commit Hash", "example.com", "chrome-devtools-mcp",
-        "fallback_backend"
+        "fallback_backend", "HARNESS_VERIFICATION_MODE", "mock_verification",
+        "Backend: mock_verification", "browser_audit"
     ]
     
     check_dirs = [
         ".agent/workflows", ".agent/skills", ".agent/orchestrator", 
-        "tools", "tests", "src", "docs", "scratch"
+        "tools", "src", "docs", "scratch"
     ]
     files_to_check = [os.path.join(base_path, "README.md")]
     for dir_name in check_dirs:
@@ -63,10 +64,20 @@ def verify_clean_runtime():
                     
                     # Proof Validation
                     if "docs/verification" in path.replace("\\", "/"):
-                        if "Status: blocked" in content and "blocked_expected" not in path:
-                            dirty.append(f"Invalid proof artifact (Status: blocked): {path}")
-                        if "No findings recorded" in content and "blocked_expected" not in path:
-                            dirty.append(f"Invalid proof artifact (Empty findings): {path}")
+                        if "browser_research_mdn_requestanimationframe.md" in path:
+                            required = ["Status", "complete", "Backend: playwright", "developer.mozilla.org", "requestAnimationFrame", "Canvas API"]
+                            forbidden = ["mock_verification", "Status: blocked", "Status: failed", "Status: partial", "No findings recorded"]
+                            for r in required:
+                                if r not in content:
+                                    dirty.append(f"Proof {path} missing required term: {r}")
+                            for f in forbidden:
+                                if f in content:
+                                    dirty.append(f"Proof {path} contains forbidden term: {f}")
+                        else:
+                            if "Status: blocked" in content and "blocked_expected" not in path:
+                                dirty.append(f"Invalid proof artifact (Status: blocked): {path}")
+                            if "No findings recorded" in content and "blocked_expected" not in path:
+                                dirty.append(f"Invalid proof artifact (Empty findings): {path}")
             except: pass
 
     # 3. Allowlist Integrity

@@ -11,13 +11,17 @@ def get_context_map(root_dir, search_terms):
     """
     context_map = {}
     # 1. Try to use index if available
-    index_path = os.path.join(root_dir, ".agent/state/source_index.json")
+    index_path = os.path.join(root_dir, ".agent/Loop_Flow/source_index.json")
     indexed_files = []
     if os.path.exists(index_path):
         try:
             with open(index_path, 'r', encoding='utf-8') as f:
                 index_data = json.load(f)
-                indexed_files = index_data.get("files", [])
+                # SourceIndexer writes a list of file info objects directly
+                if isinstance(index_data, list):
+                    indexed_files = [item["path"] for item in index_data if "path" in item]
+                elif isinstance(index_data, dict):
+                    indexed_files = index_data.get("files", [])
         except:
             pass
 

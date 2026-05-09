@@ -52,15 +52,46 @@ class PlaywrightResearch:
                 user_agent=self.config.get("user_agent", "Mozilla/5.0 StudioLoopLocalGemmaResearch/1.0")
             )
             page = context.new_page()
+            page.on("console", lambda msg: print(f"BROWSER: {msg.text}"))
             
             try:
                 print(f"Navigating to {search_url}...")
                 page.goto(search_url, timeout=30000)
                 try:
-                    page.wait_for_load_state("load", timeout=10000)
+                    # Wait for network idle
+                    page.wait_for_load_state("networkidle", timeout=15000)
                 except:
                     pass
                 
+                # Small sleep for final rendering
+                time.sleep(3)
+                page.screenshot(path="debug_search.png")
+                
+                # Aggressively extract all links from all Shadow DOMs
+                extracted_links = []
+                try:
+                    extracted_links = page.evaluate("""
+                        (function() {
+                            function getAllAnchors(root) {
+                                let results = [];
+                                const anchors = root.querySelectorAll('a');
+                                for (const a of anchors) {
+                                    if (a.href) results.push({url: a.href, title: a.innerText});
+                                }
+                                const all = root.querySelectorAll('*');
+                                for (const el of all) {
+                                    if (el.shadowRoot) {
+                                        results = results.concat(getAllAnchors(el.shadowRoot));
+                                    }
+                                }
+                                return results;
+                            }
+                            return getAllAnchors(document);
+                        })();
+                    """)
+                except:
+                    pass
+
                 # Detect CAPTCHA/Login
                 content = page.content()
                 if "captcha" in content.lower() or "verification" in content.lower():
@@ -68,7 +99,7 @@ class PlaywrightResearch:
                     if len(content) < 5000: 
                         return {"error": "Search blocked by CAPTCHA."}
                 
-                return {"html": content, "url": page.url}
+                return {"html": content, "url": page.url, "links": extracted_links}
             except Exception as e:
                 return {"error": str(e)}
             finally:

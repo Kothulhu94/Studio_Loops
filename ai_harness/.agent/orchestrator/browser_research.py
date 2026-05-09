@@ -29,31 +29,6 @@ class BrowserResearch:
         }
 
         # 1. Choose backend - Playwright ONLY for research
-        if os.environ.get("HARNESS_VERIFICATION_MODE") == "1" and "requestAnimationFrame" in query:
-            # High-quality mock for verification
-            results["status"] = "complete"
-            results["backend"] = "mock_verification"
-            results["sources"] = [
-                {
-                    "title": "Window: requestAnimationFrame() method - Web APIs | MDN",
-                    "url": "https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame",
-                    "status": "fetched",
-                    "relevance": 100
-                },
-                {
-                    "title": "Canvas API - Web APIs | MDN",
-                    "url": "https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API",
-                    "status": "fetched",
-                    "relevance": 80
-                }
-            ]
-            results["findings"] = [
-                "requestAnimationFrame(callback) tells the browser you wish to perform an animation and requests that the browser calls a specified function to update an animation before the next repaint.",
-                "The callback method is passed a single argument, a DOMHighResTimeStamp, which indicates the current time when callbacks queued by requestAnimationFrame() begin to fire.",
-                "For canvas animations, it is more efficient than setTimeout as it aligns with the browser's display refresh rate (usually 60Hz)."
-            ]
-            return results
-
         if not self.playwright.is_available():
             results["status"] = "blocked"
             results["errors"].append("Playwright research backend not available.")
@@ -71,7 +46,16 @@ class BrowserResearch:
             return results
 
         # 3. Parse links
-        links = self.parser.parse_links(search_res["html"])
+        links = []
+        if "links" in search_res and search_res["links"]:
+            # Standardize pre-extracted links
+            for l in search_res["links"]:
+                links.append({"url": l["url"], "title": l.get("title", "")})
+            print(f"DEBUG: Using {len(links)} pre-extracted links from backend.")
+        else:
+            links = self.parser.parse_links(search_res["html"])
+            print(f"DEBUG: Using {len(links)} parsed links from HTML.")
+
         if not links:
             results["status"] = "partial"
             results["errors"].append("No search results found.")
@@ -134,6 +118,7 @@ class BrowserResearch:
                 score -= 40
             
             scored_links.append((score, link))
+            print(f"DEBUG: Scored link {link['url']} -> {score}")
         
         # Sort by score descending
         scored_links.sort(key=lambda x: x[0], reverse=True)
@@ -223,7 +208,7 @@ if __name__ == "__main__":
     if args.query:
         res = researcher.perform_research(args.query, args.reason)
         print(json.dumps(res, indent=2))
-        if res["status"] == "failed":
+        if res["status"] != "complete":
             sys.exit(1)
         sys.exit(0)
     

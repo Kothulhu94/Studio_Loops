@@ -31,6 +31,7 @@ class StateStore:
             "context_packs": {},
             "research_briefs": [],
             "research_results": [],
+            "research_request_history": [],
             "writes": [],
             "patches": [],
             "commands": [],

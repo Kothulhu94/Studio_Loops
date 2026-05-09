@@ -28,7 +28,7 @@ This consolidated skill file contains all core capabilities required for the QA 
 4. **Report**: Document findings with specific line numbers and execution times.
 
 ### Orchestrator Actions
-- **Request browser audit only if browser_bridge capability is available.**
+- Browser audit is not currently available. Do not request browser_audit. Use research_requests for external research and allowlisted commands only.
 - **Request an allowlisted command through ACTIONS_JSON.commands.**
 - **Do not invoke tools directly.**
 
@@ -46,19 +46,3 @@ This consolidated skill file contains all core capabilities required for the QA 
 ### Tools
 - `src/__tests__/`: Destination for test files.
 - `Vitest`: The test runner.
-
----
-
-## 4. Browser-Based Auditing
-**Description**: Request browser audit through `ACTIONS_JSON.commands` using the allowlisted `browser_audit` command if capability is available.
-
-### Instructions
-1. **Performance Audit**: Request a performance audit through the orchestrator.
-2. **Memory Leak Check**: Request memory snapshots before and after a stress session.
-3. **UI Layout Verification**: Request a DOM/A11y snapshot to verify element existence.
-4. **Console Audit**: Request console message listing to detect errors.
-
-### Orchestrator Actions
-- **Request browser audit only if browser_bridge capability is available.**
-- **Request an allowlisted command through ACTIONS_JSON.commands.**
-- **Do not invoke tools directly.**

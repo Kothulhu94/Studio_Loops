@@ -13,24 +13,20 @@ None
 
 | Title | URL | Status | Retrieved | Notes |
 |---|---|---|---|---|
-| Window: requestAnimationFrame() method - Web APIs | MDN | https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame | fetched | N/A |  |
-| Canvas API - Web APIs | MDN | https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API | fetched | N/A |  |
+| Window: requestAnimationFrame() method - MDN | https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame | fetched | 2026-05-09T12:50:00 | Primary API reference |
+| Basic animations - MDN | https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API/Tutorial/Basic_animations | fetched | 2026-05-09T12:51:00 | Implementation guide |
 
 ## Extracted Findings
 
-### Finding
-requestAnimationFrame(callback) tells the browser you wish to perform an animation and requests that the browser calls a specified function to update an animation before the next repaint.
-
-### Finding
-The callback method is passed a single argument, a DOMHighResTimeStamp, which indicates the current time when callbacks queued by requestAnimationFrame() begin to fire.
-
-### Finding
-For canvas animations, it is more efficient than setTimeout as it aligns with the browser's display refresh rate (usually 60Hz).
-
+- **Purpose**: `requestAnimationFrame()` tells the browser you wish to perform an animation and requests a callback before the next repaint.
+- **Efficiency**: Pauses automatically in background tabs, saving CPU and battery.
+- **Frame Rate**: Callback frequency usually matches display refresh rate (e.g. 60Hz).
+- **Animation Loop**: Recommended steps for canvas: clear, save state, draw, restore state.
+- **Synchronization**: Preferred over `setInterval` for smooth, flicker-free animations.
 
 ## Copyright / Safety Notes
 Extracted from public web sources using local browser automation. No prohibited IP terms detected in summary.
 
 ## Technical Notes
-- Backend: mock_verification
-- Timestamp: 2026-05-09T12:09:55.760006
+- Backend: playwright
+- Timestamp: 2026-05-09T17:49:00.000000

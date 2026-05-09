@@ -112,8 +112,11 @@ class TestFullLoop(unittest.TestCase):
         self.orchestrator.research_client.perform_research.return_value = {
             "status": "complete",
             "query": "pattern A",
-            "findings": ["Pattern A found"],
-            "sources": [{"title": "Source A", "url": "https://developer.mozilla.org/docs/Web/API/Canvas_API", "status": "fetched"}],
+            "findings": ["Finding 1", "Finding 2"],
+            "sources": [
+                {"title": "Source A", "url": "https://developer.mozilla.org/docs/Web/API/Canvas_API", "status": "fetched"},
+                {"title": "Source B", "url": "https://developer.mozilla.org/docs/Web/API/CanvasRenderingContext2D", "status": "fetched"}
+            ],
             "artifact_path": os.path.join(self.base_dir, ".agent/Loop_Flow/research/latest_pattern_a_research_brief.md")
         }
         

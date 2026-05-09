@@ -22,7 +22,7 @@ class SearchResultParser:
             
             # Pattern for direct links
             direct_pattern = r'<a[^>]+href=["\'](http[s]?://[^"\']+)["\'][^>]*>(.*?)</a>'
-            matches = re.findall(direct_pattern, html_content)
+            matches = re.findall(direct_pattern, html_content, re.DOTALL | re.IGNORECASE)
             
             for url, title in matches:
                 # Filter out internal links and ads
@@ -42,9 +42,9 @@ class SearchResultParser:
                 if clean_title and url:
                     links.append({"url": url, "title": clean_title})
 
-            # 2. Match relative /l/?uddg links that might have been missed
-            redirect_pattern = r'href=["\'](/[l]/\?uddg=[^"\']+)["\'][^>]*>(.*?)</a>'
-            matches = re.findall(redirect_pattern, html_content)
+            # 2. Match any link containing /l/?uddg=
+            redirect_pattern = r'href=["\'][^"\']*(/[l]/\?uddg=[^"\']+)["\'][^>]*>(.*?)</a>'
+            matches = re.findall(redirect_pattern, html_content, re.DOTALL | re.IGNORECASE)
             for path, title in matches:
                 params = urllib.parse.parse_qs(urllib.parse.urlparse(path).query)
                 if 'uddg' in params:
@@ -54,8 +54,11 @@ class SearchResultParser:
                         links.append({"url": url, "title": clean_title})
         else:
             # Generic parser for other engines (Bing, Google, etc.)
-            direct_pattern = r'<a[^>]+href=["\'](http[s]?://[^"\']+|/[^"\']+)["\'][^>]*>(.*?)</a>'
-            matches = re.findall(direct_pattern, html_content)
+            direct_pattern = r'<a\s+[^>]*?href=["\'](http[s]?://[^"\']+|/[^"\']+)["\'][^>]*?>(.*?)</a>'
+            matches = re.findall(direct_pattern, html_content, re.DOTALL | re.IGNORECASE)
+            print(f"DEBUG: Found {len(matches)} potential matches in generic parser")
+            for m in matches[:20]:
+                print(f"DEBUG: Match: {m[0][:50]} | Title: {m[1][:30]}")
             
             for url, title in matches:
                 # Handle relative links
@@ -68,18 +71,31 @@ class SearchResultParser:
                 # MDN specific filtering
                 if self.engine == "mdn":
                     # Require docs path
-                    if "developer.mozilla.org/en-US/docs/" not in url:
+                    if "/en-US/docs/" not in url:
                         continue
-                    # Reject curriculum, plus, play, blog
-                    if any(bad in url for bad in ["/curriculum/", "/plus", "/play", "/blog", "github.com/mdn", "scrimba.com"]):
-                        continue
-                    # Reject very generic landing pages
-                    if any(url.endswith(gen) for gen in ["/docs/Web/HTML", "/docs/Web/JavaScript", "/docs/Web/API", "/docs/Web"]):
-                        continue
+                    # Reject curriculum, plus, play, blog, and common landing pages
+                    bad_patterns = [
+                        "/curriculum/", "/plus", "/play", "/blog", "github.com/mdn", "scrimba.com",
+                        "/docs/Web/HTML", "/docs/Web/JavaScript", "/docs/Web/API", "/docs/Web",
+                        "/docs/Learn", "/docs/Glossary", "/docs/Games", "/docs/User:", "/docs/Talk:",
+                        "/en-US/docs/Web/HTML/Reference", "/en-US/docs/Web/SVG", "/en-US/docs/Web/MathML"
+                    ]
+                    if any(bad in url for bad in bad_patterns):
+                        # Only reject if it's EXACTLY the landing page, not a subpage
+                        if any(url.endswith(bad) or url.endswith(bad + "/") for bad in bad_patterns):
+                            continue
+
+                    # Prioritize deeper paths
+                    # if url.count("/") < 5:
+                    #     continue
+                    pass
 
                 # Filter out search engine internal links and ads
                 if any(domain in url for domain in ["bing.com", "microsoft.com", "google.com", "duckduckgo.com", "yandex.com"]):
-                    if not url.startswith("http") or any(domain in url for domain in ["bing.com", "microsoft.com", "google.com"]):
+                    # Allow Bing redirects
+                    if self.engine == "bing" and "/ck/ms" in url:
+                        pass
+                    elif not url.startswith("http") or any(domain in url for domain in ["bing.com", "microsoft.com", "google.com"]):
                         continue
                 
                 if "/search?" in url or "go.microsoft.com" in url:
@@ -87,7 +103,11 @@ class SearchResultParser:
 
                 clean_title = self._clean_text(title)
                 if clean_title and len(clean_title) > 2 and url.startswith("http"):
+                    # print(f"DEBUG: Accepting link: {url}")
                     links.append({"url": url, "title": clean_title})
+                else:
+                    # print(f"DEBUG: Rejecting link (Short title or not http): {url} | Title: {clean_title}")
+                    pass
 
 
 
@@ -111,7 +131,7 @@ class SearchResultParser:
             except:
                 continue
                 
-        return unique_links[:10]
+        return unique_links[:30]
 
     def _clean_text(self, text):
         # Remove HTML tags

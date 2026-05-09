@@ -83,19 +83,16 @@ class ArtifactValidator:
             if not all_research:
                 errors.append("Research was required but not requested or performed.")
             else:
-                success_research = any(r.get("status") in ["complete", "partial"] and r.get("sources") for r in all_research)
-                if not success_research:
-                    errors.append("Research was performed but no sources were successfully retrieved.")
+                success_research = any(
+                    r.get("status") == "complete"
+                    and len(r.get("sources", [])) >= 2
+                    and len(r.get("findings", [])) >= 2
+                    and r.get("artifact_path")
+                    for r in all_research
+                )
                 
-                # For research_required: true, require specific completion metrics
-                for r in all_research:
-                    if r.get("status") == "complete":
-                        if len(r.get("sources", [])) < 1:
-                            errors.append(f"Research for '{r.get('query')}' marked complete but has no sources.")
-                        if len(r.get("findings", [])) < 1:
-                            errors.append(f"Research for '{r.get('query')}' marked complete but has no findings.")
-                        if not r.get("artifact_path"):
-                            errors.append(f"Research for '{r.get('query')}' marked complete but no artifact was saved.")
+                if not success_research:
+                    errors.append("Mandatory research failed to meet quality metrics (Status: complete, Sources >= 2, Findings >= 2).")
 
         return {
             "valid": len(errors) == 0,
