@@ -131,7 +131,7 @@
   },
   {
     "path": ".agent/orchestrator/context_pruner.py",
-    "line_count": 126,
+    "line_count": 131,
     "symbols": [
       "ContextPruner"
     ],
@@ -245,7 +245,7 @@
   },
   {
     "path": ".agent/orchestrator/prompt_compiler.py",
-    "line_count": 46,
+    "line_count": 70,
     "symbols": [
       "PromptCompiler"
     ],
@@ -256,7 +256,7 @@
   },
   {
     "path": ".agent/orchestrator/research_client.py",
-    "line_count": 108,
+    "line_count": 129,
     "symbols": [
       "normalize_ascii_text",
       "ResearchClient"
@@ -270,7 +270,7 @@
   },
   {
     "path": ".agent/orchestrator/response_parser.py",
-    "line_count": 241,
+    "line_count": 318,
     "symbols": [
       "SchemaValidator",
       "ResponseParser"
@@ -282,7 +282,7 @@
   },
   {
     "path": ".agent/orchestrator/retry_engine.py",
-    "line_count": 89,
+    "line_count": 98,
     "symbols": [
       "RetryEngine"
     ],
@@ -328,7 +328,7 @@
   },
   {
     "path": ".agent/orchestrator/session_router.py",
-    "line_count": 129,
+    "line_count": 135,
     "symbols": [
       "SessionRouter"
     ],
@@ -386,7 +386,7 @@
   },
   {
     "path": ".agent/orchestrator/studio_loop.py",
-    "line_count": 868,
+    "line_count": 902,
     "symbols": [
       "StudioLoopOrchestrator"
     ],
@@ -442,7 +442,7 @@
   },
   {
     "path": ".agent/orchestrator/templates/stage_prompt.md",
-    "line_count": 105,
+    "line_count": 99,
     "symbols": [],
     "imports": []
   },
@@ -732,7 +732,7 @@
   },
   {
     "path": "tests/test_response_parser.py",
-    "line_count": 229,
+    "line_count": 303,
     "symbols": [
       "TestResponseParser"
     ],

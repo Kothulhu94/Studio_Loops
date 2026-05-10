@@ -1,9 +1,9 @@
 {
-  "active_session_id": "design_and_implement_the_smallest_possible_copyr_20260509_212801296844",
+  "active_session_id": "improve_the_studio_loop_harness_by_adding_a_safe_20260509_215137494784",
   "active": true,
-  "status": "blocked",
-  "feature": "Design and implement the smallest possible copyright-safe sci-fi base management prototype slice: room placement data model, worker task queue, and one simple Vitest test. Keep scope tiny. Do not add UI. Do not add dependencies.",
-  "feature_slug": "design_and_implement_the_smallest_possible_copyr",
-  "current_stage": "designer",
-  "updated_at": "2026-05-09T21:50:37.455942"
+  "status": "running",
+  "feature": "Improve the Studio Loop harness by adding a safer local-codebase audit path for researcher stages and reducing prompt bloat. Keep changes small and verify with tests.",
+  "feature_slug": "improve_the_studio_loop_harness_by_adding_a_safe",
+  "current_stage": "researcher",
+  "updated_at": "2026-05-09T21:51:40.977232"
 }

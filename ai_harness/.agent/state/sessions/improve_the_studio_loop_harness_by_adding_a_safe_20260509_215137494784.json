@@ -1,0 +1,107 @@
+{
+  "session_id": "improve_the_studio_loop_harness_by_adding_a_safe_20260509_215137494784",
+  "kind": "research",
+  "stack_profile": "game_source",
+  "title": "Improve the Studio Loop harness by adding a safer local-codebase audit path for researcher stages and reducing prompt bloat. Keep changes small and verify with tests.",
+  "slug": "improve_the_studio_loop_harness_by_adding_a_safe",
+  "feature": "Improve the Studio Loop harness by adding a safer local-codebase audit path for researcher stages and reducing prompt bloat. Keep changes small and verify with tests.",
+  "feature_slug": "improve_the_studio_loop_harness_by_adding_a_safe",
+  "active": true,
+  "status": "running",
+  "current_stage": "researcher",
+  "allowed_roles": [
+    "researcher",
+    "designer",
+    "developer"
+  ],
+  "workspace_roots": [
+    "src",
+    "tests",
+    "tools",
+    "data",
+    "docs",
+    ".agent/Loop_Flow"
+  ],
+  "artifact_root": ".agent/Loop_Flow",
+  "memory_root": ".agent/Loop_Flow/context_packs/improve_the_studio_loop_harness_by_adding_a_safe",
+  "completion_criteria": [
+    "Research-backed technical audit and implementation blueprint are complete."
+  ],
+  "completed_stages": [],
+  "stage_attempts": {},
+  "artifacts": {},
+  "context_packs": {},
+  "research_briefs": [],
+  "research_results": [],
+  "research_request_history": [],
+  "research_duplicate_warnings": {},
+  "writes": [],
+  "patches": [],
+  "commands": [],
+  "tests": [],
+  "validations": [],
+  "failures": [],
+  "blockers": [],
+  "transition_history": [],
+  "skills_used": {
+    "researcher": [
+      {
+        "id": "studio-loop.researcher",
+        "version": "1.0.0",
+        "trust_level": "core",
+        "manifest": ".agent/skills/researcher/skill.json"
+      }
+    ]
+  },
+  "last_model_response_path": null,
+  "last_actions": null,
+  "last_results": null,
+  "last_validation": null,
+  "last_transition": null,
+  "capabilities": {
+    "koboldcpp": {
+      "available": true,
+      "chat_completions": false,
+      "completions": false,
+      "vision_input": false,
+      "max_context_estimate": 32768,
+      "model_name": "koboldcpp/gemma-4-26B-A4B-it-UD-IQ4_XS",
+      "error": null
+    },
+    "filesystem": {
+      "read": true,
+      "write": true,
+      "patch": true
+    },
+    "commands": {
+      "typecheck": true,
+      "test": true,
+      "dev_server": false,
+      "git_status": true,
+      "git_diff": true,
+      "git_commit": false
+    },
+    "research": {
+      "web_search": true,
+      "web_fetch": true,
+      "citations_required": true,
+      "backend": "playwright",
+      "error": null
+    },
+    "browser": {
+      "available": true,
+      "playwright": true,
+      "chrome_devtools": false,
+      "chrome_remote_debugging": false,
+      "performance_trace": false
+    },
+    "multimodal": {
+      "image_input_available": false,
+      "audio_input_available": false,
+      "screenshot_analysis_available": false
+    }
+  },
+  "created_at": "2026-05-09T21:51:37.494784",
+  "updated_at": "2026-05-09T21:51:40.976545",
+  "archived_at": null
+}
