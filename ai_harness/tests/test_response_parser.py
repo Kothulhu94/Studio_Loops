@@ -249,7 +249,7 @@ class TestResponseParser(unittest.TestCase):
             {
               "stage": "researcher",
               "status": "blocked",
-              "summary": "Blocked.",
+              "summary": "This is a sufficiently long summary for blockers.",
               "blockers": ["Waiting for user input"]
             }
             """
@@ -265,7 +265,7 @@ class TestResponseParser(unittest.TestCase):
             {
               "stage": "researcher",
               "status": "complete",
-              "summary": "Done.",
+              "summary": "This is a sufficiently long summary for next stage.",
               "next_stage_recommendation": "architect"
             }
             """
