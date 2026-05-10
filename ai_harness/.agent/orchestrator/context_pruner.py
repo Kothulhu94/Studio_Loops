@@ -1,6 +1,13 @@
 import os
 import subprocess
 import json
+import ntpath
+
+def _portable_basename(path):
+    """Return a filename for either POSIX or Windows-style paths."""
+    value = str(path or "")
+    return os.path.basename(ntpath.basename(value))
+
 
 class ContextPruner:
     def __init__(self, config, workspace_root):
@@ -63,11 +70,11 @@ Refer to .agent/Loop_Flow/context_packs/{feature_slug}_decision_memory.md for st
         # From recent research. Use concise metadata only; full absolute artifact
         # paths create noisy Windows path tokens that hurt model compliance.
         for brief in state.get("research_briefs", [])[-2:]:
-            search_terms.extend(os.path.basename(str(brief)).split()[:10])
+            search_terms.extend(_portable_basename(brief).split()[:10])
         for result in state.get("research_results", [])[-2:]:
             search_terms.extend(str(result.get("query", "")).split()[:10])
             search_terms.extend(str(result.get("status", "")).split()[:3])
-            search_terms.extend(os.path.basename(str(result.get("artifact_path", ""))).split()[:5])
+            search_terms.extend(_portable_basename(result.get("artifact_path", "")).split()[:5])
             for tag in result.get("topic_tags", [])[:5]:
                 search_terms.extend(str(tag).split()[:3])
             title = result.get("title") or result.get("brief_title") or result.get("summary", "")
@@ -85,7 +92,7 @@ Refer to .agent/Loop_Flow/context_packs/{feature_slug}_decision_memory.md for st
             if len(cleaned) <= 3:
                 continue
             if os.path.isabs(cleaned) or ":\\" in cleaned or ":/" in cleaned:
-                cleaned = os.path.basename(cleaned)
+                cleaned = _portable_basename(cleaned)
             if not cleaned or cleaned in seen:
                 continue
             seen.add(cleaned)
@@ -109,7 +116,7 @@ Refer to .agent/Loop_Flow/context_packs/{feature_slug}_decision_memory.md for st
         for res in results[-3:]: # Include last 3 results
             title = res.get("title") or res.get("brief_title") or res.get("query", "Unknown Research")
             status = res.get("status", "unknown")
-            artifact = os.path.basename(res.get("artifact_path", "N/A"))
+            artifact = _portable_basename(res.get("artifact_path", "N/A"))
             
             research_content += f"### {title}\n"
             research_content += f"- Status: {status}\n"
