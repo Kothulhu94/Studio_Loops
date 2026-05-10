@@ -11,6 +11,10 @@ class RetryEngine:
         prompt = f"### REPAIR REQUEST: {error_type}\n\n"
         if stage_name:
             prompt += f"CURRENT STAGE:\n{stage_name}\n\n"
+        prompt += "GEMMA 4 REPAIR MODE:\n"
+        prompt += "- Treat this as a deterministic JSON repair task, not a fresh stage attempt.\n"
+        prompt += "- Think silently and output only the corrected ACTIONS_JSON block.\n"
+        prompt += "- Do not preserve invalid wrappers, Markdown fences, duplicate JSON, or conversational text from the previous response.\n\n"
         prompt += f"The orchestrator rejected the previous action due to the following error:\n\n"
         prompt += f"ERROR:\n{error_message}\n\n"
         
@@ -65,7 +69,9 @@ class RetryEngine:
         prompt += "14. The root object itself must be ACTIONS_JSON.\n"
         prompt += "15. Do not wrap it in {\"actions\": ...}.\n"
         prompt += "16. Do not return arrays at the root.\n"
-        prompt += "17. Include stage, status, and summary.\n\n"
+        prompt += "17. Include stage, status, and summary.\n"
+        prompt += "18. Do not claim verification, commands, research, writes, or patches unless represented in this corrected object or already present in the supplied execution status.\n"
+        prompt += "19. For version-sensitive or current facts, request research instead of relying on stale model knowledge.\n\n"
         prompt += "REQUIRED ROOT SHAPE:\n"
         prompt += "ACTIONS_JSON:\n"
         prompt += json.dumps({

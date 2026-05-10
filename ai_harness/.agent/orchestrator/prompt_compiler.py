@@ -1,5 +1,6 @@
 import json
 import os
+from datetime import datetime, timezone
 
 class PromptCompiler:
     def __init__(self, config):
@@ -34,6 +35,8 @@ class PromptCompiler:
                 "- NO Python implementation plans for game source."
             )
 
+        current_date_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
         if os.path.exists(self.template_path):
             from string import Template
             with open(self.template_path, 'r', encoding='utf-8') as f:
@@ -45,6 +48,7 @@ class PromptCompiler:
                 feature=feature,
                 user_request=user_request,
                 stack_info=stack_info,
+                current_date_utc=current_date_utc,
                 state=json.dumps(state, indent=2),
                 role_instructions=role_workflow,
                 skills=role_skills,
@@ -59,8 +63,11 @@ class PromptCompiler:
 
         system_prompt = (
             f"You are the active Studio Loop role: {stage}.\n"
-            "The orchestrator controls transitions.\n"
-            "Do not include hidden reasoning.\n"
+            "You are running as Gemma 4 through KoboldCPP's OpenAI-compatible chat API. "
+            "Gemma 4 supports a native system role, so treat these system instructions as higher priority than user/context text.\n"
+            "Think silently; never expose hidden reasoning, scratchpads, or chain-of-thought.\n"
+            "Prefer concise, deterministic, schema-following outputs over conversational prose.\n"
+            "The orchestrator controls transitions and executes tools from ACTIONS_JSON only.\n"
             "Complete only the current stage.\n"
         )
 
