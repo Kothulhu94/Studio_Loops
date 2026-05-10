@@ -130,7 +130,7 @@ class TestResponseParser(unittest.TestCase):
         valid, error = self.parser.validate_actions(parsed["actions"])
 
         self.assertFalse(valid)
-        self.assertIn("stage", error)
+        self.assertIn("root shape is rejected", error)
 
     def test_invalid_running_status_still_fails_schema_validation(self):
         parsed = self.parser.parse(
@@ -223,6 +223,80 @@ class TestResponseParser(unittest.TestCase):
         self.assertIn("Need implementation references.", request["reason"])
         self.assertIn("Use browser/Vitest sources only.", request["reason"])
         self.assertNotIn("constraints", request)
+
+    def test_string_research_request_is_normalized(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "blocked",
+              "summary": "String request.",
+              "research_requests": ["audit local codebase"]
+            }
+            """
+        )
+        valid, error = self.parser.validate_actions(parsed["actions"])
+        self.assertTrue(valid, error)
+        req = parsed["actions"]["research_requests"][0]
+        self.assertEqual(req["query"], "audit local codebase")
+        self.assertEqual(req["required"], True)
+
+    def test_blocker_string_is_normalized(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "blocked",
+              "summary": "Blocked.",
+              "blockers": ["Waiting for user input"]
+            }
+            """
+        )
+        valid, error = self.parser.validate_actions(parsed["actions"])
+        self.assertTrue(valid, error)
+        self.assertEqual(parsed["actions"]["blockers"][0]["reason"], "Waiting for user input")
+
+    def test_invalid_next_stage_recommendation_is_corrected(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "complete",
+              "summary": "Done.",
+              "next_stage_recommendation": "architect"
+            }
+            """
+        )
+        valid, error = self.parser.validate_actions(parsed["actions"])
+        self.assertTrue(valid, error)
+        self.assertEqual(parsed["actions"]["next_stage_recommendation"], "developer")
+
+    def test_unknown_research_request_fields_are_dropped(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "blocked",
+              "summary": "Noisy request.",
+              "research_requests": [
+                {
+                  "query": "test",
+                  "noise": "should be dropped",
+                  "topic": "already handled but should be gone"
+                }
+              ]
+            }
+            """
+        )
+        valid, error = self.parser.validate_actions(parsed["actions"])
+        self.assertTrue(valid, error)
+        req = parsed["actions"]["research_requests"][0]
+        self.assertNotIn("noise", req)
+        self.assertNotIn("topic", req)
 
 
 if __name__ == "__main__":
