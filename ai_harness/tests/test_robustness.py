@@ -5,6 +5,12 @@ import json
 import subprocess
 import time
 from datetime import datetime
+import sys
+
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../.agent/orchestrator")))
+
+from context_pruner import ContextPruner
 
 class TestRobustness(unittest.TestCase):
     def setUp(self):
@@ -67,6 +73,33 @@ class TestRobustness(unittest.TestCase):
         
         # Cleanup
         os.remove(lock_path)
+
+    def test_context_pruner_search_terms_do_not_include_absolute_windows_research_paths(self):
+        config = {"paths": {"loop_flow": ".agent/Loop_Flow"}}
+        pruner = ContextPruner(config, self.base_dir)
+        state = {
+            "feature": "Design a small TypeScript base management prototype",
+            "research_briefs": [
+                r"C:\Users\rchos\Desktop\Studio_Loop\ai_harness\.agent\Loop_Flow\research\base_task_queue_research_brief.md"
+            ],
+            "research_results": [
+                {
+                    "query": "TypeScript browser task queue Vitest unit test",
+                    "status": "complete",
+                    "artifact_path": r"C:\Users\rchos\Desktop\Studio_Loop\ai_harness\.agent\Loop_Flow\research\worker_tasks_research_brief.md",
+                    "topic_tags": ["TypeScript", "Vitest"],
+                    "title": "Worker task queue brief",
+                }
+            ],
+        }
+
+        terms = pruner.build_search_terms(state, "researcher")
+        combined = " ".join(terms).lower()
+
+        self.assertNotIn(r"c:\users", combined)
+        self.assertNotIn("desktop\\studio_loop", combined)
+        self.assertIn("base_task_queue_research_brief.md", terms)
+        self.assertIn("worker_tasks_research_brief.md", terms)
 
 if __name__ == "__main__":
     unittest.main()

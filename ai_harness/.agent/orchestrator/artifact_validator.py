@@ -58,23 +58,19 @@ class ArtifactValidator:
         feature_slug = state.get("feature_slug", "")
         for req_file in validation_rules.get("required_files", []):
             req_file_processed = req_file.replace("{feature}", feature_slug)
-            full_path = self._resolve_existing_artifact(req_file_processed)
-            if not os.path.exists(full_path):
+            required_sections = validation_rules.get("required_sections", [])
+            full_path = self._find_satisfying_artifact(
+                req_file_processed,
+                required_sections,
+                actions,
+                execution_results,
+            )
+            if not full_path:
                 errors.append(f"Required file missing: {req_file_processed}")
                 continue
 
-            # Check required sections if it's a markdown file
-            if full_path.endswith(".md"):
-                required_sections = validation_rules.get("required_sections", [])
-                if required_sections:
-                    try:
-                        with open(full_path, "r", encoding="utf-8") as f:
-                            content = f.read()
-                        for section in required_sections:
-                            if not re.search(f"^#+\\s+.*?{re.escape(section)}", content, re.MULTILINE | re.IGNORECASE):
-                                errors.append(f"Required section '{section}' missing in {req_file_processed}")
-                    except Exception as e:
-                        errors.append(f"Failed to read {req_file_processed} for section validation: {str(e)}")
+            section_errors = self._validate_sections(full_path, required_sections, req_file_processed, "Required section")
+            errors.extend(section_errors)
 
         for manifest in skill_manifests:
             for artifact in manifest.get("expected_artifacts", []):
@@ -82,21 +78,24 @@ class ArtifactValidator:
                 if not path_template:
                     continue
                 artifact_path = path_template.replace("{feature}", feature_slug)
-                full_path = self._resolve_existing_artifact(artifact_path)
-                if not os.path.exists(full_path):
+                required_sections = artifact.get("required_sections", [])
+                full_path = self._find_satisfying_artifact(
+                    artifact_path,
+                    required_sections,
+                    actions,
+                    execution_results,
+                )
+                if not full_path:
                     if artifact.get("required", True):
                         errors.append(f"Expected skill artifact missing for {manifest['id']}: {artifact_path}")
                     continue
-                required_sections = artifact.get("required_sections", [])
-                if required_sections and full_path.endswith(".md"):
-                    try:
-                        with open(full_path, "r", encoding="utf-8") as f:
-                            content = f.read()
-                        for section in required_sections:
-                            if not re.search(f"^#+\\s+.*?{re.escape(section)}", content, re.MULTILINE | re.IGNORECASE):
-                                errors.append(f"Expected skill artifact section '{section}' missing in {artifact_path}")
-                    except Exception as e:
-                        errors.append(f"Failed to read expected artifact {artifact_path}: {str(e)}")
+                section_errors = self._validate_sections(
+                    full_path,
+                    required_sections,
+                    artifact_path,
+                    "Expected skill artifact section",
+                )
+                errors.extend(section_errors)
 
         # 4. Check writes/patches (Safety & Line Limits)
         for w in execution_results.get("writes", []):
@@ -159,3 +158,69 @@ class ArtifactValidator:
         if os.path.exists(full_path):
             return full_path
         return os.path.join(self.base_path, ".agent/Loop_Flow", os.path.basename(rel_path))
+
+    def _find_satisfying_artifact(self, expected_rel_path, required_sections, actions, execution_results):
+        candidates = [expected_rel_path]
+        expected_basename = os.path.basename(expected_rel_path)
+
+        for write in execution_results.get("writes", []):
+            if write.get("success") and write.get("path"):
+                candidates.append(write["path"])
+
+        for write in actions.get("writes", []):
+            if write.get("path"):
+                candidates.append(write["path"])
+
+        for artifact in actions.get("artifacts", []):
+            name = artifact.get("name")
+            if name:
+                candidates.append(name)
+                candidates.append(os.path.join(".agent/Loop_Flow", name))
+
+        seen = set()
+        fallback = None
+        exact_match = None
+        for candidate in candidates:
+            full_path = self._resolve_existing_artifact(candidate)
+            normalized = os.path.normcase(os.path.abspath(full_path))
+            if normalized in seen or not os.path.exists(full_path):
+                continue
+            seen.add(normalized)
+            if os.path.basename(candidate) == expected_basename:
+                exact_match = full_path
+                if self._has_required_sections(full_path, required_sections):
+                    return full_path
+                continue
+            if self._has_required_sections(full_path, required_sections):
+                fallback = full_path
+
+        return fallback or exact_match
+
+    def _has_required_sections(self, full_path, required_sections):
+        if not required_sections:
+            return os.path.exists(full_path)
+        if not full_path.endswith(".md"):
+            return False
+        try:
+            with open(full_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            return all(
+                re.search(f"^#+\\s+.*?{re.escape(section)}", content, re.MULTILINE | re.IGNORECASE)
+                for section in required_sections
+            )
+        except Exception:
+            return False
+
+    def _validate_sections(self, full_path, required_sections, label_path, prefix):
+        errors = []
+        if not required_sections or not full_path.endswith(".md"):
+            return errors
+        try:
+            with open(full_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            for section in required_sections:
+                if not re.search(f"^#+\\s+.*?{re.escape(section)}", content, re.MULTILINE | re.IGNORECASE):
+                    errors.append(f"{prefix} '{section}' missing in {label_path}")
+        except Exception as e:
+            errors.append(f"Failed to read {label_path} for section validation: {str(e)}")
+        return errors

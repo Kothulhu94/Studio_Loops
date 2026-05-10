@@ -4,7 +4,7 @@ from datetime import datetime
 
 
 class SessionRouter:
-    SESSION_KINDS = {"feature", "bug", "asset", "design", "research", "implementation"}
+    SESSION_KINDS = {"feature", "bug", "asset", "design", "research", "implementation", "harness_upgrade"}
 
     KIND_ROUTES = {
         "feature": "concept_producer",
@@ -13,6 +13,7 @@ class SessionRouter:
         "asset": "asset_creator",
         "bug": "bug_hunter",
         "implementation": "developer",
+        "harness_upgrade": "concept_producer",
     }
 
     KIND_ALLOWED_ROLES = {
@@ -22,6 +23,7 @@ class SessionRouter:
         "asset": ["asset_creator", "designer", "developer", "qa_tester"],
         "bug": ["bug_hunter", "debug_dev", "qa_tester"],
         "implementation": ["developer", "qa_tester", "bug_hunter", "debug_dev"],
+        "harness_upgrade": ["concept_producer", "researcher", "developer", "qa_tester", "bug_hunter", "debug_dev"],
     }
 
     KIND_COMPLETION_CRITERIA = {
@@ -31,6 +33,7 @@ class SessionRouter:
         "asset": ["Asset specs or generated assets and integration plan are complete."],
         "bug": ["Root cause, fix, and regression verification are complete."],
         "implementation": ["Code changes, tests, and verification report are complete."],
+        "harness_upgrade": ["Orchestrator/harness improvements and Python verification are complete."],
     }
 
     def __init__(self, workspace_root, sessions_dir=".agent/state/sessions"):
@@ -49,6 +52,8 @@ class SessionRouter:
             return "design"
         if any(word in request for word in ["implement", "build", "code", "add", "create"]):
             return "implementation"
+        if any(word in request for word in ["harness", "orchestrator", "self-improve", "improve agents", "workflow", "context pruning", "research system", "retry handling", "state/session routing", "skill registry", "modify .agent/orchestrator", "autonomous harness improvement"]):
+            return "harness_upgrade"
         return "feature"
 
     def route_initial_stage(self, request_text, kind=None):
@@ -67,6 +72,7 @@ class SessionRouter:
         return {
             "session_id": session_id,
             "kind": resolved_kind,
+            "stack_profile": "harness_internal" if resolved_kind == "harness_upgrade" else "game_source",
             "title": title,
             "slug": slug,
             "feature": title,

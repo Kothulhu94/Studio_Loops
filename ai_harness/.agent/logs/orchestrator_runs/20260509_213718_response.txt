@@ -1,0 +1,23 @@
+Since no specific feature or design request was provided in the task state, I cannot generate a specific design specification. I am currently blocked until a feature requirement is defined.
+
+ACTIONS_JSON:
+{
+  "stage": "designer",
+  "status": "blocked",
+  "summary": "Waiting for a specific feature request or design brief to begin creating the Aesthetic Spec, Interaction Spec, and CSS Tokens.",
+  "design_required": true,
+  "assets_required": false,
+  "qa_result": null,
+  "writes": [],
+  "patches": [],
+  "commands": [],
+  "research_requests": [],
+  "artifacts": [],
+  "next_stage_recommendation": "producer",
+  "risks": [
+    "Lack of input feature definition prevents any design output."
+  ],
+  "blockers": [
+    "No feature requirement provided in the current context."
+  ]
+}

@@ -16,22 +16,7 @@ class ContextPruner:
         )
         os.makedirs(os.path.dirname(pack_path), exist_ok=True)
 
-        # 1. Improved Keyword Extraction
-        search_terms = []
-        # From feature description
-        search_terms.extend(state.get("feature", "").split()[:15])
-        # From current stage needs
-        search_terms.append(stage)
-        # From recent research
-        for brief in state.get("research_briefs", [])[-2:]:
-            search_terms.extend(brief.split()[:10])
-        # From validation failures
-        if state.get("last_validation") and not state["last_validation"]["valid"]:
-            for err in state["last_validation"]["errors"]:
-                search_terms.extend(err.split()[:5])
-        
-        # Dedupe and clean
-        search_terms = list(set([t.lower().strip(",.()\"") for t in search_terms if len(t) > 3]))[:20]
+        search_terms = self.build_search_terms(state, stage)
         
         print(f"Pruning context with terms: {search_terms}")
         culler_output = self.run_culler(search_terms)
@@ -68,6 +53,45 @@ Refer to .agent/Loop_Flow/context_packs/{feature_slug}_decision_memory.md for st
 
         return pack_path
 
+    def build_search_terms(self, state, stage):
+        # 1. Improved Keyword Extraction
+        search_terms = []
+        # From feature description
+        search_terms.extend(state.get("feature", "").split()[:15])
+        # From current stage needs
+        search_terms.append(stage)
+        # From recent research. Use concise metadata only; full absolute artifact
+        # paths create noisy Windows path tokens that hurt model compliance.
+        for brief in state.get("research_briefs", [])[-2:]:
+            search_terms.extend(os.path.basename(str(brief)).split()[:10])
+        for result in state.get("research_results", [])[-2:]:
+            search_terms.extend(str(result.get("query", "")).split()[:10])
+            search_terms.extend(str(result.get("status", "")).split()[:3])
+            search_terms.extend(os.path.basename(str(result.get("artifact_path", ""))).split()[:5])
+            for tag in result.get("topic_tags", [])[:5]:
+                search_terms.extend(str(tag).split()[:3])
+            title = result.get("title") or result.get("brief_title") or result.get("summary", "")
+            search_terms.extend(str(title).split()[:10])
+        # From validation failures
+        if state.get("last_validation") and not state["last_validation"]["valid"]:
+            for err in state["last_validation"]["errors"]:
+                search_terms.extend(err.split()[:5])
+        
+        # Dedupe and clean
+        cleaned_terms = []
+        seen = set()
+        for term in search_terms:
+            cleaned = str(term).lower().strip(",.()\"")
+            if len(cleaned) <= 3:
+                continue
+            if os.path.isabs(cleaned) or ":\\" in cleaned or ":/" in cleaned:
+                cleaned = os.path.basename(cleaned)
+            if not cleaned or cleaned in seen:
+                continue
+            seen.add(cleaned)
+            cleaned_terms.append(cleaned)
+        return cleaned_terms[:20]
+
     def run_culler(self, keywords):
         try:
             cmd = ["python", "tools/context_culler.py"] + keywords
@@ -77,21 +101,26 @@ Refer to .agent/Loop_Flow/context_packs/{feature_slug}_decision_memory.md for st
             return f"Culler error: {str(e)}"
         
     def _get_research_context(self, state):
-        briefs = state.get("research_briefs", [])
-        if not briefs:
-            return "No research briefs available yet."
+        results = state.get("research_results", [])
+        if not results:
+            return "No research results available yet."
             
         research_content = ""
-        for brief_path in briefs[-3:]: # Include last 3 briefs
-            if os.path.exists(brief_path):
-                try:
-                    with open(brief_path, 'r', encoding='utf-8') as f:
-                        # Get a compact version: Status, Query, and Findings
-                        lines = f.readlines()
-                        content = "".join(lines[:30]) # First 30 lines (usually enough for overview + some findings)
-                        research_content += f"### {os.path.basename(brief_path)}\n{content}\n\n"
-                except Exception as e:
-                    research_content += f"### {os.path.basename(brief_path)}\nError reading brief: {str(e)}\n\n"
+        for res in results[-3:]: # Include last 3 results
+            title = res.get("title") or res.get("brief_title") or res.get("query", "Unknown Research")
+            status = res.get("status", "unknown")
+            artifact = os.path.basename(res.get("artifact_path", "N/A"))
+            
+            research_content += f"### {title}\n"
+            research_content += f"- Status: {status}\n"
+            research_content += f"- Artifact: {artifact}\n"
+            
+            findings = res.get("findings", [])
+            if findings:
+                research_content += "- Key Findings:\n"
+                for f in findings[:3]: # Top 3 findings
+                    research_content += f"  - {str(f)[:200]}\n"
+            research_content += "\n"
         return research_content
 
     def generate_slug(self, text):

@@ -1,73 +1,9 @@
 {
-  "active_session_id": null,
-  "active": false,
-  "feature": null,
-  "feature_slug": null,
-  "status": "idle",
-  "current_stage": null,
-  "completed_stages": [],
-  "stage_attempts": {},
-  "artifacts": {},
-  "context_packs": {},
-  "research_briefs": [],
-  "research_results": [],
-  "research_request_history": [],
-  "research_duplicate_warnings": {},
-  "writes": [],
-  "patches": [],
-  "commands": [],
-  "tests": [],
-  "validations": [],
-  "failures": [],
-  "blockers": [],
-  "last_model_response_path": null,
-  "last_actions": null,
-  "last_results": null,
-  "last_validation": null,
-  "last_transition": null,
-  "capabilities": {
-    "koboldcpp": {
-      "available": true,
-      "chat_completions": false,
-      "completions": false,
-      "vision_input": false,
-      "max_context_estimate": 32768,
-      "model_name": "koboldcpp/gemma-4-E4B-it-Q5_K_M",
-      "error": null
-    },
-    "filesystem": {
-      "read": true,
-      "write": true,
-      "patch": true
-    },
-    "commands": {
-      "typecheck": true,
-      "test": true,
-      "dev_server": false,
-      "git_status": true,
-      "git_diff": true,
-      "git_commit": false
-    },
-    "research": {
-      "web_search": true,
-      "web_fetch": true,
-      "citations_required": true,
-      "backend": "playwright",
-      "error": null
-    },
-    "browser": {
-      "available": true,
-      "playwright": true,
-      "chrome_devtools": false,
-      "chrome_remote_debugging": false,
-      "performance_trace": false
-    },
-    "multimodal": {
-      "image_input_available": false,
-      "audio_input_available": false,
-      "screenshot_analysis_available": false
-    }
-  },
-  "created_at": null,
-  "updated_at": "2026-05-09T19:52:39.885908"
+  "active_session_id": "design_and_implement_the_smallest_possible_copyr_20260509_212801296844",
+  "active": true,
+  "status": "blocked",
+  "feature": "Design and implement the smallest possible copyright-safe sci-fi base management prototype slice: room placement data model, worker task queue, and one simple Vitest test. Keep scope tiny. Do not add UI. Do not add dependencies.",
+  "feature_slug": "design_and_implement_the_smallest_possible_copyr",
+  "current_stage": "designer",
+  "updated_at": "2026-05-09T21:50:37.455942"
 }

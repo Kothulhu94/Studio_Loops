@@ -10,6 +10,7 @@ from unittest.mock import MagicMock
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../.agent/orchestrator")))
 
 from studio_loop import StudioLoopOrchestrator
+from kobold_client import KoboldTransportError
 
 
 class TestRepairPrompt(unittest.TestCase):
@@ -67,6 +68,12 @@ class TestRepairPrompt(unittest.TestCase):
         self.assertIn("Replace invalid values such as running", repair_prompt_packet["user"])
         self.assertIn("Do not wrap JSON in Markdown fences", repair_prompt_packet["user"])
         self.assertIn("Use next_stage_recommendation, not next_stage", repair_prompt_packet["user"])
+        self.assertIn("REQUIRED ROOT SHAPE", repair_prompt_packet["user"])
+        self.assertIn("ACTIONS_JSON:", repair_prompt_packet["user"])
+        self.assertIn('"stage": "concept_producer"', repair_prompt_packet["user"])
+        self.assertIn('"research_requests": []', repair_prompt_packet["user"])
+        self.assertIn('Do not wrap it in {"actions": ...}', repair_prompt_packet["user"])
+        self.assertIn("Do not return arrays at the root", repair_prompt_packet["user"])
 
     def test_running_status_triggers_repair_and_fenced_valid_repair_is_accepted(self):
         self.orchestrator.state_store.reset_state()
@@ -230,6 +237,24 @@ class TestRepairPrompt(unittest.TestCase):
         self.assertFalse(
             os.path.exists(os.path.join(self.base_dir, ".agent/Loop_Flow/research_required_feature_blueprint.md"))
         )
+
+    def test_transport_timeout_does_not_trigger_schema_repair(self):
+        self.orchestrator.state_store.reset_state()
+        self.orchestrator.state_store.start_feature(
+            "Transport failure feature", "transport_failure_feature", "researcher", kind="research"
+        )
+        self.orchestrator.client.call = MagicMock(side_effect=KoboldTransportError("read timed out"))
+        self.orchestrator.repair_output = MagicMock()
+
+        success = self.orchestrator.execute_stage("researcher")
+
+        self.assertFalse(success)
+        self.orchestrator.repair_output.assert_not_called()
+        self.assertEqual(self.orchestrator.client.call.call_count, 1)
+        state = self.orchestrator.state_store.load_state()
+        self.assertEqual(state["status"], "failed")
+        self.assertIn("MODEL_TRANSPORT_ERROR", state["failures"][-1]["reason"])
+        self.assertIn("No schema repair was attempted", state["failures"][-1]["reason"])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,5 @@
+[0509/213410.707:INFO:CONSOLE:6] "%cairgap.js%c Report-only mode enabled font-size:larger;font-weight:bold;border-radius:0.25em;padding:0.08em 0.25em;;color:amber;background-color:#6e3e00 ", source: https://transcend-cdn.com/cm/d556c3a1-e57c-4bdf-a490-390a1aebf6dd/airgap.js (6)
+[0509/213410.758:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping b8ebcaee-afa6-4a7e-ab81-7e24076a5896 successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0509/213412.197:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 7e7b874e-ab54-4b04-b32f-c09fc14fb2d1 successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0509/213412.202:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping e2f67849-f98d-4a89-8b7d-66fbcd0cd0e4 successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0509/213413.213:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 248e1565-3e24-4183-a675-a011cf5b7d7f successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)

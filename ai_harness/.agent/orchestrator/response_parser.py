@@ -92,6 +92,7 @@ class SchemaValidator:
 class ResponseParser:
     def __init__(self, schema_path=None):
         self.validator = SchemaValidator(schema_path) if schema_path else None
+        self.required_action_keys = {"stage", "status", "summary"}
 
     def _parse_json_object_at(self, text, json_start):
         depth = 0
@@ -143,6 +144,8 @@ class ResponseParser:
 
     def extract_fallback_actions_json(self, text):
         """Accepts exactly one bare or fenced JSON object that looks like ACTIONS_JSON."""
+        if not isinstance(text, str):
+            return None
         stripped = text.strip()
         candidates = []
         
@@ -161,10 +164,30 @@ class ResponseParser:
             return None
         
         actions = candidates[0]
-        required_action_keys = {"stage", "status", "summary"}
-        if isinstance(actions, dict) and required_action_keys.issubset(actions.keys()):
+        actions = self._unwrap_actions_json(actions)
+        if self._is_action_shaped(actions):
             return actions
         return None
+
+    def _is_action_shaped(self, data):
+        if not isinstance(data, dict):
+            return False
+        return self.required_action_keys.issubset(data.keys())
+
+    def _unwrap_actions_json(self, data):
+        if not isinstance(data, dict):
+            return data
+
+        # Explicitly unwrap only allowed wrappers if they contain valid action shapes
+        for wrapper_key in ("ACTIONS_JSON", "actions_json"):
+            if wrapper_key in data:
+                inner = data.get(wrapper_key)
+                if self._is_action_shaped(inner):
+                    return inner
+        
+        # If it looks like a wrapped action object but isn't one of the allowed ones, 
+        # or if it's already an action-shaped object, return as is (parse() will validate it).
+        return data
 
     def parse(self, text):
         results = {
@@ -172,11 +195,25 @@ class ResponseParser:
             "writes": [],
             "patches": []
         }
+        if not isinstance(text, str):
+            return results
 
-        # Extract ACTIONS_JSON using balanced braces
+        # 1. Primary extraction using marker
         actions = self.extract_json(text, "ACTIONS_JSON:")
+        
+        # 2. Fallback to bare or fenced JSON
         if actions is None:
             actions = self.extract_fallback_actions_json(text)
+        
+        # 3. Unwrap if necessary
+        actions = self._unwrap_actions_json(actions)
+        
+        # 4. Strict shape check - reject if it doesn't look like an action object
+        if not self._is_action_shaped(actions):
+            # If we extracted something but it's not action-shaped, we treat it as None
+            # to trigger validation failure/repair.
+            actions = None
+            
         results["actions"] = actions
 
         if actions:
@@ -189,7 +226,7 @@ class ResponseParser:
 
     def validate_actions(self, actions):
         if not actions:
-            return False, "No valid ACTIONS_JSON found."
+            return False, "No valid ACTIONS_JSON found or root shape is rejected (e.g. {\"actions\": []})."
 
         self.normalize_actions(actions)
         
@@ -205,16 +242,77 @@ class ResponseParser:
         return True, None
 
     def normalize_actions(self, actions):
+        if not isinstance(actions, dict):
+            return actions
+            
         if actions.get("qa_result") == "null":
             actions["qa_result"] = None
-        for request in actions.get("research_requests", []):
-            if "query" not in request and "topic" in request:
-                request["query"] = request.pop("topic")
-            if "reason" not in request and "stack" in request:
-                request["reason"] = f"Research relevant to {request.pop('stack')}"
-            elif "stack" in request:
-                request["reason"] = f"{request.get('reason', '')} Stack: {request.pop('stack')}".strip()
-            if "constraints" in request:
-                constraints = request.pop("constraints")
-                request["reason"] = f"{request.get('reason', '')} Constraints: {constraints}".strip()
+            
+        # Normalize next_stage_recommendation
+        allowed_stages = ["concept_producer", "researcher", "designer", "asset_creator", "developer", "qa_tester", "bug_hunter", "debug_dev", "handover_complete"]
+        rec = actions.get("next_stage_recommendation")
+        if rec and rec not in allowed_stages:
+            # Map common misspellings or variants
+            mapping = {
+                "architect": "developer",
+                "producer": "concept_producer",
+                "test": "qa_tester",
+                "qa": "qa_tester",
+                "dev": "developer",
+                "bug": "bug_hunter"
+            }
+            actions["next_stage_recommendation"] = mapping.get(rec.lower(), None)
+
+        # Normalize blockers
+        blockers = actions.get("blockers", [])
+        if isinstance(blockers, list):
+            new_blockers = []
+            for b in blockers:
+                if isinstance(b, str):
+                    new_blockers.append({"reason": b})
+                elif isinstance(b, dict) and "reason" in b:
+                    new_blockers.append(b)
+            actions["blockers"] = new_blockers
+
+        # Normalize research_requests
+        requests = actions.get("research_requests", [])
+        if isinstance(requests, list):
+            new_requests = []
+            for req in requests:
+                if isinstance(req, str):
+                    new_requests.append({
+                        "query": req,
+                        "reason": "Model supplied string research request.",
+                        "required": True
+                    })
+                    continue
+                
+                if not isinstance(req, dict):
+                    continue
+                    
+                # Handle topic -> query
+                if "query" not in req and "topic" in req:
+                    req["query"] = req.pop("topic")
+                
+                if "query" not in req:
+                    continue # Drop invalid
+                    
+                # Consolidate reason
+                reason = req.get("reason", "")
+                for field in ["description", "constraints", "stack"]:
+                    if field in req:
+                        val = req.pop(field)
+                        reason = f"{reason} {field.capitalize()}: {val}".strip()
+                req["reason"] = reason or "Required research."
+                
+                if "required" not in req:
+                    req["required"] = True
+                    
+                # Drop unknown properties (keep only schema properties)
+                schema_props = {"query", "reason", "required"}
+                cleaned_req = {k: v for k, v in req.items() if k in schema_props}
+                new_requests.append(cleaned_req)
+                
+            actions["research_requests"] = new_requests
+            
         return actions

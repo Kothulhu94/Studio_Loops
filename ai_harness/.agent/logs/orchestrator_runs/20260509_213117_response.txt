@@ -1,0 +1,36 @@
+ACTIONS_JSON:
+{
+  "stage": "researcher",
+  "status": "complete",
+  "summary": "Conducted a comprehensive technical audit of the Studio Loop Orchestrator architecture. Analyzed the interaction between the StudioLoopOrchestrator, the SkillRegistry, and the transition engine. Identified the core components including the StateStore for persistence, the PromptCompiler for LLM interaction, and the ResponseParser for structured output validation. Evaluated the workflow patterns defined in .agent/workflows/ and the skill definitions in .agent/skills/. Prepared the foundation for the implementation blueprint by mapping the orchestration lifecycle from task ingestion to artifact generation.",
+  "design_required": true,
+  "assets_required": false,
+  "qa_result": null,
+  "writes": [
+    {
+      "path": ".agent/Loop_Flow/orchestrator_blueprint.md",
+      "content": "# Technical Audit: Studio Loop Orchestrator\n\n## System Overview\nThe Studio Loop Orchestrator is a multi-agent autonomous system designed to execute complex creative and technical workflows through a state-driven loop. It leverages specialized skills, dynamic role assignment, and a robust orchestration engine to manage transitions between different agentic states.\n\n## Technical Audit\n\n### 1. Core Architecture Components\n- **Orchestration Engine (`studio_loop.py`)**: The central controller managing the execution loop, state transitions, and agent lifecycle.\n- **State Management (`state_store.py`)**: Provides a persistent and queryable record of the current loop state, including task history, agent roles, and accumulated context.\n- **Skill Registry (`skill_registry.py` / `capability_registry.py`)**: A decoupled system for discovering and invoking specialized agent capabilities defined in `.agent/skills/`.\n- **Transition Engine (`transition_engine.py`)**: Logic-driven component that determines the next logical step in a workflow based on current state and LLM feedback.\n- **Prompting Layer (`prompt_compiler.py`)**: Aggregates context, skills, and state to generate high-fidelity instructions for the LLM.\n- **Response Parsing (`response_parser.py`)**: Ensures LLM outputs adhere to strict schemas, facilitating reliable tool use and state updates.\n\n### 2. Workflow & Skill Integration\n- **Workflows**: Defined in `.agent/workflows/`, these act as high-level state machine templates (e.g., `STUDIO_LOOP_WORKFLOW.md`).\n- **Skills**: Granular capabilities (e.g., `developer_skills.md`) that are dynamically injected into the agent's context based on the active role.\n\n### 3. Data Flow & Context Management\n- **Context Pruning/Compaction**: The system uses `ContextPruner` and `ContextCompactor` to manage token limits by summarizing or removing irrelevant historical data.\n- **Artifact Management**: `ArtifactStore` and `ArtifactValidator` ensure that outputs produced by agents are verified and stored correctly for downstream consumption.\n\n## Implementation Blueprint\n\n### 1. Orchestration Lifecycle\n1. **Initialization**: Load workflow template and initialize `StateStore`.\n2. **Role Assignment**: Determine the active role based on the current workflow stage.\n3. **Context Assembly**: Compile prompt using `PromptCompiler`, integrating current state and relevant skills.\n4. **Execution**: Send request to LLM via `KoboldClient` or similar.\n5. **Parsing & Validation**: Parse response via `ResponseParser`. Validate against schema.\n6. **State Update**: Apply changes to `StateStore` and trigger `TransitionEngine`.\n7. **Loop/Termination**: If task is complete, exit; otherwise, repeat from step 2.\n\n### 2. Key Interface Definitions\n- `SkillRegistry.get_skills(role: str) -> List[Skill]`\n- `StateStore.update(delta: Dict) -> None`\n- `TransitionEngine.next_step(current_state: State) -> TransitionResult`\n\n## Context Pruning Map\n\n| Component | Pruning Strategy | Target | Priority |\n|---|---|---|---|\n| `StateStore` | Temporal Decay | Oldest non-essential messages | Medium |\n| `PromptCompiler` | Semantic Relevance | Skills/Tools not in current role | High |\n| `ContextPruner` | Summarization | Long technical logs/research outputs | Low |\n| `ArtifactStore` | Reference-only | Large files (replaced by metadata/paths) | High |",
+      "mode": "create"
+    },
+    {
+      "path": ".agent/Loop_Flow/context_map.json",
+      "content": "{\n  \"context_layers\": {\n    \"persistent\": [\"workflow_definition\", \"global_state\", \"artifact_metadata\"],\n    \"ephemeral\": [\"current_task_instructions\", \"active_role_skills\", \"recent_turn_history\"],\n    \"summarized\": [\"previous_stage_outcomes\", \"research_findings\", \"long_term_memory\"]\n  },\n  \"pruning_rules\": {\n    \"skill_context\": \"Remove skills not mapped to current active role\",\n    \"history_context\": \"Summarize turns older than 5 cycles\",\n    \"artifact_context\": \"Replace large file content with file_path and summary\"\n  }\n}",
+      "mode": "create"
+    }
+  ],
+  "patches": [],
+  "commands": [],
+  "research_requests": [],
+  "artifacts": [
+    {
+      "name": "orchestrator_blueprint.md",
+      "type": "blueprint"
+    }
+  ],
+  "next_stage_recommendation": "designer",
+  "risks": [
+    "Complexity in managing state transitions if the LLM produces ambiguous outputs.",
+    "Token limit exhaustion if the summarization/pruning logic is not aggressive enough."
+  ],
+  "blockers": []
+}

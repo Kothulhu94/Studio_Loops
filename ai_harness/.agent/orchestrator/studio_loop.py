@@ -12,7 +12,7 @@ from state_store import StateStore
 from role_loader import RoleLoader
 from context_pruner import ContextPruner
 from prompt_compiler import PromptCompiler
-from kobold_client import KoboldClient
+from kobold_client import KoboldClient, KoboldClientError
 from artifact_validator import ArtifactValidator
 from transition_engine import TransitionEngine
 from command_runner import CommandRunner
@@ -206,7 +206,12 @@ class StudioLoopOrchestrator:
         # 3. Call Model
         print(f"Requesting actions from local model (attempt {attempt+1})...")
         self.hooks.trigger("before_model_call", {"stage": stage_name, "prompt": prompt})
-        response_text = self.client.call(prompt)
+        try:
+            response_text = self.client.call(prompt)
+        except KoboldClientError as e:
+            self.hooks.trigger("after_model_call", {"stage": stage_name, "response": None, "error": str(e)})
+            self.record_model_transport_failure(stage_name, e)
+            return False
         self.hooks.trigger("after_model_call", {"stage": stage_name, "response": response_text})
         
         # 4. Parse Response
@@ -239,11 +244,11 @@ class StudioLoopOrchestrator:
             self.record_stage_validation_failure(stage_name, typecheck_error, response_text)
             return False
 
-        research_ok, research_error = self._validate_required_research_before_execution(stage_name, actions)
+        research_ok, research_error = self._validate_required_research_before_execution(stage_name, actions, state.get("stack_profile", "game_source"))
         if not research_ok:
             print(f"Research gate blocked final stage actions: {research_error}")
             if self.retry_engine.should_retry(attempt):
-                return self.repair_output(response_text, research_error, stage_name, attempt + 1, results=None)
+                return self.repair_output(response_text, research_error, stage_name, attempt + 1, results=None, stack_profile=state.get("stack_profile", "game_source"))
             self.record_stage_validation_failure(stage_name, research_error, response_text)
             return False
 
@@ -399,7 +404,9 @@ class StudioLoopOrchestrator:
                 }
             else:
                 self.hooks.trigger("before_research", {"stage": stage, "query": query})
-                res = self.research_client.perform_research(query, req.get("reason"), feature_slug=feature_slug, stage=stage)
+                # Check for local codebase research hint
+                is_local = any(word in query.lower() for word in ["local", "codebase", "audit", "inspect", "files", "existing"]) or (state.get("stack_profile") == "harness_internal")
+                res = self.research_client.perform_research(query, req.get("reason"), feature_slug=feature_slug, stage=stage, local_only=is_local)
                 res["stage"] = stage
                 state["research_request_history"].append(fingerprint)
             
@@ -528,20 +535,37 @@ class StudioLoopOrchestrator:
         
         if is_source_change:
             print("Source change detected. Running quality checks...")
-            suite = self.test_runner.run_full_suite()
             
-            # Store results in state for context
-            state["last_quality_check"] = suite
-            self.state_store.save_state(state)
-            
-            if not suite["typecheck"].get("success"):
-                errors.append("Typecheck failed after changes.")
-            if not suite["tests"].get("success"):
-                # Only fail if tests exist and failed
-                if "No tests found" not in suite["tests"].get("stdout", ""):
-                    errors.append("Unit tests failed after changes.")
-            if not suite["bloat"].get("success"):
-                errors.append("Bloat check failed: oversized files detected.")
+            if state.get("stack_profile") == "harness_internal":
+                print("Running Python/Orchestrator quality checks...")
+                # 1. Run runtime verification tool
+                verify_res = self.command_runner.run("python", ["tools/verify_clean_runtime.py"])
+                if verify_res.get("returncode") != 0:
+                    errors.append(f"Runtime verification failed: {verify_res.get('stderr')}")
+                
+                # 2. Run Python tests
+                test_res = self.command_runner.run("python", ["-m", "pytest", "tests/"])
+                if test_res.get("returncode") != 0:
+                    errors.append(f"Python tests failed: {test_res.get('stderr')}")
+                
+                # 3. Check capabilities
+                cap_res = self.command_runner.run("python", [".agent/orchestrator/studio_loop.py", "capabilities"])
+                if cap_res.get("returncode") != 0:
+                    errors.append("Orchestrator capabilities check failed after changes.")
+            else:
+                suite = self.test_runner.run_full_suite()
+                # Store results in state for context
+                state["last_quality_check"] = suite
+                self.state_store.save_state(state)
+                
+                if not suite["typecheck"].get("success"):
+                    errors.append("Typecheck failed after changes.")
+                if not suite["tests"].get("success"):
+                    # Only fail if tests exist and failed
+                    if "No tests found" not in suite["tests"].get("stdout", ""):
+                        errors.append("Unit tests failed after changes.")
+                if not suite["bloat"].get("success"):
+                    errors.append("Bloat check failed: oversized files detected.")
                 
         # Write validation report to log
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -581,7 +605,7 @@ class StudioLoopOrchestrator:
             "Configure package.json/tsconfig and make `npx tsc --noEmit` available before writing source files."
         )
 
-    def _validate_required_research_before_execution(self, stage_name, actions):
+    def _validate_required_research_before_execution(self, stage_name, actions, stack_profile="game_source"):
         val_rules = self.graph.get_validation_rules(stage_name)
         if not val_rules.get("research_required"):
             return True, None
@@ -596,16 +620,30 @@ class StudioLoopOrchestrator:
         )
         if has_complete_research:
             return True, None
-        return False, (
-            "RESEARCH_REQUIRED_MISSING: This stage has research_required=true, but the response marked the stage complete "
-            "without research_requests and without any complete research for this stage. Request research first; do not write "
-            "the final technical blueprint until research has completed; use the TypeScript/browser/Vitest stack only."
-        )
+            
+        if stack_profile == "harness_internal":
+            error_msg = (
+                "RESEARCH_REQUIRED_MISSING: This stage has research_required=true, but the response marked the stage complete "
+                "without research_requests and without any complete research (local codebase audit) for this stage. "
+                "Perform a local technical audit first; do not write the final technical blueprint until research has completed."
+            )
+        else:
+            error_msg = (
+                "RESEARCH_REQUIRED_MISSING: This stage has research_required=true, but the response marked the stage complete "
+                "without research_requests and without any complete research for this stage. Request research first; do not write "
+                "the final technical blueprint until research has completed; use the TypeScript/browser/Vitest stack only."
+            )
+            
+        return False, error_msg
 
     def _apply_policy_context(self, state):
         stage_write_policy = {}
         for role in self.graph.schema.get("stages", {}).keys():
             roots = self.role_loader.skill_registry.allowed_write_paths_for_role(role)
+            if state.get("kind") == "harness_upgrade" and role in ["developer", "debug_dev"]:
+                # Expand allowed roots for harness self-improvement
+                harness_roots = [".agent/orchestrator", ".agent/workflows", ".agent/skills", "tests", "tools", "docs"]
+                roots = sorted(list(set(roots + harness_roots)))
             if roots:
                 stage_write_policy[role] = roots
         workspace_roots = state.get("workspace_roots", []) if state else []
@@ -618,7 +656,7 @@ class StudioLoopOrchestrator:
         self.state_store.update_capabilities(caps)
         print("Capabilities detected and stored.")
 
-    def repair_output(self, raw_response, error, stage_name, attempt, results=None):
+    def repair_output(self, raw_response, error, stage_name, attempt, results=None, stack_profile="game_source"):
         print(f"Attempting output repair (attempt {attempt})...")
         
         # 1. Generate repair prompt
@@ -628,7 +666,8 @@ class StudioLoopOrchestrator:
             error,
             context_snippet=raw_response[:1000] if raw_response else None,
             stage_name=stage_name,
-            results=results
+            results=results,
+            stack_profile=stack_profile
         )
         repair_prompt_packet = {
             "system": (
@@ -649,6 +688,18 @@ class StudioLoopOrchestrator:
         )
         print(
             f"Stage {stage_name} reached local model, but ACTIONS_JSON validation failed after repair retries: {error}"
+        )
+        self.state_store.fail_stage(stage_name, reason)
+
+    def record_model_transport_failure(self, stage_name, error):
+        reason = (
+            f"MODEL_TRANSPORT_ERROR at stage '{stage_name}': {error}. "
+            "KoboldCPP timed out, disconnected, or returned an unusable client response before ACTIONS_JSON could be parsed. "
+            "No schema repair was attempted because this was not model output."
+        )
+        print(
+            f"Stage {stage_name} could not get a usable local model response. "
+            "KoboldCPP timed out or disconnected; schema repair was skipped."
         )
         self.state_store.fail_stage(stage_name, reason)
 

@@ -5,7 +5,9 @@
     "model": "local-gemma-4",
     "temperature": 0.3,
     "top_p": 0.9,
-    "max_output_tokens": 2500
+    "max_output_tokens": 2500,
+    "connect_timeout_seconds": 15,
+    "read_timeout_seconds": 900
   },
   "context_budget": {
     "max_prompt_chars": 48000,

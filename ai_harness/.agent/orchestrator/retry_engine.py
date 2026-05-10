@@ -5,20 +5,25 @@ class RetryEngine:
     def __init__(self, max_retries=3):
         self.max_retries = max_retries
 
-    def get_repair_prompt(self, error_type, error_message, context_snippet=None, stage_name=None, results=None):
+    def get_repair_prompt(self, error_type, error_message, context_snippet=None, stage_name=None, results=None, stack_profile="game_source"):
         """Generates a targeted repair prompt as per Section 18."""
+        current_stage = stage_name or "<current_stage>"
         prompt = f"### REPAIR REQUEST: {error_type}\n\n"
         if stage_name:
             prompt += f"CURRENT STAGE:\n{stage_name}\n\n"
         prompt += f"The orchestrator rejected the previous action due to the following error:\n\n"
         prompt += f"ERROR:\n{error_message}\n\n"
+        
         if "RESEARCH_REQUIRED_MISSING" in error_message:
             prompt += "REQUIRED RESEARCH REPAIR:\n"
             prompt += "- This stage has research_required=true.\n"
             prompt += "- Return status blocked with one or more research_requests.\n"
             prompt += "- Do not write the final technical blueprint until research has completed.\n"
             prompt += "- Do not include writes or patches in this repair response.\n"
-            prompt += "- Use TypeScript/browser/Vitest stack research only.\n\n"
+            if stack_profile == "harness_internal":
+                prompt += "- For harness_internal: use Python for orchestrator/tooling changes; use tests/*.py and tools/verify_clean_runtime.py for verification.\n\n"
+            else:
+                prompt += "- Use TypeScript/browser/Vitest stack research only.\n\n"
         
         if results:
             prompt += "ACTION EXECUTION STATUS:\n"
@@ -51,7 +56,35 @@ class RetryEngine:
         prompt += "10. Do not rename fields. Use next_stage_recommendation, not next_stage.\n"
         prompt += "11. Ensure research_required is satisfied if true in the validation rules.\n"
         prompt += "12. If research is required and no complete research exists, request research first and do not write a final technical blueprint yet.\n"
-        prompt += "13. For this project, use the TypeScript/browser/Vitest stack only; do not propose Python game source implementation.\n"
+        
+        if stack_profile == "harness_internal":
+            prompt += "13. For harness_internal: use Python for orchestrator/tooling changes; use tests/*.py and tools/verify_clean_runtime.py for verification.\n"
+        else:
+            prompt += "13. For game_source: use TypeScript/browser/Vitest; do not propose Python game source implementation.\n"
+            
+        prompt += "14. The root object itself must be ACTIONS_JSON.\n"
+        prompt += "15. Do not wrap it in {\"actions\": ...}.\n"
+        prompt += "16. Do not return arrays at the root.\n"
+        prompt += "17. Include stage, status, and summary.\n\n"
+        prompt += "REQUIRED ROOT SHAPE:\n"
+        prompt += "ACTIONS_JSON:\n"
+        prompt += json.dumps({
+            "stage": current_stage,
+            "status": "blocked",
+            "summary": "Brief valid summary of at least 10 characters.",
+            "research_requests": [],
+            "writes": [],
+            "patches": [],
+            "commands": [],
+            "blockers": [],
+            "design_required": False,
+            "assets_required": False,
+            "qa_result": None,
+            "artifacts": [],
+            "risks": [],
+            "next_stage_recommendation": None
+        }, indent=2)
+        prompt += "\n"
         
         return prompt
 

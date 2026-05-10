@@ -90,6 +90,48 @@ class TestResponseParser(unittest.TestCase):
 
         self.assertIsNone(parsed["actions"])
 
+    def test_unwraps_uppercase_actions_json_wrapper_if_inner_is_action_shaped(self):
+        parsed = self.parser.parse(
+            json.dumps({
+                "ACTIONS_JSON": {
+                    "stage": "researcher",
+                    "status": "blocked",
+                    "summary": "Wrapped response is safely unwrapped."
+                }
+            })
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        self.assertEqual(parsed["actions"]["stage"], "researcher")
+
+    def test_unwraps_lowercase_actions_json_wrapper_if_inner_is_action_shaped(self):
+        parsed = self.parser.parse(
+            json.dumps({
+                "actions_json": {
+                    "stage": "researcher",
+                    "status": "blocked",
+                    "summary": "Lowercase wrapped response is safely unwrapped."
+                }
+            })
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        self.assertEqual(parsed["actions"]["status"], "blocked")
+
+    def test_rejects_actions_array_wrapper_as_not_equivalent(self):
+        parsed = self.parser.parse(
+            'ACTIONS_JSON: {"actions": [], "status": "blocked", "summary": "Wrong root shape."}'
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertFalse(valid)
+        self.assertIn("stage", error)
+
     def test_invalid_running_status_still_fails_schema_validation(self):
         parsed = self.parser.parse(
             """

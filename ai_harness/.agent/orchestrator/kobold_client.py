@@ -3,11 +3,25 @@ import json
 import os
 from datetime import datetime
 
+class KoboldClientError(Exception):
+    """Base error for local model client failures."""
+
+
+class KoboldTransportError(KoboldClientError):
+    """KoboldCPP could not be reached or did not respond in time."""
+
+
+class KoboldResponseError(KoboldClientError):
+    """KoboldCPP responded, but not with the expected chat-completion shape."""
+
+
 class KoboldClient:
     def __init__(self, config, base_path=None):
         self.config = config["koboldcpp"]
         self.base_path = base_path or os.getcwd()
         self.logs_path = os.path.join(self.base_path, config["paths"]["logs"])
+        self.connect_timeout = self.config.get("connect_timeout_seconds", 15)
+        self.read_timeout = self.config.get("read_timeout_seconds", 900)
 
     def call(self, prompt_packet):
         url = f"{self.config['base_url']}{self.config['endpoint']}"
@@ -23,7 +37,7 @@ class KoboldClient:
         }
 
         try:
-            response = requests.post(url, json=payload, timeout=300)
+            response = requests.post(url, json=payload, timeout=(self.connect_timeout, self.read_timeout))
             response.raise_for_status()
             result = response.json()
             content = result["choices"][0]["message"]["content"]
@@ -32,9 +46,25 @@ class KoboldClient:
             self.log_interaction(prompt_packet, content)
             
             return content
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            message = (
+                f"KoboldCPP transport failure at {url}: {e}. "
+                f"Configured timeout=(connect={self.connect_timeout}s, read={self.read_timeout}s)."
+            )
+            print(message)
+            raise KoboldTransportError(message) from e
+        except requests.exceptions.RequestException as e:
+            message = f"KoboldCPP HTTP/client failure at {url}: {e}"
+            print(message)
+            raise KoboldTransportError(message) from e
+        except (KeyError, IndexError, TypeError, ValueError) as e:
+            message = f"KoboldCPP response was not a valid chat completion: {e}"
+            print(message)
+            raise KoboldResponseError(message) from e
         except Exception as e:
-            print(f"Error calling KoboldCPP: {e}")
-            return f"Error: {str(e)}"
+            message = f"Unexpected KoboldCPP client failure: {e}"
+            print(message)
+            raise KoboldClientError(message) from e
 
     def log_interaction(self, prompt, response):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

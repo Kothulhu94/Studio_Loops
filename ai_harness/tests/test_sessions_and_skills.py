@@ -168,6 +168,83 @@ class TestSessionsAndSkills(unittest.TestCase):
         )
         self.assertTrue(report["valid"], report["errors"])
 
+    def test_artifact_validator_accepts_written_technical_blueprint_for_researcher(self):
+        validator = ArtifactValidator(self.base_dir)
+        os.makedirs(os.path.join(self.base_dir, ".agent/Loop_Flow"), exist_ok=True)
+        concept_path = os.path.join(self.base_dir, ".agent/Loop_Flow/test_feature_blueprint.md")
+        technical_path = os.path.join(self.base_dir, ".agent/Loop_Flow/test_feature_technical_blueprint.md")
+        with open(concept_path, "w", encoding="utf-8") as handle:
+            handle.write("# Vision\nConcept only.\n# Target User Experience\nOk\n# Thematic Alignment\nOk\n")
+        with open(technical_path, "w", encoding="utf-8") as handle:
+            handle.write(
+                "# Technical Blueprint\n"
+                "## Technical Audit\nOk\n"
+                "## Implementation Blueprint\nOk\n"
+                "## Context Pruning Map\nOk\n"
+                "## Implementation Checklist\n- [ ] Ok\n"
+            )
+
+        actions = {
+            "stage": "researcher",
+            "status": "complete",
+            "summary": "Researcher wrote a valid technical blueprint.",
+            "writes": [
+                {
+                    "path": ".agent/Loop_Flow/test_feature_technical_blueprint.md",
+                    "content": "",
+                }
+            ],
+            "artifacts": [
+                {
+                    "name": "test_feature_technical_blueprint.md",
+                    "type": "blueprint",
+                }
+            ],
+        }
+        results = {
+            "writes": [
+                {
+                    "path": ".agent/Loop_Flow/test_feature_technical_blueprint.md",
+                    "success": True,
+                    "error": None,
+                }
+            ],
+            "patches": [],
+            "commands": [],
+            "research": [],
+        }
+        rules = {
+            "required_files": [".agent/Loop_Flow/{feature}_blueprint.md"],
+            "required_sections": [
+                "Technical Audit",
+                "Implementation Blueprint",
+                "Context Pruning Map",
+                "Implementation Checklist",
+            ],
+        }
+        manifest = {
+            "id": "studio-loop.researcher",
+            "expected_artifacts": [
+                {
+                    "path": ".agent/Loop_Flow/{feature}_blueprint.md",
+                    "required": True,
+                    "required_sections": rules["required_sections"],
+                }
+            ],
+            "validators": [],
+        }
+
+        report = validator.validate(
+            "researcher",
+            actions,
+            results,
+            rules,
+            {"feature_slug": "test_feature", "research_results": []},
+            skill_manifests=[manifest],
+        )
+
+        self.assertTrue(report["valid"], report["errors"])
+
 
 if __name__ == "__main__":
     unittest.main()

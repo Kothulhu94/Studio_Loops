@@ -17,13 +17,7 @@ Runtime stack:
 
 Project stack (MUST ADHERE):
 
-- Language: TypeScript (strict)
-- Environment: Browser
-- Source Directory: `src/`
-- Test Directory: `tests/`
-- Test Runner: Vitest
-- Logic: Vanilla JS/TS logic, Canvas/DOM APIs.
-- NO Python implementation plans for game source.
+$stack_info
 
 The orchestrator executes only valid, safe actions requested through `ACTIONS_JSON`.
 
@@ -63,12 +57,16 @@ Do not use XML tags.
 Do not assume chat history.
 Use only the supplied task state, artifacts, research briefs, and context pack.
 Request all actions through `ACTIONS_JSON`.
+The root object itself must be ACTIONS_JSON.
+Do not wrap it in {"actions": ...}.
+Do not return arrays at the root.
 The status field must be exactly one of: complete, blocked, failed.
 Never use running, in_progress, pending, or custom status values.
 If you are requesting research, commands, writes, or patches, still choose a valid status for this response.
 Use real JSON null, not the string "null".
 Only QA should set qa_result to PASS, FAIL, BLOCKED, or SKIPPED.
 All non-QA roles should set qa_result to null.
+Include "stage", "status", and "summary".
 
 End with:
 
