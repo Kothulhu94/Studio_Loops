@@ -30,6 +30,14 @@ class TestFullLoop(unittest.TestCase):
         self.orchestrator.client.call = MagicMock()
         # Mock research to avoid real web requests
         self.orchestrator.research_client.perform_research = MagicMock()
+        self.orchestrator.capability_registry.detect_all = MagicMock(return_value={
+            "commands": {
+                "typecheck": True,
+                "test": True,
+                "git_status": True,
+                "git_diff": True,
+            }
+        })
 
     def tearDown(self):
         self.temp_dir.cleanup()

@@ -128,6 +128,60 @@ class TestResponseParser(unittest.TestCase):
         self.assertIn("Additional properties", bad_error)
         self.assertTrue(good_valid, good_error)
 
+    def test_research_request_topic_stack_is_normalized_to_schema_shape(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "blocked",
+              "summary": "Requesting TypeScript browser architecture research.",
+              "research_requests": [
+                {
+                  "topic": "TypeScript browser task queue data model Vitest unit test",
+                  "stack": "TypeScript/browser/Vitest"
+                }
+              ]
+            }
+            """
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        request = parsed["actions"]["research_requests"][0]
+        self.assertEqual(request["query"], "TypeScript browser task queue data model Vitest unit test")
+        self.assertIn("TypeScript/browser/Vitest", request["reason"])
+        self.assertNotIn("topic", request)
+        self.assertNotIn("stack", request)
+
+    def test_research_request_constraints_are_folded_into_reason(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "blocked",
+              "summary": "Requesting constrained TypeScript browser architecture research.",
+              "research_requests": [
+                {
+                  "query": "TypeScript browser task queue data model Vitest unit test",
+                  "reason": "Need implementation references.",
+                  "constraints": "Use browser/Vitest sources only."
+                }
+              ]
+            }
+            """
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        request = parsed["actions"]["research_requests"][0]
+        self.assertIn("Need implementation references.", request["reason"])
+        self.assertIn("Use browser/Vitest sources only.", request["reason"])
+        self.assertNotIn("constraints", request)
+
 
 if __name__ == "__main__":
     unittest.main()

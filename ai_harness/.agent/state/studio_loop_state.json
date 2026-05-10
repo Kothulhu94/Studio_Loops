@@ -25,7 +25,49 @@
   "last_results": null,
   "last_validation": null,
   "last_transition": null,
-  "capabilities": {},
+  "capabilities": {
+    "koboldcpp": {
+      "available": true,
+      "chat_completions": false,
+      "completions": false,
+      "vision_input": false,
+      "max_context_estimate": 32768,
+      "model_name": "koboldcpp/gemma-4-E4B-it-Q5_K_M",
+      "error": null
+    },
+    "filesystem": {
+      "read": true,
+      "write": true,
+      "patch": true
+    },
+    "commands": {
+      "typecheck": true,
+      "test": true,
+      "dev_server": false,
+      "git_status": true,
+      "git_diff": true,
+      "git_commit": false
+    },
+    "research": {
+      "web_search": true,
+      "web_fetch": true,
+      "citations_required": true,
+      "backend": "playwright",
+      "error": null
+    },
+    "browser": {
+      "available": true,
+      "playwright": true,
+      "chrome_devtools": false,
+      "chrome_remote_debugging": false,
+      "performance_trace": false
+    },
+    "multimodal": {
+      "image_input_available": false,
+      "audio_input_available": false,
+      "screenshot_analysis_available": false
+    }
+  },
   "created_at": null,
-  "updated_at": "2026-05-09T18:03:29.419638"
+  "updated_at": "2026-05-09T19:52:39.885908"
 }

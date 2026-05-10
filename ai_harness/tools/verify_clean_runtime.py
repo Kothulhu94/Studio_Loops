@@ -13,9 +13,21 @@ RUNTIME_PATTERNS = [
     ".agent/Loop_Flow/*.json",
     ".agent/Loop_Flow/context_packs/*.md",
     ".agent/Loop_Flow/research/*.md",
+    ".agent/logs/**/*",
     ".agent/logs/**/*.json",
     ".agent/logs/**/*.txt",
     ".agent/logs/**/*.md",
+]
+
+BUNDLE_RUNTIME_FILE_PREFIXES = [
+    "FILE: .agent\\Loop_Flow\\",
+    "FILE: .agent/Loop_Flow/",
+    "FILE: .agent\\logs\\",
+    "FILE: .agent/logs/",
+    "FILE: .agent\\state\\sessions\\",
+    "FILE: .agent/state/sessions/",
+    "FILE: .agent\\state\\studio_loop.lock",
+    "FILE: .agent/state/studio_loop.lock",
 ]
 
 PROOF_FORBIDDEN = [
@@ -92,18 +104,29 @@ def _is_gitkeep(path):
 
 
 def _verify_runtime_clean(base_path, dirty):
-    live_research = glob.glob(os.path.join(base_path, ".agent/Loop_Flow/research/*_research_brief.md"))
     for pattern in RUNTIME_PATTERNS:
         for match in glob.glob(os.path.join(base_path, pattern), recursive=True):
+            if os.path.isdir(match):
+                continue
             if _is_gitkeep(match):
                 continue
             rel = os.path.relpath(match, base_path).replace("\\", "/")
-            if live_research and (
-                rel.startswith(".agent/Loop_Flow/research/")
-                or rel.startswith(".agent/logs/research/cache/")
-            ):
-                continue
             dirty.append(f"Generated runtime artifact remains: {match}")
+
+    sessions_dir = os.path.join(base_path, ".agent/state/sessions")
+    if os.path.isdir(sessions_dir):
+        for match in glob.glob(os.path.join(sessions_dir, "*.json")):
+            try:
+                session = json.loads(_read_text(match))
+            except Exception as exc:
+                dirty.append(f"Unreadable session state remains: {match}: {exc}")
+                continue
+            if session.get("active") or session.get("status") in {"running", "failed", "blocked"}:
+                dirty.append(f"Active or non-archived runtime session remains: {match}")
+
+    lock_path = os.path.join(base_path, ".agent/state/studio_loop.lock")
+    if os.path.exists(lock_path):
+        dirty.append(f"Runtime lock remains: {lock_path}")
 
 
 def _verify_proof(base_path, dirty):
@@ -150,6 +173,11 @@ def _verify_bundle(base_path, dirty):
     for marker in NON_ASCII_PUNCTUATION:
         if marker in content:
             dirty.append(f"Bundle contains non-ASCII punctuation: {marker.encode('unicode_escape').decode('ascii')}")
+    file_headers = [line.strip() for line in content.splitlines() if line.startswith("FILE: ")]
+    for header in file_headers:
+        for marker in BUNDLE_RUNTIME_FILE_PREFIXES:
+            if header.startswith(marker):
+                dirty.append(f"Bundle contains generated runtime file: {header}")
 
 
 def _iter_production_text_files(base_path):

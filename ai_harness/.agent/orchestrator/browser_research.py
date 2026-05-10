@@ -2,6 +2,7 @@ import os
 import json
 import sys
 from urllib.parse import urlparse, urlunparse
+import re
 
 # Add the current directory to sys.path to allow absolute imports of sibling modules
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -19,30 +20,74 @@ class BrowserResearch:
         self.parser = SearchResultParser(self.research_config.get("search_engine", "duckduckgo_lite"))
         self.extractor = PageExtractor(self.research_config, self.base_path)
 
+    def _query_terms(self, query):
+        stopwords = {
+            "a", "an", "and", "api", "are", "as", "at", "best", "for", "how", "in",
+            "is", "of", "on", "or", "the", "to", "use", "using", "with",
+        }
+        return [
+            term for term in re.findall(r"[a-zA-Z][a-zA-Z0-9]+", query.lower())
+            if len(term) >= 4 and term not in stopwords
+        ]
+
+    def _query_profile(self, query):
+        q_lower = query.lower()
+        if "canvas" in q_lower and "requestanimationframe" in q_lower:
+            return "canvas_animation"
+        ts_terms = [
+            "typescript", "browser", "data model", "task queue", "queue",
+            "worker task", "state management", "vitest",
+        ]
+        if any(term in q_lower for term in ts_terms):
+            return "typescript_browser_architecture"
+        return "generic_technical"
+
     def _query_variants(self, query):
         variants = [query]
         q_lower = query.lower()
-        if "mdn" in q_lower and "canvas" in q_lower and "requestanimationframe" in q_lower:
+        profile = self._query_profile(query)
+        if profile == "canvas_animation":
             variants.extend([
                 "Canvas API requestAnimationFrame MDN",
                 "site:developer.mozilla.org/en-US/docs/Web/API Canvas requestAnimationFrame",
                 "requestAnimationFrame Canvas MDN",
                 "Canvas API basic animations MDN",
             ])
+        elif profile == "typescript_browser_architecture":
+            variants.extend([
+                "TypeScript data model browser task queue Vitest",
+                "TypeScript queue data structures browser unit testing Vitest",
+                "JavaScript queue data structure browser state management",
+            ])
         return list(dict.fromkeys(variants))
 
     def _canonical_candidates(self, query):
-        q_lower = query.lower()
-        if "canvas" not in q_lower or "requestanimationframe" not in q_lower:
-            return []
-        base = "https://developer.mozilla.org"
-        paths = [
-            "/en-US/docs/Web/API/Canvas_API",
-            "/en-US/docs/Web/API/Window/requestAnimationFrame",
-            "/en-US/docs/Web/API/Canvas_API/Tutorial/Basic_animations",
-            "/en-US/docs/Web/API/CanvasRenderingContext2D",
-        ]
-        return [{"url": base + path, "title": path.rsplit("/", 1)[-1]} for path in paths]
+        profile = self._query_profile(query)
+        candidates = []
+        if profile == "canvas_animation":
+            base = "https://developer.mozilla.org"
+            paths = [
+                "/en-US/docs/Web/API/Canvas_API",
+                "/en-US/docs/Web/API/Window/requestAnimationFrame",
+                "/en-US/docs/Web/API/Canvas_API/Tutorial/Basic_animations",
+                "/en-US/docs/Web/API/CanvasRenderingContext2D",
+            ]
+            candidates.extend({"url": base + path, "title": path.rsplit("/", 1)[-1]} for path in paths)
+        elif profile == "typescript_browser_architecture":
+            candidates.extend([
+                {"url": "https://www.typescriptlang.org/docs/handbook/2/everyday-types.html", "title": "TypeScript Handbook - Everyday Types"},
+                {"url": "https://www.typescriptlang.org/docs/handbook/2/objects.html", "title": "TypeScript Handbook - Object Types"},
+                {"url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array", "title": "MDN JavaScript Array"},
+                {"url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map", "title": "MDN JavaScript Map"},
+                {"url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes", "title": "MDN JavaScript Classes"},
+            ])
+            q_lower = query.lower()
+            if "test" in q_lower or "vitest" in q_lower:
+                candidates.extend([
+                    {"url": "https://vitest.dev/guide/", "title": "Vitest Guide"},
+                    {"url": "https://vitest.dev/api/", "title": "Vitest API"},
+                ])
+        return candidates
 
     def _normalize_url(self, url):
         parsed = urlparse(url)
@@ -57,10 +102,20 @@ class BrowserResearch:
             "animation/rendering": ["animation", "animate", "render", "repaint", "frame"],
             "2d context": ["2d context", "canvasrenderingcontext2d", "getcontext", "2d graphics"],
             "basic animations": ["basic animations", "basic_animations"],
+            "typescript": ["typescript", "strict types", "interface", "type alias", "generics"],
+            "javascript data structures": ["array", "map", "set", "object", "queue", "fifo", "priority queue"],
+            "queue/task scheduling": ["queue", "task", "scheduler", "priority", "dequeue", "enqueue", "worker"],
+            "browser/runtime": ["browser", "web api", "webapi", "dom", "canvas", "requestanimationframe"],
+            "testing/vitest": ["vitest", "unit test", "expect", "describe", "test"],
+            "state/modeling": ["state", "model", "immutable", "reducer", "data model"],
         }
         for topic, needles in checks.items():
             if any(needle in haystack for needle in needles):
                 coverage.append(topic)
+        terms = self._query_terms(query)
+        matched_terms = {term for term in terms if term in haystack}
+        if len(matched_terms) >= 2:
+            coverage.extend(f"query:{term}" for term in sorted(matched_terms))
         return coverage
 
     def _explicitly_requested_rejected_topic(self, query, keyword):
@@ -87,14 +142,25 @@ class BrowserResearch:
         return ""
 
     def _score_link(self, query, link):
+        profile = self._query_profile(query)
         title_lower = link.get("title", "").lower()
         url_lower = link.get("url", "").lower()
         score = 0
         domain = urlparse(link.get("url", "")).netloc.lower()
         if "developer.mozilla.org" in domain:
             score += 40
+        if "typescriptlang.org" in domain:
+            score += 45 if profile == "typescript_browser_architecture" else 15
+        if "vitest.dev" in domain:
+            score += 45 if profile == "typescript_browser_architecture" else 10
         if "/en-us/docs/web/api/" in url_lower:
             score += 25
+        if "/javascript/reference/global_objects/array" in url_lower or "/javascript/reference/global_objects/map" in url_lower:
+            score += 35 if profile == "typescript_browser_architecture" else 10
+        if "handbook" in url_lower and "typescript" in url_lower:
+            score += 35
+        if "vitest" in url_lower or "vitest" in title_lower:
+            score += 35
         if "canvas_api/tutorial/basic_animations" in url_lower:
             score += 45
         if "window/requestanimationframe" in url_lower:
@@ -107,11 +173,12 @@ class BrowserResearch:
             score += 35
         if any(bad in url_lower for bad in ["scrimba.com", "github.com/mdn", "localhost", "/plus", "/curriculum/", "/blog/", "/learn/"]):
             score -= 100
-        if self._rejection_reason(query, title_lower, url_lower, ""):
+        if profile == "canvas_animation" and self._rejection_reason(query, title_lower, url_lower, ""):
             score -= 100
         return score
 
-    def _source_set_valid(self, sources, findings):
+    def _source_set_valid(self, sources, findings, query=""):
+        profile = self._query_profile(query)
         relevant = [
             s for s in sources
             if s.get("status") == "fetched" and s.get("relevant") and not s.get("rejected")
@@ -119,12 +186,25 @@ class BrowserResearch:
         covered = set()
         for source in relevant:
             covered.update(source.get("topic_coverage", []))
-        return (
-            len(relevant) >= 2
-            and "canvas" in covered
-            and ("requestanimationframe" in covered or "animation/rendering" in covered)
-            and len(findings) >= 2
-        )
+        if len(relevant) < 2 or len(findings) < 2:
+            return False
+        if profile == "canvas_animation":
+            return (
+                "canvas" in covered
+                and ("requestanimationframe" in covered or "animation/rendering" in covered)
+            )
+        if profile == "typescript_browser_architecture":
+            required_topics = {
+                "typescript",
+                "javascript data structures",
+                "queue/task scheduling",
+                "browser/runtime",
+                "testing/vitest",
+                "state/modeling",
+            }
+            return len(covered & required_topics) >= 2
+        query_coverage = {topic.split(":", 1)[1] for topic in covered if topic.startswith("query:")}
+        return len(query_coverage) >= 2
 
     def perform_research(self, query, reason=None):
         results = {
@@ -201,7 +281,10 @@ class BrowserResearch:
             excerpt_lower = extracted.get("excerpt", "").lower()
             title_lower = extracted.get("title", "").lower()
             coverage = self._topic_coverage(query, extracted.get("title", ""), extracted.get("url", ""), extracted.get("excerpt", ""))
-            rejection_reason = self._rejection_reason(query, title_lower, extracted.get("url", "").lower(), excerpt_lower)
+            profile = self._query_profile(query)
+            rejection_reason = ""
+            if profile == "canvas_animation":
+                rejection_reason = self._rejection_reason(query, title_lower, extracted.get("url", "").lower(), excerpt_lower)
 
             if rejection_reason:
                 extracted["status"] = "failed"
@@ -230,7 +313,8 @@ class BrowserResearch:
             results["sources"].append(source_entry)
 
         # 5. Final Validation
-        results["source_set_relevance_passed"] = self._source_set_valid(results["sources"], results["findings"])
+        results["query_profile"] = self._query_profile(query)
+        results["source_set_relevance_passed"] = self._source_set_valid(results["sources"], results["findings"], query)
         if results["source_set_relevance_passed"]:
             results["status"] = "complete"
         elif results["findings"]:

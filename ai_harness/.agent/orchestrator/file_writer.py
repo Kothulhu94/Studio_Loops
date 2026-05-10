@@ -34,6 +34,14 @@ class FileWriter:
 
         # 2. Enforce mode logic
         if mode == "create" and os.path.exists(full_path):
+            # Idempotency: If content is identical, treat as success
+            try:
+                with open(full_path, 'r', encoding='utf-8') as f:
+                    existing_content = f.read()
+                if existing_content == content:
+                    return True, None
+            except:
+                pass
             return False, f"File already exists (mode=create): {path}"
         
         if mode == "overwrite" and os.path.exists(full_path):

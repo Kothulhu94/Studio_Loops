@@ -1,4 +1,4 @@
-AI HARNESS COMPLETE BUNDLE - Generated on 05/09/2026 15:56:42
+AI HARNESS COMPLETE BUNDLE - Generated on 05/09/2026 19:50:08
 --------------------------------------------------------------------------------
 FILE: HANDOFF_SCHEMA.json
 --------------------------------------------------------------------------------
@@ -136,6 +136,1338 @@ FILE: HANDOFF_SCHEMA.json
 
 
 --------------------------------------------------------------------------------
+FILE: package-lock.json
+--------------------------------------------------------------------------------
+{
+  "name": "studio-loop-ai-harness",
+  "version": "0.1.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "studio-loop-ai-harness",
+      "version": "0.1.0",
+      "devDependencies": {
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.13"
+      }
+    },
+    "node_modules/@emnapi/core": {
+      "version": "1.10.0",
+      "resolved": "https://registry.npmjs.org/@emnapi/core/-/core-1.10.0.tgz",
+      "integrity": "sha512-yq6OkJ4p82CAfPl0u9mQebQHKPJkY7WrIuk205cTYnYe+k2Z8YBh11FrbRG/H6ihirqcacOgl2BIO8oyMQLeXw==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "@emnapi/wasi-threads": "1.2.1",
+        "tslib": "^2.4.0"
+      }
+    },
+    "node_modules/@emnapi/runtime": {
+      "version": "1.10.0",
+      "resolved": "https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.10.0.tgz",
+      "integrity": "sha512-ewvYlk86xUoGI0zQRNq/mC+16R1QeDlKQy21Ki3oSYXNgLb45GV1P6A0M+/s6nyCuNDqe5VpaY84BzXGwVbwFA==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "tslib": "^2.4.0"
+      }
+    },
+    "node_modules/@emnapi/wasi-threads": {
+      "version": "1.2.1",
+      "resolved": "https://registry.npmjs.org/@emnapi/wasi-threads/-/wasi-threads-1.2.1.tgz",
+      "integrity": "sha512-uTII7OYF+/Mes/MrcIOYp5yOtSMLBWSIoLPpcgwipoiKbli6k322tcoFsxoIIxPDqW01SQGAgko4EzZi2BNv2w==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "tslib": "^2.4.0"
+      }
+    },
+    "node_modules/@jridgewell/sourcemap-codec": {
+      "version": "1.5.5",
+      "resolved": "https://registry.npmjs.org/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.5.tgz",
+      "integrity": "sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@napi-rs/wasm-runtime": {
+      "version": "1.1.4",
+      "resolved": "https://registry.npmjs.org/@napi-rs/wasm-runtime/-/wasm-runtime-1.1.4.tgz",
+      "integrity": "sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "@tybys/wasm-util": "^0.10.1"
+      },
+      "funding": {
+        "type": "github",
+        "url": "https://github.com/sponsors/Brooooooklyn"
+      },
+      "peerDependencies": {
+        "@emnapi/core": "^1.7.1",
+        "@emnapi/runtime": "^1.7.1"
+      }
+    },
+    "node_modules/@oxc-project/types": {
+      "version": "0.128.0",
+      "resolved": "https://registry.npmjs.org/@oxc-project/types/-/types-0.128.0.tgz",
+      "integrity": "sha512-huv1Y/LzBJkBVHt3OlC7u0zHBW9qXf1FdD7sGmc1rXc2P1mTwHssYv7jyGx5KAACSCH+9B3Bhn6Z9luHRvf7pQ==",
+      "dev": true,
+      "license": "MIT",
+      "funding": {
+        "url": "https://github.com/sponsors/Boshen"
+      }
+    },
+    "node_modules/@rolldown/binding-android-arm64": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-android-arm64/-/binding-android-arm64-1.0.0-rc.18.tgz",
+      "integrity": "sha512-lIDyUAfD7U3+BWKzdxMbJcsYHuqXqmGz40aeRqvuAm3y5TkJSYTBW2RDrn65DJFPQqVjUAUqq5uz8urzQ8aBdQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "android"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-darwin-arm64": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-darwin-arm64/-/binding-darwin-arm64-1.0.0-rc.18.tgz",
+      "integrity": "sha512-apJq2ktnGp27nSInMR5Vcj8kY6xJzDAvfdIFlpDcAK/w4cDO58qVoi1YQsES/SKiFNge/6e4CUzgjfHduYqWpQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-darwin-x64": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-darwin-x64/-/binding-darwin-x64-1.0.0-rc.18.tgz",
+      "integrity": "sha512-5Ofot8xbs+pxRHJqm9/9N/4sTQOvdrwEsmPE9pdLEEoAbdZtG6F2LMDfO1sp6ZAtXJuJV/21ew2srq3W8NXB5g==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-freebsd-x64": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-freebsd-x64/-/binding-freebsd-x64-1.0.0-rc.18.tgz",
+      "integrity": "sha512-7h8eeOTT1eyqJyx64BFCnWZpNm486hGWt2sqeLLgDxA0xI1oGZ9H7gK1S85uNGmBhkdPwa/6reTxfFFKvIsebw==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "freebsd"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-arm-gnueabihf": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-arm-gnueabihf/-/binding-linux-arm-gnueabihf-1.0.0-rc.18.tgz",
+      "integrity": "sha512-eRcm/HVt9U/JFu5RKAEKwGQYtDCKWLiaH6wOnsSEp6NMBb/3Os8LgHZlNyzMpFVNmiiMFlfb2zEnebfzJrHFmg==",
+      "cpu": [
+        "arm"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-arm64-gnu": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-gnu/-/binding-linux-arm64-gnu-1.0.0-rc.18.tgz",
+      "integrity": "sha512-SOrT/cT4ukTmgnrEz/Hg3m7LBnuCLW9psDeMKrimRWY4I8DmnO7Lco8W2vtqPmMkbVu8iJ+g4GFLVLLOVjJ9DQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-arm64-musl": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-musl/-/binding-linux-arm64-musl-1.0.0-rc.18.tgz",
+      "integrity": "sha512-QWjdxN1HJCpBTAcZ5N5F7wju3gVPzRzSpmGzx7na0c/1qpN9CFil+xt+l9lV/1M6/gqHSNXCiqPfwhVJPeLnug==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-ppc64-gnu": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-ppc64-gnu/-/binding-linux-ppc64-gnu-1.0.0-rc.18.tgz",
+      "integrity": "sha512-ugCOyj7a4d9h3q9B+wXmf6g3a68UsjGh6dob5DHevHGMwDUbhsYNbSPxJsENcIttJZ9jv7qGM2UesLw5jqIhdg==",
+      "cpu": [
+        "ppc64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-s390x-gnu": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-s390x-gnu/-/binding-linux-s390x-gnu-1.0.0-rc.18.tgz",
+      "integrity": "sha512-kKWRhbsotpXkGbcd5dllUWg5gEXcDAa8u5YnP9AV5DYNbvJHGzzuwv7dpmhc8NqKMJldl0a+x76IHbspEpEmdA==",
+      "cpu": [
+        "s390x"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-x64-gnu": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.0.0-rc.18.tgz",
+      "integrity": "sha512-uCo8ElcCIAMyYAZyuIZ81oFkhTSIllNvUCHCAlbhlN4ji3uC28h7IIdlXyIvGO7HsuqnV9p3rD/bpH7XhIyhRw==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-linux-x64-musl": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-linux-x64-musl/-/binding-linux-x64-musl-1.0.0-rc.18.tgz",
+      "integrity": "sha512-XNOQZtuE6yUIvx4rwGemwh8kpL1xvU41FXy/s9K7T/3JVcqGzo3NfKM2HrbrGgfPYGFW42f07Wk++aOC6B9NWA==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-openharmony-arm64": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-openharmony-arm64/-/binding-openharmony-arm64-1.0.0-rc.18.tgz",
+      "integrity": "sha512-tSn/kzrfa7tNOXr7sEacDBN4YsIqTyLqh45IO0nHDwtpKIDNDJr+VFojt+4klSpChxB29JLyduSsE0MKEwa65A==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "openharmony"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-wasm32-wasi": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-wasm32-wasi/-/binding-wasm32-wasi-1.0.0-rc.18.tgz",
+      "integrity": "sha512-+J9YGmc+czgqlhYmwun3S3O0FIZhsH8ep2456xwjAdIOmuJxM7xz4P4PtrxU+Bz17a/5bqPA8o3HAAoX0teUdg==",
+      "cpu": [
+        "wasm32"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "@emnapi/core": "1.10.0",
+        "@emnapi/runtime": "1.10.0",
+        "@napi-rs/wasm-runtime": "^1.1.4"
+      },
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-win32-arm64-msvc": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-win32-arm64-msvc/-/binding-win32-arm64-msvc-1.0.0-rc.18.tgz",
+      "integrity": "sha512-zsu47DgU0FQzSwi6sU9dZoEdUv7pc1AptSEz/Z8HBg54sV0Pbs3N0+CrIbTsgiu6EyoaNN9CHboqbLaz9lhOyQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/binding-win32-x64-msvc": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.0.0-rc.18.tgz",
+      "integrity": "sha512-7H+3yqGgmnlDTRRhw/xpYY9J1kf4GC681nVc4GqKhExZTDrVVrV2tsOR9kso0fvgBdcTCcQShx4SLLoHgaLwhg==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      }
+    },
+    "node_modules/@rolldown/pluginutils": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/@rolldown/pluginutils/-/pluginutils-1.0.0-rc.18.tgz",
+      "integrity": "sha512-CUY5Mnhe64xQBGZEEXQ5WyZwsc1JU3vAZLIxtrsBt3LO6UOb+C8GunVKqe9sT8NeWb4lqSaoJtp2xo6GxT1MNw==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@standard-schema/spec": {
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/@standard-schema/spec/-/spec-1.1.0.tgz",
+      "integrity": "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@tybys/wasm-util": {
+      "version": "0.10.2",
+      "resolved": "https://registry.npmjs.org/@tybys/wasm-util/-/wasm-util-0.10.2.tgz",
+      "integrity": "sha512-RoBvJ2X0wuKlWFIjrwffGw1IqZHKQqzIchKaadZZfnNpsAYp2mM0h36JtPCjNDAHGgYez/15uMBpfGwchhiMgg==",
+      "dev": true,
+      "license": "MIT",
+      "optional": true,
+      "dependencies": {
+        "tslib": "^2.4.0"
+      }
+    },
+    "node_modules/@types/chai": {
+      "version": "5.2.3",
+      "resolved": "https://registry.npmjs.org/@types/chai/-/chai-5.2.3.tgz",
+      "integrity": "sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@types/deep-eql": "*",
+        "assertion-error": "^2.0.1"
+      }
+    },
+    "node_modules/@types/deep-eql": {
+      "version": "4.0.2",
+      "resolved": "https://registry.npmjs.org/@types/deep-eql/-/deep-eql-4.0.2.tgz",
+      "integrity": "sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@types/estree": {
+      "version": "1.0.9",
+      "resolved": "https://registry.npmjs.org/@types/estree/-/estree-1.0.9.tgz",
+      "integrity": "sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@vitest/expect": {
+      "version": "4.1.5",
+      "resolved": "https://registry.npmjs.org/@vitest/expect/-/expect-4.1.5.tgz",
+      "integrity": "sha512-PWBaRY5JoKuRnHlUHfpV/KohFylaDZTupcXN1H9vYryNLOnitSw60Mw9IAE2r67NbwwzBw/Cc/8q9BK3kIX8Kw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@standard-schema/spec": "^1.1.0",
+        "@types/chai": "^5.2.2",
+        "@vitest/spy": "4.1.5",
+        "@vitest/utils": "4.1.5",
+        "chai": "^6.2.2",
+        "tinyrainbow": "^3.1.0"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/@vitest/mocker": {
+      "version": "4.1.5",
+      "resolved": "https://registry.npmjs.org/@vitest/mocker/-/mocker-4.1.5.tgz",
+      "integrity": "sha512-/x2EmFC4mT4NNzqvC3fmesuV97w5FC903KPmey4gsnJiMQ3Be1IlDKVaDaG8iqaLFHqJ2FVEkxZk5VmeLjIItw==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@vitest/spy": "4.1.5",
+        "estree-walker": "^3.0.3",
+        "magic-string": "^0.30.21"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      },
+      "peerDependencies": {
+        "msw": "^2.4.9",
+        "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
+      },
+      "peerDependenciesMeta": {
+        "msw": {
+          "optional": true
+        },
+        "vite": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/@vitest/pretty-format": {
+      "version": "4.1.5",
+      "resolved": "https://registry.npmjs.org/@vitest/pretty-format/-/pretty-format-4.1.5.tgz",
+      "integrity": "sha512-7I3q6l5qr03dVfMX2wCo9FxwSJbPdwKjy2uu/YPpU3wfHvIL4QHwVRp57OfGrDFeUJ8/8QdfBKIV12FTtLn00g==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "tinyrainbow": "^3.1.0"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/@vitest/runner": {
+      "version": "4.1.5",
+      "resolved": "https://registry.npmjs.org/@vitest/runner/-/runner-4.1.5.tgz",
+      "integrity": "sha512-2D+o7Pr82IEO46YPpoA/YU0neeyr6FTerQb5Ro7BUnBuv6NQtT/kmVnczngiMEBhzgqz2UZYl5gArejsyERDSQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@vitest/utils": "4.1.5",
+        "pathe": "^2.0.3"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/@vitest/snapshot": {
+      "version": "4.1.5",
+      "resolved": "https://registry.npmjs.org/@vitest/snapshot/-/snapshot-4.1.5.tgz",
+      "integrity": "sha512-zypXEt4KH/XgKGPUz4eC2AvErYx0My5hfL8oDb1HzGFpEk1P62bxSohdyOmvz+d9UJwanI68MKwr2EquOaOgMQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@vitest/pretty-format": "4.1.5",
+        "@vitest/utils": "4.1.5",
+        "magic-string": "^0.30.21",
+        "pathe": "^2.0.3"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/@vitest/spy": {
+      "version": "4.1.5",
+      "resolved": "https://registry.npmjs.org/@vitest/spy/-/spy-4.1.5.tgz",
+      "integrity": "sha512-2lNOsh6+R2Idnf1TCZqSwYlKN2E/iDlD8sgU59kYVl+OMDmvldO1VDk39smRfpUNwYpNRVn3w4YfuC7KfbBnkQ==",
+      "dev": true,
+      "license": "MIT",
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/@vitest/utils": {
+      "version": "4.1.5",
+      "resolved": "https://registry.npmjs.org/@vitest/utils/-/utils-4.1.5.tgz",
+      "integrity": "sha512-76wdkrmfXfqGjueGgnb45ITPyUi1ycZ4IHgC2bhPDUfWHklY/q3MdLOAB+TF1e6xfl8NxNY0ZYaPCFNWSsw3Ug==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@vitest/pretty-format": "4.1.5",
+        "convert-source-map": "^2.0.0",
+        "tinyrainbow": "^3.1.0"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      }
+    },
+    "node_modules/assertion-error": {
+      "version": "2.0.1",
+      "resolved": "https://registry.npmjs.org/assertion-error/-/assertion-error-2.0.1.tgz",
+      "integrity": "sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=12"
+      }
+    },
+    "node_modules/chai": {
+      "version": "6.2.2",
+      "resolved": "https://registry.npmjs.org/chai/-/chai-6.2.2.tgz",
+      "integrity": "sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=18"
+      }
+    },
+    "node_modules/convert-source-map": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/convert-source-map/-/convert-source-map-2.0.0.tgz",
+      "integrity": "sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/detect-libc": {
+      "version": "2.1.2",
+      "resolved": "https://registry.npmjs.org/detect-libc/-/detect-libc-2.1.2.tgz",
+      "integrity": "sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==",
+      "dev": true,
+      "license": "Apache-2.0",
+      "engines": {
+        "node": ">=8"
+      }
+    },
+    "node_modules/es-module-lexer": {
+      "version": "2.1.0",
+      "resolved": "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-2.1.0.tgz",
+      "integrity": "sha512-n27zTYMjYu1aj4MjCWzSP7G9r75utsaoc8m61weK+W8JMBGGQybd43GstCXZ3WNmSFtGT9wi59qQTW6mhTR5LQ==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/estree-walker": {
+      "version": "3.0.3",
+      "resolved": "https://registry.npmjs.org/estree-walker/-/estree-walker-3.0.3.tgz",
+      "integrity": "sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@types/estree": "^1.0.0"
+      }
+    },
+    "node_modules/expect-type": {
+      "version": "1.3.0",
+      "resolved": "https://registry.npmjs.org/expect-type/-/expect-type-1.3.0.tgz",
+      "integrity": "sha512-knvyeauYhqjOYvQ66MznSMs83wmHrCycNEN6Ao+2AeYEfxUIkuiVxdEa1qlGEPK+We3n0THiDciYSsCcgW/DoA==",
+      "dev": true,
+      "license": "Apache-2.0",
+      "engines": {
+        "node": ">=12.0.0"
+      }
+    },
+    "node_modules/fdir": {
+      "version": "6.5.0",
+      "resolved": "https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz",
+      "integrity": "sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=12.0.0"
+      },
+      "peerDependencies": {
+        "picomatch": "^3 || ^4"
+      },
+      "peerDependenciesMeta": {
+        "picomatch": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/fsevents": {
+      "version": "2.3.3",
+      "resolved": "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz",
+      "integrity": "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==",
+      "dev": true,
+      "hasInstallScript": true,
+      "license": "MIT",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": "^8.16.0 || ^10.6.0 || >=11.0.0"
+      }
+    },
+    "node_modules/lightningcss": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss/-/lightningcss-1.32.0.tgz",
+      "integrity": "sha512-NXYBzinNrblfraPGyrbPoD19C1h9lfI/1mzgWYvXUTe414Gz/X1FD2XBZSZM7rRTrMA8JL3OtAaGifrIKhQ5yQ==",
+      "dev": true,
+      "license": "MPL-2.0",
+      "dependencies": {
+        "detect-libc": "^2.0.3"
+      },
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      },
+      "optionalDependencies": {
+        "lightningcss-android-arm64": "1.32.0",
+        "lightningcss-darwin-arm64": "1.32.0",
+        "lightningcss-darwin-x64": "1.32.0",
+        "lightningcss-freebsd-x64": "1.32.0",
+        "lightningcss-linux-arm-gnueabihf": "1.32.0",
+        "lightningcss-linux-arm64-gnu": "1.32.0",
+        "lightningcss-linux-arm64-musl": "1.32.0",
+        "lightningcss-linux-x64-gnu": "1.32.0",
+        "lightningcss-linux-x64-musl": "1.32.0",
+        "lightningcss-win32-arm64-msvc": "1.32.0",
+        "lightningcss-win32-x64-msvc": "1.32.0"
+      }
+    },
+    "node_modules/lightningcss-android-arm64": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-android-arm64/-/lightningcss-android-arm64-1.32.0.tgz",
+      "integrity": "sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "android"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-darwin-arm64": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-darwin-arm64/-/lightningcss-darwin-arm64-1.32.0.tgz",
+      "integrity": "sha512-RzeG9Ju5bag2Bv1/lwlVJvBE3q6TtXskdZLLCyfg5pt+HLz9BqlICO7LZM7VHNTTn/5PRhHFBSjk5lc4cmscPQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-darwin-x64": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-darwin-x64/-/lightningcss-darwin-x64-1.32.0.tgz",
+      "integrity": "sha512-U+QsBp2m/s2wqpUYT/6wnlagdZbtZdndSmut/NJqlCcMLTWp5muCrID+K5UJ6jqD2BFshejCYXniPDbNh73V8w==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "darwin"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-freebsd-x64": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-freebsd-x64/-/lightningcss-freebsd-x64-1.32.0.tgz",
+      "integrity": "sha512-JCTigedEksZk3tHTTthnMdVfGf61Fky8Ji2E4YjUTEQX14xiy/lTzXnu1vwiZe3bYe0q+SpsSH/CTeDXK6WHig==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "freebsd"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-arm-gnueabihf": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-arm-gnueabihf/-/lightningcss-linux-arm-gnueabihf-1.32.0.tgz",
+      "integrity": "sha512-x6rnnpRa2GL0zQOkt6rts3YDPzduLpWvwAF6EMhXFVZXD4tPrBkEFqzGowzCsIWsPjqSK+tyNEODUBXeeVHSkw==",
+      "cpu": [
+        "arm"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-arm64-gnu": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-arm64-gnu/-/lightningcss-linux-arm64-gnu-1.32.0.tgz",
+      "integrity": "sha512-0nnMyoyOLRJXfbMOilaSRcLH3Jw5z9HDNGfT/gwCPgaDjnx0i8w7vBzFLFR1f6CMLKF8gVbebmkUN3fa/kQJpQ==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-arm64-musl": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-arm64-musl/-/lightningcss-linux-arm64-musl-1.32.0.tgz",
+      "integrity": "sha512-UpQkoenr4UJEzgVIYpI80lDFvRmPVg6oqboNHfoH4CQIfNA+HOrZ7Mo7KZP02dC6LjghPQJeBsvXhJod/wnIBg==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-x64-gnu": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-x64-gnu/-/lightningcss-linux-x64-gnu-1.32.0.tgz",
+      "integrity": "sha512-V7Qr52IhZmdKPVr+Vtw8o+WLsQJYCTd8loIfpDaMRWGUZfBOYEJeyJIkqGIDMZPwPx24pUMfwSxxI8phr/MbOA==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "libc": [
+        "glibc"
+      ],
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-linux-x64-musl": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-linux-x64-musl/-/lightningcss-linux-x64-musl-1.32.0.tgz",
+      "integrity": "sha512-bYcLp+Vb0awsiXg/80uCRezCYHNg1/l3mt0gzHnWV9XP1W5sKa5/TCdGWaR/zBM2PeF/HbsQv/j2URNOiVuxWg==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "libc": [
+        "musl"
+      ],
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "linux"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-win32-arm64-msvc": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-win32-arm64-msvc/-/lightningcss-win32-arm64-msvc-1.32.0.tgz",
+      "integrity": "sha512-8SbC8BR40pS6baCM8sbtYDSwEVQd4JlFTOlaD3gWGHfThTcABnNDBda6eTZeqbofalIJhFx0qKzgHJmcPTnGdw==",
+      "cpu": [
+        "arm64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/lightningcss-win32-x64-msvc": {
+      "version": "1.32.0",
+      "resolved": "https://registry.npmjs.org/lightningcss-win32-x64-msvc/-/lightningcss-win32-x64-msvc-1.32.0.tgz",
+      "integrity": "sha512-Amq9B/SoZYdDi1kFrojnoqPLxYhQ4Wo5XiL8EVJrVsB8ARoC1PWW6VGtT0WKCemjy8aC+louJnjS7U18x3b06Q==",
+      "cpu": [
+        "x64"
+      ],
+      "dev": true,
+      "license": "MPL-2.0",
+      "optional": true,
+      "os": [
+        "win32"
+      ],
+      "engines": {
+        "node": ">= 12.0.0"
+      },
+      "funding": {
+        "type": "opencollective",
+        "url": "https://opencollective.com/parcel"
+      }
+    },
+    "node_modules/magic-string": {
+      "version": "0.30.21",
+      "resolved": "https://registry.npmjs.org/magic-string/-/magic-string-0.30.21.tgz",
+      "integrity": "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@jridgewell/sourcemap-codec": "^1.5.5"
+      }
+    },
+    "node_modules/nanoid": {
+      "version": "3.3.12",
+      "resolved": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.12.tgz",
+      "integrity": "sha512-ZB9RH/39qpq5Vu6Y+NmUaFhQR6pp+M2Xt76XBnEwDaGcVAqhlvxrl3B2bKS5D3NH3QR76v3aSrKaF/Kiy7lEtQ==",
+      "dev": true,
+      "funding": [
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/ai"
+        }
+      ],
+      "license": "MIT",
+      "bin": {
+        "nanoid": "bin/nanoid.cjs"
+      },
+      "engines": {
+        "node": "^10 || ^12 || ^13.7 || ^14 || >=15.0.1"
+      }
+    },
+    "node_modules/obug": {
+      "version": "2.1.1",
+      "resolved": "https://registry.npmjs.org/obug/-/obug-2.1.1.tgz",
+      "integrity": "sha512-uTqF9MuPraAQ+IsnPf366RG4cP9RtUi7MLO1N3KEc+wb0a6yKpeL0lmk2IB1jY5KHPAlTc6T/JRdC/YqxHNwkQ==",
+      "dev": true,
+      "funding": [
+        "https://github.com/sponsors/sxzz",
+        "https://opencollective.com/debug"
+      ],
+      "license": "MIT"
+    },
+    "node_modules/pathe": {
+      "version": "2.0.3",
+      "resolved": "https://registry.npmjs.org/pathe/-/pathe-2.0.3.tgz",
+      "integrity": "sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/picocolors": {
+      "version": "1.1.1",
+      "resolved": "https://registry.npmjs.org/picocolors/-/picocolors-1.1.1.tgz",
+      "integrity": "sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==",
+      "dev": true,
+      "license": "ISC"
+    },
+    "node_modules/picomatch": {
+      "version": "4.0.4",
+      "resolved": "https://registry.npmjs.org/picomatch/-/picomatch-4.0.4.tgz",
+      "integrity": "sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=12"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/jonschlinkert"
+      }
+    },
+    "node_modules/postcss": {
+      "version": "8.5.14",
+      "resolved": "https://registry.npmjs.org/postcss/-/postcss-8.5.14.tgz",
+      "integrity": "sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg==",
+      "dev": true,
+      "funding": [
+        {
+          "type": "opencollective",
+          "url": "https://opencollective.com/postcss/"
+        },
+        {
+          "type": "tidelift",
+          "url": "https://tidelift.com/funding/github/npm/postcss"
+        },
+        {
+          "type": "github",
+          "url": "https://github.com/sponsors/ai"
+        }
+      ],
+      "license": "MIT",
+      "dependencies": {
+        "nanoid": "^3.3.11",
+        "picocolors": "^1.1.1",
+        "source-map-js": "^1.2.1"
+      },
+      "engines": {
+        "node": "^10 || ^12 || >=14"
+      }
+    },
+    "node_modules/rolldown": {
+      "version": "1.0.0-rc.18",
+      "resolved": "https://registry.npmjs.org/rolldown/-/rolldown-1.0.0-rc.18.tgz",
+      "integrity": "sha512-phmyKBpuBdRYDf4hgyynGAYn/rDDe+iZXKVJ7WX5b1zQzpLkP5oJRPGsfJuHdzPMlyyEO/4sPW6yfSx2gf7lVg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@oxc-project/types": "=0.128.0",
+        "@rolldown/pluginutils": "1.0.0-rc.18"
+      },
+      "bin": {
+        "rolldown": "bin/cli.mjs"
+      },
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      },
+      "optionalDependencies": {
+        "@rolldown/binding-android-arm64": "1.0.0-rc.18",
+        "@rolldown/binding-darwin-arm64": "1.0.0-rc.18",
+        "@rolldown/binding-darwin-x64": "1.0.0-rc.18",
+        "@rolldown/binding-freebsd-x64": "1.0.0-rc.18",
+        "@rolldown/binding-linux-arm-gnueabihf": "1.0.0-rc.18",
+        "@rolldown/binding-linux-arm64-gnu": "1.0.0-rc.18",
+        "@rolldown/binding-linux-arm64-musl": "1.0.0-rc.18",
+        "@rolldown/binding-linux-ppc64-gnu": "1.0.0-rc.18",
+        "@rolldown/binding-linux-s390x-gnu": "1.0.0-rc.18",
+        "@rolldown/binding-linux-x64-gnu": "1.0.0-rc.18",
+        "@rolldown/binding-linux-x64-musl": "1.0.0-rc.18",
+        "@rolldown/binding-openharmony-arm64": "1.0.0-rc.18",
+        "@rolldown/binding-wasm32-wasi": "1.0.0-rc.18",
+        "@rolldown/binding-win32-arm64-msvc": "1.0.0-rc.18",
+        "@rolldown/binding-win32-x64-msvc": "1.0.0-rc.18"
+      }
+    },
+    "node_modules/siginfo": {
+      "version": "2.0.0",
+      "resolved": "https://registry.npmjs.org/siginfo/-/siginfo-2.0.0.tgz",
+      "integrity": "sha512-ybx0WO1/8bSBLEWXZvEd7gMW3Sn3JFlW3TvX1nREbDLRNQNaeNN8WK0meBwPdAaOI7TtRRRJn/Es1zhrrCHu7g==",
+      "dev": true,
+      "license": "ISC"
+    },
+    "node_modules/source-map-js": {
+      "version": "1.2.1",
+      "resolved": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz",
+      "integrity": "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==",
+      "dev": true,
+      "license": "BSD-3-Clause",
+      "engines": {
+        "node": ">=0.10.0"
+      }
+    },
+    "node_modules/stackback": {
+      "version": "0.0.2",
+      "resolved": "https://registry.npmjs.org/stackback/-/stackback-0.0.2.tgz",
+      "integrity": "sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/std-env": {
+      "version": "4.1.0",
+      "resolved": "https://registry.npmjs.org/std-env/-/std-env-4.1.0.tgz",
+      "integrity": "sha512-Rq7ybcX2RuC55r9oaPVEW7/xu3tj8u4GeBYHBWCychFtzMIr86A7e3PPEBPT37sHStKX3+TiX/Fr/ACmJLVlLQ==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/tinybench": {
+      "version": "2.9.0",
+      "resolved": "https://registry.npmjs.org/tinybench/-/tinybench-2.9.0.tgz",
+      "integrity": "sha512-0+DUvqWMValLmha6lr4kD8iAMK1HzV0/aKnCtWb9v9641TnP/MFb7Pc2bxoxQjTXAErryXVgUOfv2YqNllqGeg==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/tinyexec": {
+      "version": "1.1.2",
+      "resolved": "https://registry.npmjs.org/tinyexec/-/tinyexec-1.1.2.tgz",
+      "integrity": "sha512-dAqSqE/RabpBKI8+h26GfLq6Vb3JVXs30XYQjdMjaj/c2tS8IYYMbIzP599KtRj7c57/wYApb3QjgRgXmrCukA==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=18"
+      }
+    },
+    "node_modules/tinyglobby": {
+      "version": "0.2.16",
+      "resolved": "https://registry.npmjs.org/tinyglobby/-/tinyglobby-0.2.16.tgz",
+      "integrity": "sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "fdir": "^6.5.0",
+        "picomatch": "^4.0.4"
+      },
+      "engines": {
+        "node": ">=12.0.0"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/SuperchupuDev"
+      }
+    },
+    "node_modules/tinyrainbow": {
+      "version": "3.1.0",
+      "resolved": "https://registry.npmjs.org/tinyrainbow/-/tinyrainbow-3.1.0.tgz",
+      "integrity": "sha512-Bf+ILmBgretUrdJxzXM0SgXLZ3XfiaUuOj/IKQHuTXip+05Xn+uyEYdVg0kYDipTBcLrCVyUzAPz7QmArb0mmw==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=14.0.0"
+      }
+    },
+    "node_modules/tslib": {
+      "version": "2.8.1",
+      "resolved": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
+      "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==",
+      "dev": true,
+      "license": "0BSD",
+      "optional": true
+    },
+    "node_modules/typescript": {
+      "version": "5.9.3",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+      "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
+      "dev": true,
+      "license": "Apache-2.0",
+      "bin": {
+        "tsc": "bin/tsc",
+        "tsserver": "bin/tsserver"
+      },
+      "engines": {
+        "node": ">=14.17"
+      }
+    },
+    "node_modules/vite": {
+      "version": "8.0.11",
+      "resolved": "https://registry.npmjs.org/vite/-/vite-8.0.11.tgz",
+      "integrity": "sha512-Jz1mxtUBR5xTT65VOdJZUUeoyLtqljmFkiUXhPTLZka3RDc9vpi/xXkyrnsdRcm2lIi3l3GPMnAidTsEGIj3Ow==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "lightningcss": "^1.32.0",
+        "picomatch": "^4.0.4",
+        "postcss": "^8.5.14",
+        "rolldown": "1.0.0-rc.18",
+        "tinyglobby": "^0.2.16"
+      },
+      "bin": {
+        "vite": "bin/vite.js"
+      },
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      },
+      "funding": {
+        "url": "https://github.com/vitejs/vite?sponsor=1"
+      },
+      "optionalDependencies": {
+        "fsevents": "~2.3.3"
+      },
+      "peerDependencies": {
+        "@types/node": "^20.19.0 || >=22.12.0",
+        "@vitejs/devtools": "^0.1.18",
+        "esbuild": "^0.27.0 || ^0.28.0",
+        "jiti": ">=1.21.0",
+        "less": "^4.0.0",
+        "sass": "^1.70.0",
+        "sass-embedded": "^1.70.0",
+        "stylus": ">=0.54.8",
+        "sugarss": "^5.0.0",
+        "terser": "^5.16.0",
+        "tsx": "^4.8.1",
+        "yaml": "^2.4.2"
+      },
+      "peerDependenciesMeta": {
+        "@types/node": {
+          "optional": true
+        },
+        "@vitejs/devtools": {
+          "optional": true
+        },
+        "esbuild": {
+          "optional": true
+        },
+        "jiti": {
+          "optional": true
+        },
+        "less": {
+          "optional": true
+        },
+        "sass": {
+          "optional": true
+        },
+        "sass-embedded": {
+          "optional": true
+        },
+        "stylus": {
+          "optional": true
+        },
+        "sugarss": {
+          "optional": true
+        },
+        "terser": {
+          "optional": true
+        },
+        "tsx": {
+          "optional": true
+        },
+        "yaml": {
+          "optional": true
+        }
+      }
+    },
+    "node_modules/vitest": {
+      "version": "4.1.5",
+      "resolved": "https://registry.npmjs.org/vitest/-/vitest-4.1.5.tgz",
+      "integrity": "sha512-9Xx1v3/ih3m9hN+SbfkUyy0JAs72ap3r7joc87XL6jwF0jGg6mFBvQ1SrwaX+h8BlkX6Hz9shdd1uo6AF+ZGpg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@vitest/expect": "4.1.5",
+        "@vitest/mocker": "4.1.5",
+        "@vitest/pretty-format": "4.1.5",
+        "@vitest/runner": "4.1.5",
+        "@vitest/snapshot": "4.1.5",
+        "@vitest/spy": "4.1.5",
+        "@vitest/utils": "4.1.5",
+        "es-module-lexer": "^2.0.0",
+        "expect-type": "^1.3.0",
+        "magic-string": "^0.30.21",
+        "obug": "^2.1.1",
+        "pathe": "^2.0.3",
+        "picomatch": "^4.0.3",
+        "std-env": "^4.0.0-rc.1",
+        "tinybench": "^2.9.0",
+        "tinyexec": "^1.0.2",
+        "tinyglobby": "^0.2.15",
+        "tinyrainbow": "^3.1.0",
+        "vite": "^6.0.0 || ^7.0.0 || ^8.0.0",
+        "why-is-node-running": "^2.3.0"
+      },
+      "bin": {
+        "vitest": "vitest.mjs"
+      },
+      "engines": {
+        "node": "^20.0.0 || ^22.0.0 || >=24.0.0"
+      },
+      "funding": {
+        "url": "https://opencollective.com/vitest"
+      },
+      "peerDependencies": {
+        "@edge-runtime/vm": "*",
+        "@opentelemetry/api": "^1.9.0",
+        "@types/node": "^20.0.0 || ^22.0.0 || >=24.0.0",
+        "@vitest/browser-playwright": "4.1.5",
+        "@vitest/browser-preview": "4.1.5",
+        "@vitest/browser-webdriverio": "4.1.5",
+        "@vitest/coverage-istanbul": "4.1.5",
+        "@vitest/coverage-v8": "4.1.5",
+        "@vitest/ui": "4.1.5",
+        "happy-dom": "*",
+        "jsdom": "*",
+        "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
+      },
+      "peerDependenciesMeta": {
+        "@edge-runtime/vm": {
+          "optional": true
+        },
+        "@opentelemetry/api": {
+          "optional": true
+        },
+        "@types/node": {
+          "optional": true
+        },
+        "@vitest/browser-playwright": {
+          "optional": true
+        },
+        "@vitest/browser-preview": {
+          "optional": true
+        },
+        "@vitest/browser-webdriverio": {
+          "optional": true
+        },
+        "@vitest/coverage-istanbul": {
+          "optional": true
+        },
+        "@vitest/coverage-v8": {
+          "optional": true
+        },
+        "@vitest/ui": {
+          "optional": true
+        },
+        "happy-dom": {
+          "optional": true
+        },
+        "jsdom": {
+          "optional": true
+        },
+        "vite": {
+          "optional": false
+        }
+      }
+    },
+    "node_modules/why-is-node-running": {
+      "version": "2.3.0",
+      "resolved": "https://registry.npmjs.org/why-is-node-running/-/why-is-node-running-2.3.0.tgz",
+      "integrity": "sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "siginfo": "^2.0.0",
+        "stackback": "0.0.2"
+      },
+      "bin": {
+        "why-is-node-running": "cli.js"
+      },
+      "engines": {
+        "node": ">=8"
+      }
+    }
+  }
+}
+
+
+
+--------------------------------------------------------------------------------
+FILE: package.json
+--------------------------------------------------------------------------------
+{
+  "name": "studio-loop-ai-harness",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.13"
+  }
+}
+
+
+
+--------------------------------------------------------------------------------
 FILE: README.md
 --------------------------------------------------------------------------------
 # Studio Loop Local Gemma 4 Harness
@@ -171,6 +1503,36 @@ Primary backend:
 The model does not browse directly. It requests research through `ACTIONS_JSON.research_requests`; the orchestrator performs browser research, extracts page text, writes a research brief, and injects that brief into the next prompt.
 
 No Brave, Tavily, SerpAPI, or paid search account is required.
+
+
+
+--------------------------------------------------------------------------------
+FILE: requirements.txt
+--------------------------------------------------------------------------------
+playwright
+requests
+jsonschema
+psutil
+
+
+
+--------------------------------------------------------------------------------
+FILE: tsconfig.json
+--------------------------------------------------------------------------------
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "types": ["vitest/globals"]
+  },
+  "include": ["src/**/*.ts", "tests/**/*.ts", "vitest.config.ts"]
+}
 
 
 
@@ -530,6 +1892,7 @@ import os
 import json
 import sys
 from urllib.parse import urlparse, urlunparse
+import re
 
 # Add the current directory to sys.path to allow absolute imports of sibling modules
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -547,30 +1910,74 @@ class BrowserResearch:
         self.parser = SearchResultParser(self.research_config.get("search_engine", "duckduckgo_lite"))
         self.extractor = PageExtractor(self.research_config, self.base_path)
 
+    def _query_terms(self, query):
+        stopwords = {
+            "a", "an", "and", "api", "are", "as", "at", "best", "for", "how", "in",
+            "is", "of", "on", "or", "the", "to", "use", "using", "with",
+        }
+        return [
+            term for term in re.findall(r"[a-zA-Z][a-zA-Z0-9]+", query.lower())
+            if len(term) >= 4 and term not in stopwords
+        ]
+
+    def _query_profile(self, query):
+        q_lower = query.lower()
+        if "canvas" in q_lower and "requestanimationframe" in q_lower:
+            return "canvas_animation"
+        ts_terms = [
+            "typescript", "browser", "data model", "task queue", "queue",
+            "worker task", "state management", "vitest",
+        ]
+        if any(term in q_lower for term in ts_terms):
+            return "typescript_browser_architecture"
+        return "generic_technical"
+
     def _query_variants(self, query):
         variants = [query]
         q_lower = query.lower()
-        if "mdn" in q_lower and "canvas" in q_lower and "requestanimationframe" in q_lower:
+        profile = self._query_profile(query)
+        if profile == "canvas_animation":
             variants.extend([
                 "Canvas API requestAnimationFrame MDN",
                 "site:developer.mozilla.org/en-US/docs/Web/API Canvas requestAnimationFrame",
                 "requestAnimationFrame Canvas MDN",
                 "Canvas API basic animations MDN",
             ])
+        elif profile == "typescript_browser_architecture":
+            variants.extend([
+                "TypeScript data model browser task queue Vitest",
+                "TypeScript queue data structures browser unit testing Vitest",
+                "JavaScript queue data structure browser state management",
+            ])
         return list(dict.fromkeys(variants))
 
     def _canonical_candidates(self, query):
-        q_lower = query.lower()
-        if "canvas" not in q_lower or "requestanimationframe" not in q_lower:
-            return []
-        base = "https://developer.mozilla.org"
-        paths = [
-            "/en-US/docs/Web/API/Canvas_API",
-            "/en-US/docs/Web/API/Window/requestAnimationFrame",
-            "/en-US/docs/Web/API/Canvas_API/Tutorial/Basic_animations",
-            "/en-US/docs/Web/API/CanvasRenderingContext2D",
-        ]
-        return [{"url": base + path, "title": path.rsplit("/", 1)[-1]} for path in paths]
+        profile = self._query_profile(query)
+        candidates = []
+        if profile == "canvas_animation":
+            base = "https://developer.mozilla.org"
+            paths = [
+                "/en-US/docs/Web/API/Canvas_API",
+                "/en-US/docs/Web/API/Window/requestAnimationFrame",
+                "/en-US/docs/Web/API/Canvas_API/Tutorial/Basic_animations",
+                "/en-US/docs/Web/API/CanvasRenderingContext2D",
+            ]
+            candidates.extend({"url": base + path, "title": path.rsplit("/", 1)[-1]} for path in paths)
+        elif profile == "typescript_browser_architecture":
+            candidates.extend([
+                {"url": "https://www.typescriptlang.org/docs/handbook/2/everyday-types.html", "title": "TypeScript Handbook - Everyday Types"},
+                {"url": "https://www.typescriptlang.org/docs/handbook/2/objects.html", "title": "TypeScript Handbook - Object Types"},
+                {"url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array", "title": "MDN JavaScript Array"},
+                {"url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map", "title": "MDN JavaScript Map"},
+                {"url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes", "title": "MDN JavaScript Classes"},
+            ])
+            q_lower = query.lower()
+            if "test" in q_lower or "vitest" in q_lower:
+                candidates.extend([
+                    {"url": "https://vitest.dev/guide/", "title": "Vitest Guide"},
+                    {"url": "https://vitest.dev/api/", "title": "Vitest API"},
+                ])
+        return candidates
 
     def _normalize_url(self, url):
         parsed = urlparse(url)
@@ -585,10 +1992,20 @@ class BrowserResearch:
             "animation/rendering": ["animation", "animate", "render", "repaint", "frame"],
             "2d context": ["2d context", "canvasrenderingcontext2d", "getcontext", "2d graphics"],
             "basic animations": ["basic animations", "basic_animations"],
+            "typescript": ["typescript", "strict types", "interface", "type alias", "generics"],
+            "javascript data structures": ["array", "map", "set", "object", "queue", "fifo", "priority queue"],
+            "queue/task scheduling": ["queue", "task", "scheduler", "priority", "dequeue", "enqueue", "worker"],
+            "browser/runtime": ["browser", "web api", "webapi", "dom", "canvas", "requestanimationframe"],
+            "testing/vitest": ["vitest", "unit test", "expect", "describe", "test"],
+            "state/modeling": ["state", "model", "immutable", "reducer", "data model"],
         }
         for topic, needles in checks.items():
             if any(needle in haystack for needle in needles):
                 coverage.append(topic)
+        terms = self._query_terms(query)
+        matched_terms = {term for term in terms if term in haystack}
+        if len(matched_terms) >= 2:
+            coverage.extend(f"query:{term}" for term in sorted(matched_terms))
         return coverage
 
     def _explicitly_requested_rejected_topic(self, query, keyword):
@@ -615,14 +2032,25 @@ class BrowserResearch:
         return ""
 
     def _score_link(self, query, link):
+        profile = self._query_profile(query)
         title_lower = link.get("title", "").lower()
         url_lower = link.get("url", "").lower()
         score = 0
         domain = urlparse(link.get("url", "")).netloc.lower()
         if "developer.mozilla.org" in domain:
             score += 40
+        if "typescriptlang.org" in domain:
+            score += 45 if profile == "typescript_browser_architecture" else 15
+        if "vitest.dev" in domain:
+            score += 45 if profile == "typescript_browser_architecture" else 10
         if "/en-us/docs/web/api/" in url_lower:
             score += 25
+        if "/javascript/reference/global_objects/array" in url_lower or "/javascript/reference/global_objects/map" in url_lower:
+            score += 35 if profile == "typescript_browser_architecture" else 10
+        if "handbook" in url_lower and "typescript" in url_lower:
+            score += 35
+        if "vitest" in url_lower or "vitest" in title_lower:
+            score += 35
         if "canvas_api/tutorial/basic_animations" in url_lower:
             score += 45
         if "window/requestanimationframe" in url_lower:
@@ -635,11 +2063,12 @@ class BrowserResearch:
             score += 35
         if any(bad in url_lower for bad in ["scrimba.com", "github.com/mdn", "localhost", "/plus", "/curriculum/", "/blog/", "/learn/"]):
             score -= 100
-        if self._rejection_reason(query, title_lower, url_lower, ""):
+        if profile == "canvas_animation" and self._rejection_reason(query, title_lower, url_lower, ""):
             score -= 100
         return score
 
-    def _source_set_valid(self, sources, findings):
+    def _source_set_valid(self, sources, findings, query=""):
+        profile = self._query_profile(query)
         relevant = [
             s for s in sources
             if s.get("status") == "fetched" and s.get("relevant") and not s.get("rejected")
@@ -647,12 +2076,25 @@ class BrowserResearch:
         covered = set()
         for source in relevant:
             covered.update(source.get("topic_coverage", []))
-        return (
-            len(relevant) >= 2
-            and "canvas" in covered
-            and ("requestanimationframe" in covered or "animation/rendering" in covered)
-            and len(findings) >= 2
-        )
+        if len(relevant) < 2 or len(findings) < 2:
+            return False
+        if profile == "canvas_animation":
+            return (
+                "canvas" in covered
+                and ("requestanimationframe" in covered or "animation/rendering" in covered)
+            )
+        if profile == "typescript_browser_architecture":
+            required_topics = {
+                "typescript",
+                "javascript data structures",
+                "queue/task scheduling",
+                "browser/runtime",
+                "testing/vitest",
+                "state/modeling",
+            }
+            return len(covered & required_topics) >= 2
+        query_coverage = {topic.split(":", 1)[1] for topic in covered if topic.startswith("query:")}
+        return len(query_coverage) >= 2
 
     def perform_research(self, query, reason=None):
         results = {
@@ -729,7 +2171,10 @@ class BrowserResearch:
             excerpt_lower = extracted.get("excerpt", "").lower()
             title_lower = extracted.get("title", "").lower()
             coverage = self._topic_coverage(query, extracted.get("title", ""), extracted.get("url", ""), extracted.get("excerpt", ""))
-            rejection_reason = self._rejection_reason(query, title_lower, extracted.get("url", "").lower(), excerpt_lower)
+            profile = self._query_profile(query)
+            rejection_reason = ""
+            if profile == "canvas_animation":
+                rejection_reason = self._rejection_reason(query, title_lower, extracted.get("url", "").lower(), excerpt_lower)
 
             if rejection_reason:
                 extracted["status"] = "failed"
@@ -758,7 +2203,8 @@ class BrowserResearch:
             results["sources"].append(source_entry)
 
         # 5. Final Validation
-        results["source_set_relevance_passed"] = self._source_set_valid(results["sources"], results["findings"])
+        results["query_profile"] = self._query_profile(query)
+        results["source_set_relevance_passed"] = self._source_set_valid(results["sources"], results["findings"], query)
         if results["source_set_relevance_passed"]:
             results["status"] = "complete"
         elif results["findings"]:
@@ -817,6 +2263,7 @@ import subprocess
 import json
 import urllib.request
 import urllib.error
+import shutil
 
 class CapabilityRegistry:
     def __init__(self, config=None):
@@ -905,49 +2352,78 @@ class CapabilityRegistry:
         self.capabilities["commands"]["git_status"] = self._can_run(["git", "status", "--short"])
         self.capabilities["commands"]["git_diff"] = self.capabilities["commands"]["git_status"]
         
-        # Check node_modules for local tools
-        if os.path.exists("node_modules/.bin/tsc"):
-            self.capabilities["commands"]["typecheck"] = True
-        elif self._can_run(["tsc", "--version"]):
-            self.capabilities["commands"]["typecheck"] = True
-            
-        if os.path.exists("node_modules/.bin/vitest"):
-            self.capabilities["commands"]["test"] = True
-        elif self._can_run(["vitest", "--version"]):
-            self.capabilities["commands"]["test"] = True
+        # Check node tools via npx or local
+        node_available = shutil.which("node") is not None
+        npm_available = shutil.which("npm") is not None
+        npx_available = shutil.which("npx") is not None
+        
+        if npx_available:
+            self.capabilities["commands"]["typecheck"] = self._can_run(["npx", "tsc", "--version"])
+            self.capabilities["commands"]["test"] = self._can_run(["npx", "vitest", "--version"])
+        else:
+            # Check node_modules for local tools
+            if os.path.exists("node_modules/.bin/tsc"):
+                self.capabilities["commands"]["typecheck"] = True
+            elif self._can_run(["tsc", "--version"]):
+                self.capabilities["commands"]["typecheck"] = True
+                
+            if os.path.exists("node_modules/.bin/vitest"):
+                self.capabilities["commands"]["test"] = True
+            elif self._can_run(["vitest", "--version"]):
+                self.capabilities["commands"]["test"] = True
 
     def _detect_research(self):
-        from playwright_research import PlaywrightResearch
-        
-        pw = PlaywrightResearch(self.config.get("web_research", {}))
-        
-        # Playwright is the primary research backend
-        if pw.is_available():
-            self.capabilities["research"]["web_search"] = True
-            self.capabilities["research"]["web_fetch"] = True
-            self.capabilities["research"]["backend"] = "playwright"
-            self.capabilities["research"]["error"] = None
-        else:
-            self.capabilities["research"]["web_search"] = False
-            self.capabilities["research"]["web_fetch"] = False
-            self.capabilities["research"]["backend"] = None
-            self.capabilities["research"]["error"] = "No functional browser research backend (Playwright) found."
-
+        try:
+            from playwright_research import PlaywrightResearch
+            pw = PlaywrightResearch(self.config.get("web_research", {}))
+            
+            # Playwright is the primary research backend
+            if pw.is_available():
+                self.capabilities["research"]["web_search"] = True
+                self.capabilities["research"]["web_fetch"] = True
+                self.capabilities["research"]["backend"] = "playwright"
+                self.capabilities["research"]["error"] = None
+            else:
+                self.capabilities["research"]["web_search"] = False
+                self.capabilities["research"]["web_fetch"] = False
+                self.capabilities["research"]["backend"] = None
+                self.capabilities["research"]["error"] = "No functional browser research backend (Playwright) found. Check if chromium is installed."
+        except Exception as e:
+            self.capabilities["research"]["error"] = f"Failed to import or initialize PlaywrightResearch: {str(e)}"
 
     def _detect_browser(self):
-        from playwright_research import PLAYWRIGHT_AVAILABLE
-        
-        self.capabilities["browser"]["playwright"] = PLAYWRIGHT_AVAILABLE
-        self.capabilities["browser"]["available"] = PLAYWRIGHT_AVAILABLE
-        self.capabilities["browser"]["chrome_devtools"] = False # CDP disabled
-        self.capabilities["browser"]["chrome_remote_debugging"] = False
-        self.capabilities["browser"]["performance_trace"] = False
+        try:
+            from playwright_research import PLAYWRIGHT_AVAILABLE, PlaywrightResearch
+            
+            pw = PlaywrightResearch(self.config.get("web_research", {}))
+            browser_ok = pw.is_available()
+            
+            self.capabilities["browser"]["playwright"] = PLAYWRIGHT_AVAILABLE
+            self.capabilities["browser"]["available"] = browser_ok
+            self.capabilities["browser"]["chrome_devtools"] = False # CDP disabled
+            self.capabilities["browser"]["chrome_remote_debugging"] = False
+            self.capabilities["browser"]["performance_trace"] = False
+        except:
+            self.capabilities["browser"]["available"] = False
 
     def _can_run(self, cmd):
         try:
-            # We don't use shell=True for detection to avoid side effects
-            subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False, timeout=2)
-            return True
+            if not cmd:
+                return False
+            executable = shutil.which(cmd[0]) if isinstance(cmd, list) else shutil.which(cmd)
+            if not executable:
+                return False
+            resolved_cmd = [executable] + cmd[1:] if isinstance(cmd, list) else executable
+            use_shell = executable.lower().endswith((".bat", ".cmd"))
+            result = subprocess.run(
+                resolved_cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+                timeout=5,
+                shell=use_shell
+            )
+            return result.returncode == 0
         except:
             return False
 
@@ -965,26 +2441,26 @@ FILE: .agent\orchestrator\command_allowlist.json
   "allowed_commands": [
     {
       "name": "typecheck",
-      "command": ["{drive}\\PortableApps\\Node\\node-v24.15.0-win-x64\\node.exe", "node_modules\\typescript\\bin\\tsc", "--noEmit"],
+      "command": ["npx", "tsc", "--noEmit"],
       "allow_args": false,
       "timeout": 120
     },
     {
       "name": "test",
-      "command": ["{drive}\\PortableApps\\Node\\node-v24.15.0-win-x64\\node.exe", "node_modules\\vitest\\vitest.mjs", "run"],
+      "command": ["npx", "vitest", "run"],
       "allow_args": false,
       "timeout": 180
     },
     {
       "name": "test_target",
-      "command": ["{drive}\\PortableApps\\Node\\node-v24.15.0-win-x64\\node.exe", "node_modules\\vitest\\vitest.mjs", "run"],
+      "command": ["npx", "vitest", "run"],
       "allow_args": true,
       "arg_pattern": "^[A-Za-z0-9_./\\\\-]+$",
       "timeout": 180
     },
     {
       "name": "find_bloat",
-      "command": ["{drive}\\PortablePython\\python.exe", "tools/find_bloat.py"],
+      "command": ["python", "tools/find_bloat.py"],
       "allow_args": true,
       "arg_pattern": "^--json$",
       "timeout": 60
@@ -1004,7 +2480,7 @@ FILE: .agent\orchestrator\command_allowlist.json
     },
     {
       "name": "browser_research_check",
-      "command": ["{drive}\\PortablePython\\python.exe", ".agent/orchestrator/browser_research.py", "--check"],
+      "command": ["python", ".agent/orchestrator/browser_research.py", "--check"],
       "allow_args": false,
       "timeout": 60
     }
@@ -1058,11 +2534,15 @@ class CommandRunner:
 
     def _resolve_command_parts(self, cmd_spec):
         drive = os.path.splitdrive(self.workspace_root)[0] or "C:"
+        path_tools = {"python", "npx", "node", "npm", "git"}
         
         if isinstance(cmd_spec, list):
             resolved = []
             for part in cmd_spec:
-                resolved.append(part.replace("{drive}", drive))
+                if part in path_tools:
+                    resolved.append(part)
+                else:
+                    resolved.append(part.replace("{drive}", drive))
             return resolved
         else:
             # Legacy string support
@@ -1540,6 +3020,14 @@ class FileWriter:
 
         # 2. Enforce mode logic
         if mode == "create" and os.path.exists(full_path):
+            # Idempotency: If content is identical, treat as success
+            try:
+                with open(full_path, 'r', encoding='utf-8') as f:
+                    existing_content = f.read()
+                if existing_content == content:
+                    return True, None
+            except:
+                pass
             return False, f"File already exists (mode=create): {path}"
         
         if mode == "overwrite" and os.path.exists(full_path):
@@ -2028,9 +3516,9 @@ class PlaywrightResearch:
 
     def get_install_hint(self):
         if not self.available:
-            return r"Run: \PortablePython\python.exe -m pip install playwright"
+            return "Run: python -m pip install playwright"
         if not self._browser_available:
-            return r"Run: \PortablePython\python.exe -m playwright install chromium"
+            return "Run: python -m playwright install chromium"
         return ""
 
     def run_search(self, query, search_url_template):
@@ -2385,16 +3873,7 @@ class ResponseParser:
     def __init__(self, schema_path=None):
         self.validator = SchemaValidator(schema_path) if schema_path else None
 
-    def extract_json(self, text, marker):
-        """Extracts JSON starting from marker using balanced brace counting."""
-        start_idx = text.find(marker)
-        if start_idx == -1:
-            return None
-        
-        json_start = text.find('{', start_idx)
-        if json_start == -1:
-            return None
-        
+    def _parse_json_object_at(self, text, json_start):
         depth = 0
         in_string = False
         escape = False
@@ -2422,10 +3901,49 @@ class ResponseParser:
                     if depth == 0:
                         json_str = text[json_start:i+1]
                         try:
-                            return json.loads(json_str)
-                        except json.JSONDecodeError as e:
-                            print(f"JSON Decode Error for {marker}: {e}")
-                            return None
+                            return json.loads(json_str), i + 1
+                        except json.JSONDecodeError:
+                            return None, i + 1
+        return None, None
+
+    def extract_json(self, text, marker):
+        """Extracts JSON starting from marker using balanced brace counting."""
+        start_idx = text.find(marker)
+        if start_idx == -1:
+            return None
+        
+        json_start = text.find('{', start_idx)
+        if json_start == -1:
+            return None
+
+        data, _ = self._parse_json_object_at(text, json_start)
+        if data is None:
+            print(f"JSON Decode Error for {marker}")
+        return data
+
+    def extract_fallback_actions_json(self, text):
+        """Accepts exactly one bare or fenced JSON object that looks like ACTIONS_JSON."""
+        stripped = text.strip()
+        candidates = []
+        
+        fence_match = re.fullmatch(r"```(?:json)?\s*(\{.*\})\s*```", stripped, re.DOTALL)
+        if fence_match:
+            candidate_text = fence_match.group(1)
+            data, end = self._parse_json_object_at(candidate_text, 0)
+            if data is not None and end == len(candidate_text):
+                candidates.append(data)
+        elif stripped.startswith("{"):
+            data, end = self._parse_json_object_at(stripped, 0)
+            if data is not None and end == len(stripped):
+                candidates.append(data)
+        
+        if len(candidates) != 1:
+            return None
+        
+        actions = candidates[0]
+        required_action_keys = {"stage", "status", "summary"}
+        if isinstance(actions, dict) and required_action_keys.issubset(actions.keys()):
+            return actions
         return None
 
     def parse(self, text):
@@ -2437,6 +3955,8 @@ class ResponseParser:
 
         # Extract ACTIONS_JSON using balanced braces
         actions = self.extract_json(text, "ACTIONS_JSON:")
+        if actions is None:
+            actions = self.extract_fallback_actions_json(text)
         results["actions"] = actions
 
         if actions:
@@ -2450,6 +3970,8 @@ class ResponseParser:
     def validate_actions(self, actions):
         if not actions:
             return False, "No valid ACTIONS_JSON found."
+
+        self.normalize_actions(actions)
         
         if self.validator:
             return self.validator.validate(actions)
@@ -2461,6 +3983,21 @@ class ResponseParser:
                 return False, f"Missing required key in ACTIONS_JSON: {key}"
         
         return True, None
+
+    def normalize_actions(self, actions):
+        if actions.get("qa_result") == "null":
+            actions["qa_result"] = None
+        for request in actions.get("research_requests", []):
+            if "query" not in request and "topic" in request:
+                request["query"] = request.pop("topic")
+            if "reason" not in request and "stack" in request:
+                request["reason"] = f"Research relevant to {request.pop('stack')}"
+            elif "stack" in request:
+                request["reason"] = f"{request.get('reason', '')} Stack: {request.pop('stack')}".strip()
+            if "constraints" in request:
+                constraints = request.pop("constraints")
+                request["reason"] = f"{request.get('reason', '')} Constraints: {constraints}".strip()
+        return actions
 
 
 
@@ -2474,20 +4011,53 @@ class RetryEngine:
     def __init__(self, max_retries=3):
         self.max_retries = max_retries
 
-    def get_repair_prompt(self, error_type, error_message, context_snippet=None):
+    def get_repair_prompt(self, error_type, error_message, context_snippet=None, stage_name=None, results=None):
         """Generates a targeted repair prompt as per Section 18."""
         prompt = f"### REPAIR REQUEST: {error_type}\n\n"
+        if stage_name:
+            prompt += f"CURRENT STAGE:\n{stage_name}\n\n"
         prompt += f"The orchestrator rejected the previous action due to the following error:\n\n"
         prompt += f"ERROR:\n{error_message}\n\n"
+        if "RESEARCH_REQUIRED_MISSING" in error_message:
+            prompt += "REQUIRED RESEARCH REPAIR:\n"
+            prompt += "- This stage has research_required=true.\n"
+            prompt += "- Return status blocked with one or more research_requests.\n"
+            prompt += "- Do not write the final technical blueprint until research has completed.\n"
+            prompt += "- Do not include writes or patches in this repair response.\n"
+            prompt += "- Use TypeScript/browser/Vitest stack research only.\n\n"
         
+        if results:
+            prompt += "ACTION EXECUTION STATUS:\n"
+            prompt += json.dumps(results, indent=2)[:4000] + "\n"
+            if results.get("writes"):
+                prompt += "Writes:\n"
+                for w in results["writes"]:
+                    status = "SUCCESS" if w["success"] else f"FAILED: {w['error']}"
+                    prompt += f"- {w['path']}: {status}\n"
+            if results.get("patches"):
+                prompt += "Patches:\n"
+                for p in results["patches"]:
+                    status = "SUCCESS" if p["success"] else f"FAILED: {p['error']}"
+                    prompt += f"- {p['path']}: {status}\n"
+            prompt += "\n"
+
         if context_snippet:
-            prompt += f"RELEVANT CONTEXT:\n{context_snippet}\n\n"
+            prompt += f"PREVIOUS RESPONSE EXCERPT:\n{context_snippet}\n\n"
             
         prompt += "INSTRUCTION:\n"
-        prompt += "1. Identify the cause of the failure.\n"
-        prompt += "2. Return a corrected ACTIONS_JSON block only.\n"
-        prompt += "3. Do not repeat failed patches or writes without modification.\n"
-        prompt += "4. If this was a JSON syntax error, ensure the new JSON is valid and escaped correctly.\n"
+        prompt += "1. Return exactly one ACTIONS_JSON block.\n"
+        prompt += "2. Do not include prose before or after.\n"
+        prompt += "3. Use valid JSON.\n"
+        prompt += "4. Use null as JSON null, not \"null\".\n"
+        prompt += "5. If a file already exists and you intended to update it, use mode=\"overwrite\".\n"
+        prompt += "6. Do not use mode=\"create\" for files that already exist according to the status above.\n"
+        prompt += "7. Do not invent writes/patches unless needed to satisfy the original stage.\n"
+        prompt += "8. The status field must be exactly one of: complete, blocked, failed. Replace invalid values such as running, in_progress, or pending.\n"
+        prompt += "9. Do not wrap JSON in Markdown fences.\n"
+        prompt += "10. Do not rename fields. Use next_stage_recommendation, not next_stage.\n"
+        prompt += "11. Ensure research_required is satisfied if true in the validation rules.\n"
+        prompt += "12. If research is required and no complete research exists, request research first and do not write a final technical blueprint yet.\n"
+        prompt += "13. For this project, use the TypeScript/browser/Vitest stack only; do not propose Python game source implementation.\n"
         
         return prompt
 
@@ -3575,6 +5145,36 @@ class StudioLoopOrchestrator:
                 print(f"Autonomous loop stopped: Max retries exceeded for {current_stage}.")
                 break
 
+    def acquire_lock(self):
+        lock_path = os.path.join(self.base_path, ".agent/state/studio_loop.lock")
+        os.makedirs(os.path.dirname(lock_path), exist_ok=True)
+        pid = os.getpid()
+        
+        if os.path.exists(lock_path):
+            try:
+                with open(lock_path, 'r') as f:
+                    lock_data = json.load(f)
+                old_pid = lock_data.get("pid")
+                # Check if old_pid is still alive
+                import psutil
+                if psutil.pid_exists(old_pid):
+                    print(f"FAILED: Another orchestrator (PID {old_pid}) is already running in this workspace.")
+                    sys.exit(1)
+                else:
+                    print(f"Found stale lock from PID {old_pid}. Recovering...")
+            except Exception:
+                print("Found corrupted lock file. Recovering...")
+        
+        with open(lock_path, 'w') as f:
+            json.dump({"pid": pid, "timestamp": datetime.now().isoformat()}, f)
+        import atexit
+        atexit.register(self.release_lock)
+
+    def release_lock(self):
+        lock_path = os.path.join(self.base_path, ".agent/state/studio_loop.lock")
+        if os.path.exists(lock_path):
+            os.remove(lock_path)
+
     def execute_stage(self, stage_name, attempt=0, repair_prompt_override=None):
         state = self.state_store.load_state()
         if not state["active"]:
@@ -3596,7 +5196,16 @@ class StudioLoopOrchestrator:
         self._apply_policy_context(state)
         
         if repair_prompt_override:
-            prompt = repair_prompt_override
+            if isinstance(repair_prompt_override, str):
+                prompt = {
+                    "system": (
+                        "You are repairing the previous ACTIONS_JSON for the current Studio Loop stage.\n"
+                        "Return corrected ACTIONS_JSON only."
+                    ),
+                    "user": repair_prompt_override
+                }
+            else:
+                prompt = repair_prompt_override
         else:
             # 1. Build Context
             print("Building context...")
@@ -3632,7 +5241,8 @@ class StudioLoopOrchestrator:
         if not is_valid:
             print(f"Invalid ACTIONS_JSON: {err}")
             if self.retry_engine.should_retry(attempt):
-                return self.repair_output(response_text, err, stage_name, attempt + 1)
+                return self.repair_output(response_text, err, stage_name, attempt + 1, results=None)
+            self.record_stage_validation_failure(stage_name, err, response_text)
             return False
 
         # 6. Safety Guard
@@ -3641,12 +5251,28 @@ class StudioLoopOrchestrator:
             print(f"Safety Guard Blocked Actions: {err}")
             # We treat safety violations as failures that require repair
             if self.retry_engine.should_retry(attempt):
-                return self.repair_output(response_text, f"SAFETY_VIOLATION: {err}", stage_name, attempt + 1)
+                return self.repair_output(response_text, f"SAFETY_VIOLATION: {err}", stage_name, attempt + 1, results=None)
+            return False
+
+        typecheck_ok, typecheck_error = self._validate_typecheck_available_for_source_actions(stage_name, actions)
+        if not typecheck_ok:
+            print(f"Typecheck gate blocked source actions: {typecheck_error}")
+            if self.retry_engine.should_retry(attempt):
+                return self.repair_output(response_text, typecheck_error, stage_name, attempt + 1, results=None)
+            self.record_stage_validation_failure(stage_name, typecheck_error, response_text)
+            return False
+
+        research_ok, research_error = self._validate_required_research_before_execution(stage_name, actions)
+        if not research_ok:
+            print(f"Research gate blocked final stage actions: {research_error}")
+            if self.retry_engine.should_retry(attempt):
+                return self.repair_output(response_text, research_error, stage_name, attempt + 1, results=None)
+            self.record_stage_validation_failure(stage_name, research_error, response_text)
             return False
 
         # 7. Execute Actions
         print("Executing actions...")
-        execution_results, research_performed = self.perform_actions(stage_name, actions)
+        execution_results, research_performed = self.perform_actions(stage_name, actions, attempt=attempt)
         
         # 7. Two-Pass Research Re-entry
         if research_performed:
@@ -3686,7 +5312,16 @@ class StudioLoopOrchestrator:
             if not val_report["valid"]:
                 print(f"Stage validation failed: {val_report['errors']}")
                 if self.retry_engine.should_retry(attempt):
-                    return self.execute_stage(stage_name, attempt + 1)
+                    repair_error = "POST_EXECUTION_VALIDATION_FAILED: " + "; ".join(val_report["errors"])
+                    repair_results = {
+                        "validation_errors": val_report["errors"],
+                        "execution_results": execution_results,
+                        "write_results": execution_results.get("writes", []),
+                        "patch_results": execution_results.get("patches", []),
+                        "instruction": "Use overwrite for existing artifacts that were already written successfully."
+                    }
+                    return self.repair_output(response_text, repair_error, stage_name, attempt + 1, results=repair_results)
+                self.record_stage_validation_failure(stage_name, "; ".join(val_report["errors"]), response_text)
                 return False
             
             # 8. Success & Transition
@@ -3727,7 +5362,7 @@ class StudioLoopOrchestrator:
             self.state_store.save_state(state)
         return False
 
-    def perform_actions(self, stage, actions):
+    def perform_actions(self, stage, actions, attempt=0):
         state = self.state_store.load_state()
         self._apply_policy_context(state)
         feature_slug = state.get("feature_slug")
@@ -3808,10 +5443,33 @@ class StudioLoopOrchestrator:
         # 2. Writes
         all_writes = actions.get("writes", [])
         for w in all_writes:
-            self.hooks.trigger("before_write", {"stage": stage, "path": w["path"]})
-            success, err = self.file_writer.write(stage, w["path"], w["content"], w.get("mode", "overwrite"))
-            self.hooks.trigger("after_write", {"stage": stage, "path": w["path"], "success": success})
-            results["writes"].append({"path": w["path"], "success": success, "error": err})
+            path = w["path"]
+            mode = w.get("mode", "overwrite")
+            content = w["content"]
+            
+            # Preflight Conflict Detection
+            full_path = os.path.join(self.base_path, path)
+            if mode == "create" and os.path.exists(full_path):
+                # If content identical, success (FileWriter handles this too but we check here for logs/logic)
+                try:
+                    with open(full_path, 'r', encoding='utf-8') as f:
+                        if f.read() == content:
+                            print(f"Preflight: {path} already exists with identical content. Marking as success.")
+                            results["writes"].append({"path": path, "success": True, "error": None})
+                            continue
+                except:
+                    pass
+                
+                # If stage artifact and retry, convert to overwrite
+                is_stage_artifact = ".agent/Loop_Flow" in path.replace("\\", "/")
+                if is_stage_artifact and attempt > 0:
+                    print(f"Preflight: Detected create conflict for stage artifact {path} on retry {attempt}. Converting to overwrite.")
+                    mode = "overwrite"
+
+            self.hooks.trigger("before_write", {"stage": stage, "path": path})
+            success, err = self.file_writer.write(stage, path, content, mode)
+            self.hooks.trigger("after_write", {"stage": stage, "path": path, "success": success})
+            results["writes"].append({"path": path, "success": success, "error": err})
 
         # 3. Patches
         all_patches = actions.get("patches", [])
@@ -3835,10 +5493,19 @@ class StudioLoopOrchestrator:
         state = self.state_store.load_state()
         skill_manifests = self.role_loader.load_role_skill_manifests(stage_name)
         val_rules = self.graph.get_validation_rules(stage_name)
-        
+
         # 1. Structural & File Validation
         report = self.artifact_validator.validate(stage_name, actions, results, val_rules, state, skill_manifests=skill_manifests)
         errors = report["errors"]
+        
+        # 1b. Research Enforcement (Point 6)
+        if val_rules.get("research_required"):
+            has_complete_research = any(
+                r.get("status") == "complete" for r in state.get("research_results", [])
+                if r.get("stage") == stage_name
+            )
+            if actions.get("status") == "complete" and not has_complete_research:
+                errors.append("Research is required for this stage but no complete research was performed or found.")
         
         # 2. Copyright Scan
         summary_violations = self.copyright_guard.scan_text(actions.get("summary", ""))
@@ -3877,7 +5544,8 @@ class StudioLoopOrchestrator:
         source_dirs = ('src/', 'tests/', 'tools/', 'data/')
         
         is_source_change = any(
-            p.endswith(source_extensions) or any(p.startswith(sd) for sd in source_dirs)
+            (p.endswith(source_extensions) and not p.startswith(".agent/")) 
+            or any(p.startswith(sd) for sd in source_dirs)
             for p in changed_paths
         )
         
@@ -3913,6 +5581,50 @@ class StudioLoopOrchestrator:
 
         return {"valid": len(errors) == 0, "errors": errors}
 
+    def _validate_typecheck_available_for_source_actions(self, stage_name, actions):
+        if stage_name not in ["developer", "debug_dev"]:
+            return True, None
+        changed_paths = [w.get("path", "") for w in actions.get("writes", [])] + [
+            p.get("path", "") for p in actions.get("patches", [])
+        ]
+        source_dirs = ("src/", "tests/", "tools/", "data/")
+        source_extensions = (".ts", ".tsx", ".js", ".jsx", ".json", ".py", ".css")
+        has_source_change = any(
+            (path.endswith(source_extensions) and not path.startswith(".agent/"))
+            or any(path.startswith(root) for root in source_dirs)
+            for path in changed_paths
+        )
+        if not has_source_change:
+            return True, None
+        capabilities = self.capability_registry.detect_all()
+        if capabilities.get("commands", {}).get("typecheck"):
+            return True, None
+        return False, (
+            "TYPECHECK_UNAVAILABLE: Developer source writes are blocked because TypeScript typecheck is not configured. "
+            "Configure package.json/tsconfig and make `npx tsc --noEmit` available before writing source files."
+        )
+
+    def _validate_required_research_before_execution(self, stage_name, actions):
+        val_rules = self.graph.get_validation_rules(stage_name)
+        if not val_rules.get("research_required"):
+            return True, None
+        if actions.get("status") != "complete":
+            return True, None
+        if actions.get("research_requests"):
+            return True, None
+        state = self.state_store.load_state()
+        has_complete_research = any(
+            r.get("status") == "complete" and r.get("stage") == stage_name
+            for r in state.get("research_results", [])
+        )
+        if has_complete_research:
+            return True, None
+        return False, (
+            "RESEARCH_REQUIRED_MISSING: This stage has research_required=true, but the response marked the stage complete "
+            "without research_requests and without any complete research for this stage. Request research first; do not write "
+            "the final technical blueprint until research has completed; use the TypeScript/browser/Vitest stack only."
+        )
+
     def _apply_policy_context(self, state):
         stage_write_policy = {}
         for role in self.graph.schema.get("stages", {}).keys():
@@ -3929,17 +5641,39 @@ class StudioLoopOrchestrator:
         self.state_store.update_capabilities(caps)
         print("Capabilities detected and stored.")
 
-    def repair_output(self, raw_response, error, stage_name, attempt):
+    def repair_output(self, raw_response, error, stage_name, attempt, results=None):
         print(f"Attempting output repair (attempt {attempt})...")
         
         # 1. Generate repair prompt
         error_type = "SCHEMA_ERROR" if "JSON" in error else "VALIDATION_FAILED"
-        repair_prompt = self.retry_engine.get_repair_prompt(error_type, error, context_snippet=raw_response[:1000])
+        repair_prompt = self.retry_engine.get_repair_prompt(
+            error_type,
+            error,
+            context_snippet=raw_response[:1000] if raw_response else None,
+            stage_name=stage_name,
+            results=results
+        )
+        repair_prompt_packet = {
+            "system": (
+                "You are repairing the previous ACTIONS_JSON for the current Studio Loop stage.\n"
+                "Return corrected ACTIONS_JSON only."
+            ),
+            "user": repair_prompt
+        }
         
         # 2. Get repair response from model
-        # For now, we simulate the model call via execute_stage but passing the repair prompt
-        # In a real implementation, execute_stage would take an optional override_prompt
-        return self.execute_stage(stage_name, attempt, repair_prompt_override=repair_prompt)
+        return self.execute_stage(stage_name, attempt, repair_prompt_override=repair_prompt_packet)
+
+    def record_stage_validation_failure(self, stage_name, error, response_text):
+        excerpt = response_text[:1000] if response_text else ""
+        reason = (
+            f"ACTIONS_JSON validation failed after repair retries at stage '{stage_name}': {error}. "
+            f"Response excerpt: {excerpt}"
+        )
+        print(
+            f"Stage {stage_name} reached local model, but ACTIONS_JSON validation failed after repair retries: {error}"
+        )
+        self.state_store.fail_stage(stage_name, reason)
 
     def status(self):
         state = self.state_store.load_state()
@@ -3997,18 +5731,37 @@ class StudioLoopOrchestrator:
                     if os.path.isfile(item_path):
                         os.remove(item_path)
                     elif os.path.isdir(item_path):
-                        # For subdirectories like .agent/logs/validation, we want to clean them too
-                        # but keep their .gitkeep if they have one? 
-                        # Actually, instruction says clean everything but .gitkeep.
-                        # If it's a directory, we can rmtree but we might lose .gitkeep inside.
-                        # Let's be surgical.
                         self._surgical_dir_clean(item_path)
+                        # After surgical clean, if it's empty and not one of the root cleanup_dirs, remove it
+                        if d not in cleanup_dirs and not os.listdir(item_path):
+                             shutil.rmtree(item_path)
                 except Exception as e:
                     print(f"Error cleaning {item_path}: {e}")
         
         # Also clean any test_final.txt in root
         if os.path.exists(os.path.join(self.base_path, "test_final.txt")):
             os.remove(os.path.join(self.base_path, "test_final.txt"))
+
+        sessions_dir = os.path.join(self.base_path, ".agent/state/sessions")
+        if os.path.isdir(sessions_dir):
+            for item in os.listdir(sessions_dir):
+                item_path = os.path.join(sessions_dir, item)
+                try:
+                    if item == ".gitkeep":
+                        continue
+                    if os.path.isfile(item_path):
+                        os.remove(item_path)
+                    elif os.path.isdir(item_path):
+                        shutil.rmtree(item_path)
+                except Exception as e:
+                    print(f"Error cleaning session state {item_path}: {e}")
+
+        lock_path = os.path.join(self.base_path, ".agent/state/studio_loop.lock")
+        if os.path.exists(lock_path):
+            try:
+                os.remove(lock_path)
+            except Exception as e:
+                print(f"Error removing lock file {lock_path}: {e}")
                 
         print("State, artifacts, and logs reset.")
 
@@ -4045,21 +5798,26 @@ if __name__ == "__main__":
     state = orchestrator.state_store.load_state()
 
     if args.command == "run":
+        orchestrator.acquire_lock()
         orchestrator.run(args.payload or "New task", mode="single_stage")
     elif args.command == "auto":
+        orchestrator.acquire_lock()
         orchestrator.run(args.payload or "New task", mode="auto")
     elif args.command == "continue":
         if state["active"]:
+            orchestrator.acquire_lock()
             orchestrator.autonomous_loop()
         else:
             print("No active feature to continue.")
     elif args.command == "step":
         if state["active"]:
+            orchestrator.acquire_lock()
             orchestrator.execute_stage(state["current_stage"])
         else:
             print("No active feature to step.")
     elif args.command == "retry":
         if state["active"]:
+            orchestrator.acquire_lock()
             orchestrator.retry_stage(state["current_stage"])
         else:
             print("No active feature to retry.")
@@ -4266,6 +6024,16 @@ Runtime stack:
 - Artifacts: `.agent/Loop_Flow/`
 - Logs: `.agent/logs/`
 
+Project stack (MUST ADHERE):
+
+- Language: TypeScript (strict)
+- Environment: Browser
+- Source Directory: `src/`
+- Test Directory: `tests/`
+- Test Runner: Vitest
+- Logic: Vanilla JS/TS logic, Canvas/DOM APIs.
+- NO Python implementation plans for game source.
+
 The orchestrator executes only valid, safe actions requested through `ACTIONS_JSON`.
 
 ## Feature
@@ -4304,6 +6072,12 @@ Do not use XML tags.
 Do not assume chat history.
 Use only the supplied task state, artifacts, research briefs, and context pack.
 Request all actions through `ACTIONS_JSON`.
+The status field must be exactly one of: complete, blocked, failed.
+Never use running, in_progress, pending, or custom status values.
+If you are requesting research, commands, writes, or patches, still choose a valid status for this response.
+Use real JSON null, not the string "null".
+Only QA should set qa_result to PASS, FAIL, BLOCKED, or SKIPPED.
+All non-QA roles should set qa_result to null.
 
 End with:
 
@@ -4314,7 +6088,7 @@ ACTIONS_JSON:
   "summary": "Detailed summary of work performed",
   "design_required": false,
   "assets_required": false,
-  "qa_result": "PASS|FAIL|BLOCKED|SKIPPED|null",
+  "qa_result": null,
   "writes": [
     {"path": "relative/path", "content": "content", "mode": "create|overwrite|append"}
   ],
@@ -5021,6 +6795,7 @@ Versioned package wrapper for the legacy researcher skill bundle.
 FILE: .agent\state\studio_loop_state.json
 --------------------------------------------------------------------------------
 {
+  "active_session_id": null,
   "active": false,
   "feature": null,
   "feature_slug": null,
@@ -5046,9 +6821,51 @@ FILE: .agent\state\studio_loop_state.json
   "last_results": null,
   "last_validation": null,
   "last_transition": null,
-  "capabilities": {},
+  "capabilities": {
+    "koboldcpp": {
+      "available": true,
+      "chat_completions": false,
+      "completions": false,
+      "vision_input": false,
+      "max_context_estimate": 32768,
+      "model_name": "koboldcpp/gemma-4-E4B-it-Q5_K_M",
+      "error": null
+    },
+    "filesystem": {
+      "read": true,
+      "write": true,
+      "patch": true
+    },
+    "commands": {
+      "typecheck": true,
+      "test": true,
+      "dev_server": false,
+      "git_status": true,
+      "git_diff": true,
+      "git_commit": false
+    },
+    "research": {
+      "web_search": true,
+      "web_fetch": true,
+      "citations_required": true,
+      "backend": "playwright",
+      "error": null
+    },
+    "browser": {
+      "available": true,
+      "playwright": true,
+      "chrome_devtools": false,
+      "chrome_remote_debugging": false,
+      "performance_trace": false
+    },
+    "multimodal": {
+      "image_input_available": false,
+      "audio_input_available": false,
+      "screenshot_analysis_available": false
+    }
+  },
   "created_at": null,
-  "updated_at": "2026-05-09T14:36:46.275629"
+  "updated_at": "2026-05-09T19:47:19.917884"
 }
 
 
@@ -5152,6 +6969,7 @@ FILE: .agent\workflows\concept_producer.md
 ---
 description: Operate as the Concept Producer for the project
 ---
+
 # Role: Concept Producer (The Visionary)
 
 ## Orchestrator Contract
@@ -5163,11 +6981,18 @@ description: Operate as the Concept Producer for the project
 - End with `ACTIONS_JSON` JSON.
 
 ## Role Overview
-You are the **Concept Producer** for "the project". In V2, you are **The Visionary**. Your mission is to maintain the high-level vision and ensure every feature aligns with the "Cryo-Awakening" setting.
+You are the **Concept Producer** for "the project". In V2, you are **The Visionary**. Your mission is to maintain the high-level vision and ensure every feature aligns with the "scifi dungeon keeper" setting.
 
 - **Master Skills**: You MUST utilize the [Producer Skills](../skills/producer_skills.md).
-- **Sci-fi Bannerlord**: Explore -> Fight -> Loot -> Recruit -> Upgrade -> Repeat.
+- **Sci-fi dungeon keeper dig-build-explore-defend-invade
 - **Systemic Depth**: Prioritize emergent systems over hard-coded scripts.
+
+## Mandatory Stack
+1. **Language**: TypeScript (strict mode).
+2. **Environment**: Browser / DOM / Canvas.
+3. **Logic**: Vanilla TypeScript/JavaScript logic.
+4. **Test Runner**: Vitest.
+5. **Restriction**: NO Python code for game logic or source. Python is for orchestrator/tooling only.
 
 ## Your Responsibilities
 1. **Feature Definition**: Define the "What" and "Why" for new features, including **Dialogue Branching Logic** and **NPC Behavior Synthesis**.
@@ -5192,7 +7017,6 @@ You are the **Concept Producer** for "the project". In V2, you are **The Visiona
 - Save durable work into files under `.agent/Loop_Flow/`.
 - End every role response with a machine-readable `ACTIONS_JSON` JSON block.
 - The orchestrator, not the model, controls role transitions.
-
 
 
 --------------------------------------------------------------------------------
@@ -5321,6 +7145,13 @@ You are the **Developer** for "the project". In V2, you are **The Architect**. Y
 - **Master Skills**: You MUST utilize the [Developer Skills](../skills/developer_skills.md) to perform your tasks.
 - **System Logic**: Handle **Procedural Content Logic**, **Network Protocol Mocking**, and **Sound Trigger Logic**.
 
+## Mandatory Stack
+1. **Language**: TypeScript (strict mode).
+2. **Environment**: Browser / DOM / Canvas.
+3. **Logic**: Vanilla TypeScript/JavaScript logic.
+4. **Test Runner**: Vitest.
+5. **Restriction**: NO Python code for game logic or source. Python is for orchestrator/tooling only.
+
 ## Your Responsibilities
 1. **Self-Healing Implementation**: Build systems that are robust and handle edge cases gracefully. Use **Data-Driven Templating** for stat tables.
 2. **Implementation**: Use the provided context pack and source index to implement logic. Request only allowlisted command names through `ACTIONS_JSON.commands`.
@@ -5440,6 +7271,13 @@ You are the **Researcher** for "the project". In V2, you are the **Context Archi
 - **Technologies**: WebGPU, Rapier Physics (WASM), SVG rendering, and Canvas performance.
 - **Context Culling**: Use the provided source index and context culler results to identify relevant files and ranges.
 - **Browser Research**: Use the `research_requests` action to gather external information. Browser QA is not currently available. Use research_requests for external research and allowlisted commands only.
+
+## Mandatory Stack
+1. **Language**: TypeScript (strict mode).
+2. **Environment**: Browser / DOM / Canvas.
+3. **Logic**: Vanilla TypeScript/JavaScript logic.
+4. **Test Runner**: Vitest.
+5. **Restriction**: NO Python code for game logic or source. Python is for orchestrator/tooling only.
 
 ## Your Responsibilities
 1. **Technical Audits**: Audit the current code to see where a feature should fit and what it might break.
@@ -5653,6 +7491,75 @@ Use `ACTIONS_JSON.commands` with name: `typecheck`.
 
 
 --------------------------------------------------------------------------------
+FILE: docs\local_setup.md
+--------------------------------------------------------------------------------
+# ROG Ally X Local Setup
+
+This guide covers setting up the Studio Loop AI Harness on the internal SSD.
+
+## Prerequisites
+
+Ensure you have the following installed and in your PATH:
+
+- Python 3.10+
+- Node.js (Latest LTS recommended)
+- Git
+
+## Setup Flow
+
+1. **Clone or move the repository** to `C:\Users\rchos\Desktop\Studio_Loop\ai_harness`.
+
+2. **Install Python dependencies**:
+   ```powershell
+   python -m pip install --upgrade pip
+   python -m pip install -r requirements.txt
+   python -m playwright install chromium
+   ```
+
+3. **Install Node dependencies** (if `package.json` is present):
+   ```powershell
+   npm install
+   ```
+
+4. **Verify the environment**:
+   ```powershell
+   python tools/bootstrap_local_env.py --check
+   ```
+
+5. **Verify research capabilities**:
+   ```powershell
+   python .agent/orchestrator/browser_research.py --check
+   ```
+
+6. **Check full capabilities**:
+   ```powershell
+   python .agent/orchestrator/studio_loop.py capabilities
+   ```
+
+7. **Run clean runtime verification**:
+   ```powershell
+   python tools/verify_clean_runtime.py
+   ```
+
+## Usage
+
+- Keep the KoboldCPP terminal open and running your model.
+- The KoboldCPP IPv6 warning is harmless if `127.0.0.1:5001` works.
+- Use `run` first to test a single stage:
+  ```powershell
+  python .agent/orchestrator/studio_loop.py run "Create a tiny test blueprint..."
+  ```
+- Use `step` to execute one stage at a time.
+- Use `auto` for fully autonomous operation once you've verified stability.
+
+## Troubleshooting
+
+- If Playwright fails to launch, run `python -m playwright install chromium` again.
+- If commands are not found, ensure Python and Node are in your System PATH.
+
+
+
+--------------------------------------------------------------------------------
 FILE: docs\verification\browser_research_mdn_requestanimationframe.md
 --------------------------------------------------------------------------------
 # Research Brief: MDN Canvas API requestAnimationFrame
@@ -5746,6 +7653,14 @@ class TestFullLoop(unittest.TestCase):
         self.orchestrator.client.call = MagicMock()
         # Mock research to avoid real web requests
         self.orchestrator.research_client.perform_research = MagicMock()
+        self.orchestrator.capability_registry.detect_all = MagicMock(return_value={
+            "commands": {
+                "typecheck": True,
+                "test": True,
+                "git_status": True,
+                "git_diff": True,
+            }
+        })
 
     def tearDown(self):
         self.temp_dir.cleanup()
@@ -6145,6 +8060,642 @@ class TestBrowserResearchMock(unittest.TestCase):
                 self.assertTrue(len(results["sources"]) >= 2)
                 self.assertTrue(len(results["findings"]) >= 1)
 
+    def test_canvas_source_set_still_requires_canvas_and_animation_coverage(self):
+        researcher = BrowserResearch()
+        sources_missing_animation = [
+            {"status": "fetched", "relevant": True, "rejected": False, "topic_coverage": ["canvas"]},
+            {"status": "fetched", "relevant": True, "rejected": False, "topic_coverage": ["canvas", "2d context"]},
+        ]
+        sources_complete = [
+            {"status": "fetched", "relevant": True, "rejected": False, "topic_coverage": ["canvas"]},
+            {"status": "fetched", "relevant": True, "rejected": False, "topic_coverage": ["requestanimationframe"]},
+        ]
+
+        self.assertFalse(
+            researcher._source_set_valid(
+                sources_missing_animation,
+                ["finding one", "finding two"],
+                "MDN Canvas API requestAnimationFrame",
+            )
+        )
+        self.assertTrue(
+            researcher._source_set_valid(
+                sources_complete,
+                ["finding one", "finding two"],
+                "MDN Canvas API requestAnimationFrame",
+            )
+        )
+
+    def test_typescript_browser_task_queue_passes_without_canvas_coverage(self):
+        researcher = BrowserResearch()
+        sources = [
+            {"status": "fetched", "relevant": True, "rejected": False, "topic_coverage": ["typescript", "state/modeling"]},
+            {"status": "fetched", "relevant": True, "rejected": False, "topic_coverage": ["javascript data structures", "queue/task scheduling", "testing/vitest"]},
+        ]
+
+        self.assertTrue(
+            researcher._source_set_valid(
+                sources,
+                ["TypeScript interfaces model state.", "Array queues can be tested with Vitest."],
+                "TypeScript browser task queue data model Vitest unit test",
+            )
+        )
+
+    def test_generic_technical_query_uses_query_term_overlap_not_canvas(self):
+        researcher = BrowserResearch()
+        sources = [
+            {"status": "fetched", "relevant": True, "rejected": False, "topic_coverage": ["query:pathfinding", "query:grid"]},
+            {"status": "fetched", "relevant": True, "rejected": False, "topic_coverage": ["query:grid", "query:algorithm"]},
+        ]
+
+        self.assertTrue(
+            researcher._source_set_valid(
+                sources,
+                ["Pathfinding grid note.", "Algorithm grid note."],
+                "pathfinding grid algorithm",
+            )
+        )
+
+    def test_query_aware_canonical_candidates_include_typescript_vitest_mdn_js(self):
+        researcher = BrowserResearch()
+        candidates = researcher._canonical_candidates("TypeScript browser task queue data model Vitest unit test")
+        urls = [candidate["url"] for candidate in candidates]
+
+        self.assertTrue(any("typescriptlang.org/docs/handbook" in url for url in urls))
+        self.assertTrue(any("Global_Objects/Array" in url for url in urls))
+        self.assertTrue(any("Global_Objects/Map" in url for url in urls))
+        self.assertTrue(any("vitest.dev/guide" in url for url in urls))
+
+    @patch('browser_research.PlaywrightResearch')
+    def test_typescript_browser_research_can_complete_with_relevant_sources(self, mock_playwright_class):
+        mock_backend = MagicMock()
+        mock_playwright_class.return_value = mock_backend
+        mock_backend.is_available.return_value = True
+        mock_backend.run_search.return_value = {"links": []}
+        mock_backend.fetch_page.return_value = {"html": "ok"}
+
+        with patch('browser_research.PageExtractor') as mock_extractor_class:
+            mock_extractor = MagicMock()
+            mock_extractor_class.return_value = mock_extractor
+
+            def extract_side_effect(url, html):
+                if "typescriptlang" in url:
+                    return {
+                        "title": "TypeScript Handbook Object Types",
+                        "url": url,
+                        "status": "fetched",
+                        "retrieved_at": "2026-05-09",
+                        "cache_path": ".agent/cache/typescript.txt",
+                        "excerpt": "TypeScript interface type alias generics object data model state.",
+                        "notes": "",
+                    }
+                if "Array" in url or "Map" in url:
+                    return {
+                        "title": "JavaScript Array Map queue data structures",
+                        "url": url,
+                        "status": "fetched",
+                        "retrieved_at": "2026-05-09",
+                        "cache_path": ".agent/cache/js.txt",
+                        "excerpt": "Array Map object queue fifo priority task scheduler browser unit test.",
+                        "notes": "",
+                    }
+                if "vitest" in url:
+                    return {
+                        "title": "Vitest unit test API",
+                        "url": url,
+                        "status": "fetched",
+                        "retrieved_at": "2026-05-09",
+                        "cache_path": ".agent/cache/vitest.txt",
+                        "excerpt": "Vitest describe test expect unit test browser code.",
+                        "notes": "",
+                    }
+                return {"status": "failed", "error": "not used"}
+
+            mock_extractor.extract.side_effect = extract_side_effect
+            researcher = BrowserResearch()
+            results = researcher.perform_research("TypeScript browser task queue data model Vitest unit test")
+
+            self.assertEqual(results["query_profile"], "typescript_browser_architecture")
+            self.assertEqual(results["status"], "complete")
+            self.assertTrue(results["source_set_relevance_passed"])
+            self.assertGreaterEqual(
+                len([s for s in results["sources"] if s.get("status") == "fetched" and s.get("relevant")]),
+                2,
+            )
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+
+--------------------------------------------------------------------------------
+FILE: tests\test_repair_prompt.py
+--------------------------------------------------------------------------------
+import json
+import os
+import shutil
+import sys
+import tempfile
+import unittest
+from unittest.mock import MagicMock
+
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../.agent/orchestrator")))
+
+from studio_loop import StudioLoopOrchestrator
+
+
+class TestRepairPrompt(unittest.TestCase):
+    def setUp(self):
+        self.original_base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        self.temp_dir_obj = tempfile.TemporaryDirectory()
+        self.base_dir = os.path.join(self.temp_dir_obj.name, "workspace")
+        shutil.copytree(
+            self.original_base_dir,
+            self.base_dir,
+            ignore=shutil.ignore_patterns("node_modules", ".git", ".agent/logs/*", "__pycache__"),
+        )
+        self.orchestrator = StudioLoopOrchestrator(self.base_dir)
+        self.orchestrator.state_store.reset_state()
+        self.orchestrator.state_store.start_feature("Repair test feature", "repair_test_feature", "concept_producer")
+
+    def tearDown(self):
+        self.temp_dir_obj.cleanup()
+
+    def test_repair_override_uses_prompt_packet_accepted_by_client_call(self):
+        invalid_response = """
+        ACTIONS_JSON:
+        {
+          "stage": "concept_producer",
+          "status": "complete",
+          "summary": "This response has an invalid QA result.",
+          "qa_result": "WRONG"
+        }
+        """
+        repaired_actions = {
+            "stage": "concept_producer",
+            "status": "blocked",
+            "summary": "Repair path returned valid blocked actions.",
+            "qa_result": None,
+            "blockers": [{"reason": "Stopping after repair validation for test."}],
+        }
+        repaired_response = f"ACTIONS_JSON:\n{json.dumps(repaired_actions)}"
+        self.orchestrator.client.call = MagicMock(side_effect=[invalid_response, repaired_response])
+
+        success = self.orchestrator.execute_stage("concept_producer")
+
+        self.assertFalse(success)
+        self.assertEqual(self.orchestrator.client.call.call_count, 2)
+        repair_prompt_packet = self.orchestrator.client.call.call_args_list[1].args[0]
+        self.assertIsInstance(repair_prompt_packet, dict)
+        self.assertIn("system", repair_prompt_packet)
+        self.assertIn("user", repair_prompt_packet)
+        self.assertIn("You are repairing the previous ACTIONS_JSON", repair_prompt_packet["system"])
+        self.assertIn("concept_producer", repair_prompt_packet["user"])
+        self.assertIn("Schema validation failed", repair_prompt_packet["user"])
+        self.assertIn("invalid QA result", repair_prompt_packet["user"])
+        self.assertIn("Return exactly one ACTIONS_JSON block", repair_prompt_packet["user"])
+        self.assertIn('Use null as JSON null, not "null"', repair_prompt_packet["user"])
+        self.assertIn("Do not invent writes/patches", repair_prompt_packet["user"])
+        self.assertIn("Replace invalid values such as running", repair_prompt_packet["user"])
+        self.assertIn("Do not wrap JSON in Markdown fences", repair_prompt_packet["user"])
+        self.assertIn("Use next_stage_recommendation, not next_stage", repair_prompt_packet["user"])
+
+    def test_running_status_triggers_repair_and_fenced_valid_repair_is_accepted(self):
+        self.orchestrator.state_store.reset_state()
+        self.orchestrator.state_store.start_feature(
+            "Research test feature", "research_test_feature", "researcher", kind="research"
+        )
+        self.orchestrator.client.call = MagicMock(side_effect=[
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "running",
+              "summary": "Trying to begin research with an invalid status."
+            }
+            """,
+            """```json
+            {
+              "stage": "researcher",
+              "status": "blocked",
+              "summary": "Research is needed before technical handoff can complete.",
+              "qa_result": null,
+              "blockers": [{"reason": "External research required."}]
+            }
+            ```""",
+        ])
+
+        success = self.orchestrator.execute_stage("researcher")
+
+        self.assertFalse(success)
+        self.assertEqual(self.orchestrator.client.call.call_count, 2)
+        state = self.orchestrator.state_store.load_state()
+        self.assertEqual(state["current_stage"], "researcher")
+        self.assertEqual(state["status"], "blocked")
+
+    def test_repeated_invalid_repairs_persist_failure_on_current_stage(self):
+        self.orchestrator.state_store.reset_state()
+        self.orchestrator.state_store.start_feature(
+            "Research failure feature", "research_failure_feature", "researcher", kind="research"
+        )
+        invalid_response = """
+        ACTIONS_JSON:
+        {
+          "stage": "researcher",
+          "status": "running",
+          "summary": "Invalid status should exhaust repair attempts."
+        }
+        """
+        self.orchestrator.client.call = MagicMock(return_value=invalid_response)
+
+        success = self.orchestrator.execute_stage("researcher")
+
+        self.assertFalse(success)
+        state = self.orchestrator.state_store.load_state()
+        self.assertEqual(state["current_stage"], "researcher")
+        self.assertEqual(state["status"], "failed")
+        self.assertTrue(state["failures"])
+        self.assertEqual(state["failures"][-1]["stage"], "researcher")
+        self.assertIn("ACTIONS_JSON validation failed after repair retries", state["failures"][-1]["reason"])
+
+    def test_post_execution_validation_failure_uses_repair_prompt_with_results(self):
+        self.orchestrator.state_store.reset_state()
+        self.orchestrator.state_store.start_feature(
+            "Bad concept feature", "bad_concept_feature", "concept_producer", kind="design"
+        )
+        first_response = """
+        ACTIONS_JSON:
+        {
+          "stage": "concept_producer",
+          "status": "complete",
+          "summary": "Concept blueprint written with missing required sections.",
+          "qa_result": null,
+          "writes": [
+            {
+              "path": ".agent/Loop_Flow/bad_concept_feature_blueprint.md",
+              "content": "# Vision\\nOnly the vision exists.",
+              "mode": "create"
+            }
+          ]
+        }
+        """
+        repair_response = """
+        ACTIONS_JSON:
+        {
+          "stage": "concept_producer",
+          "status": "blocked",
+          "summary": "Concept blueprint needs required sections repaired.",
+          "qa_result": null,
+          "blockers": [{"reason": "Required concept sections are missing."}]
+        }
+        """
+        self.orchestrator.client.call = MagicMock(side_effect=[first_response, repair_response])
+
+        success = self.orchestrator.execute_stage("concept_producer")
+
+        self.assertFalse(success)
+        self.assertEqual(self.orchestrator.client.call.call_count, 2)
+        repair_prompt = self.orchestrator.client.call.call_args_list[1].args[0]["user"]
+        self.assertIn("POST_EXECUTION_VALIDATION_FAILED", repair_prompt)
+        self.assertIn("Required section", repair_prompt)
+        self.assertIn("ACTION EXECUTION STATUS", repair_prompt)
+        self.assertIn(".agent/Loop_Flow/bad_concept_feature_blueprint.md", repair_prompt)
+        self.assertIn('"success": true', repair_prompt)
+        self.assertIn('use mode="overwrite"', repair_prompt)
+
+    def test_research_required_missing_repairs_before_writes(self):
+        self.orchestrator.state_store.reset_state()
+        self.orchestrator.state_store.start_feature(
+            "Research required feature", "research_required_feature", "researcher", kind="research"
+        )
+        first_response = """
+        ACTIONS_JSON:
+        {
+          "stage": "researcher",
+          "status": "complete",
+          "summary": "Technical blueprint written without required research.",
+          "qa_result": null,
+          "writes": [
+            {
+              "path": ".agent/Loop_Flow/research_required_feature_blueprint.md",
+              "content": "# Technical Audit\\nAudit.\\n# Implementation Blueprint\\nPlan.\\n# Context Pruning Map\\nMap.\\n# Implementation Checklist\\n- [ ] One.",
+              "mode": "create"
+            }
+          ]
+        }
+        """
+        repair_response = """
+        ACTIONS_JSON:
+        {
+          "stage": "researcher",
+          "status": "blocked",
+          "summary": "Research is required before writing the final technical blueprint.",
+          "qa_result": null,
+          "research_requests": [
+            {
+              "query": "TypeScript browser Vitest task queue data model best practices",
+              "reason": "Ground the required technical blueprint in current TypeScript/browser/Vitest practice.",
+              "required": true
+            }
+          ],
+          "blockers": [{"reason": "Waiting for required research pass."}]
+        }
+        """
+        self.orchestrator.client.call = MagicMock(side_effect=[first_response, repair_response])
+        self.orchestrator.research_client.perform_research = MagicMock(return_value={
+            "status": "blocked",
+            "query": "TypeScript browser Vitest task queue data model best practices",
+            "sources": [],
+            "findings": [],
+            "artifact_path": None,
+            "errors": ["mocked research not performed"],
+        })
+
+        success = self.orchestrator.execute_stage("researcher")
+
+        self.assertFalse(success)
+        repair_prompt = self.orchestrator.client.call.call_args_list[1].args[0]["user"]
+        self.assertIn("RESEARCH_REQUIRED_MISSING", repair_prompt)
+        self.assertIn("Return status blocked with one or more research_requests", repair_prompt)
+        self.assertIn("request research first", repair_prompt)
+        self.assertIn("TypeScript/browser/Vitest", repair_prompt)
+        self.assertFalse(
+            os.path.exists(os.path.join(self.base_dir, ".agent/Loop_Flow/research_required_feature_blueprint.md"))
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+
+--------------------------------------------------------------------------------
+FILE: tests\test_response_parser.py
+--------------------------------------------------------------------------------
+import os
+import sys
+import unittest
+import json
+
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../.agent/orchestrator")))
+
+from response_parser import ResponseParser
+
+
+class TestResponseParser(unittest.TestCase):
+    def setUp(self):
+        self.schema_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "../.agent/orchestrator/actions_schema.json")
+        )
+        self.parser = ResponseParser(schema_path=self.schema_path)
+
+    def test_qa_result_string_null_is_normalized_before_validation(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "concept_producer",
+              "status": "complete",
+              "summary": "Valid concept summary.",
+              "qa_result": "null"
+            }
+            """
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        self.assertIsNone(parsed["actions"]["qa_result"])
+
+    def test_qa_result_json_null_validates(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "concept_producer",
+              "status": "complete",
+              "summary": "Valid concept summary.",
+              "qa_result": null
+            }
+            """
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        self.assertIsNone(parsed["actions"]["qa_result"])
+
+    def test_actions_json_marker_still_parses_normally(self):
+        parsed = self.parser.parse(
+            """
+            Some useful text.
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "blocked",
+              "summary": "Blocked while requesting external research."
+            }
+            """
+        )
+
+        self.assertEqual(parsed["actions"]["stage"], "researcher")
+        self.assertEqual(parsed["actions"]["status"], "blocked")
+
+    def test_fenced_repair_json_without_marker_parses_if_action_shaped(self):
+        parsed = self.parser.parse(
+            """```json
+            {
+              "stage": "researcher",
+              "status": "blocked",
+              "summary": "Blocked while requesting external research.",
+              "qa_result": null
+            }
+            ```"""
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        self.assertEqual(parsed["actions"]["stage"], "researcher")
+
+    def test_fallback_rejects_unrelated_json_object(self):
+        parsed = self.parser.parse('{"message": "not an action"}')
+
+        self.assertIsNone(parsed["actions"])
+
+    def test_invalid_running_status_still_fails_schema_validation(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "running",
+              "summary": "This should fail validation."
+            }
+            """
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertFalse(valid)
+        self.assertIn("running", error)
+
+    def test_next_stage_rejected_and_next_stage_recommendation_accepted(self):
+        bad_actions = {
+            "stage": "researcher",
+            "status": "blocked",
+            "summary": "Blocked while requesting external research.",
+            "next_stage": "developer",
+        }
+        good_actions = {
+            "stage": "researcher",
+            "status": "blocked",
+            "summary": "Blocked while requesting external research.",
+            "next_stage_recommendation": "developer",
+        }
+
+        bad_valid, bad_error = self.parser.validate_actions(json.loads(json.dumps(bad_actions)))
+        good_valid, good_error = self.parser.validate_actions(json.loads(json.dumps(good_actions)))
+
+        self.assertFalse(bad_valid)
+        self.assertIn("Additional properties", bad_error)
+        self.assertTrue(good_valid, good_error)
+
+    def test_research_request_topic_stack_is_normalized_to_schema_shape(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "blocked",
+              "summary": "Requesting TypeScript browser architecture research.",
+              "research_requests": [
+                {
+                  "topic": "TypeScript browser task queue data model Vitest unit test",
+                  "stack": "TypeScript/browser/Vitest"
+                }
+              ]
+            }
+            """
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        request = parsed["actions"]["research_requests"][0]
+        self.assertEqual(request["query"], "TypeScript browser task queue data model Vitest unit test")
+        self.assertIn("TypeScript/browser/Vitest", request["reason"])
+        self.assertNotIn("topic", request)
+        self.assertNotIn("stack", request)
+
+    def test_research_request_constraints_are_folded_into_reason(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "blocked",
+              "summary": "Requesting constrained TypeScript browser architecture research.",
+              "research_requests": [
+                {
+                  "query": "TypeScript browser task queue data model Vitest unit test",
+                  "reason": "Need implementation references.",
+                  "constraints": "Use browser/Vitest sources only."
+                }
+              ]
+            }
+            """
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        request = parsed["actions"]["research_requests"][0]
+        self.assertIn("Need implementation references.", request["reason"])
+        self.assertIn("Use browser/Vitest sources only.", request["reason"])
+        self.assertNotIn("constraints", request)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+
+--------------------------------------------------------------------------------
+FILE: tests\test_robustness.py
+--------------------------------------------------------------------------------
+import unittest
+import os
+import shutil
+import json
+import subprocess
+import time
+from datetime import datetime
+
+class TestRobustness(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+        self.original_base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        self.temp_dir_obj = tempfile.TemporaryDirectory()
+        self.base_dir = os.path.join(self.temp_dir_obj.name, "workspace")
+        shutil.copytree(
+            self.original_base_dir,
+            self.base_dir,
+            ignore=shutil.ignore_patterns("node_modules", ".git", ".agent/logs/*", "__pycache__"),
+        )
+        self.orchestrator_path = os.path.join(self.base_dir, ".agent/orchestrator/studio_loop.py")
+
+    def tearDown(self):
+        self.temp_dir_obj.cleanup()
+        
+    def test_reset_cleans_artifacts(self):
+        # Create dummy artifacts
+        os.makedirs(os.path.join(self.base_dir, ".agent/Loop_Flow/research"), exist_ok=True)
+        dummy_file = os.path.join(self.base_dir, ".agent/Loop_Flow/research/dummy.md")
+        with open(dummy_file, 'w') as f:
+            f.write("dummy")
+        session_dir = os.path.join(self.base_dir, ".agent/state/sessions")
+        os.makedirs(session_dir, exist_ok=True)
+        old_session = os.path.join(session_dir, "old_active.json")
+        with open(old_session, "w", encoding="utf-8") as f:
+            json.dump({"active": True, "status": "running"}, f)
+        lock_path = os.path.join(self.base_dir, ".agent/state/studio_loop.lock")
+        with open(lock_path, "w", encoding="utf-8") as f:
+            json.dump({"pid": 123456}, f)
+            
+        # Run reset
+        subprocess.run(["python", self.orchestrator_path, "reset"], cwd=self.base_dir, check=True)
+        
+        # Verify cleaned
+        self.assertFalse(os.path.exists(dummy_file))
+        self.assertFalse(os.path.exists(old_session))
+        self.assertFalse(os.path.exists(lock_path))
+        self.assertTrue(os.path.exists(os.path.join(self.base_dir, ".agent/Loop_Flow/research/.gitkeep")))
+
+    def test_process_lock(self):
+        # Actually, let's just manually create a lock and try to run status (status shouldn't be blocked)
+        lock_path = os.path.join(self.base_dir, ".agent/state/studio_loop.lock")
+        os.makedirs(os.path.dirname(lock_path), exist_ok=True)
+        with open(lock_path, 'w') as f:
+            json.dump({"pid": 99999, "timestamp": datetime.now().isoformat()}, f)
+            
+        # Try to run 'run' which should fail if PID 99999 was alive (it's not, so it should recover)
+        # To test failure, we need a REAL live PID.
+        import psutil
+        my_pid = os.getpid()
+        with open(lock_path, 'w') as f:
+            json.dump({"pid": my_pid, "timestamp": datetime.now().isoformat()}, f)
+            
+        # Now run a command that acquires lock
+        result = subprocess.run(["python", self.orchestrator_path, "run", "test"], cwd=self.base_dir, capture_output=True, text=True)
+        self.assertIn("Another orchestrator", result.stdout)
+        self.assertNotEqual(result.returncode, 0)
+        
+        # Cleanup
+        os.remove(lock_path)
+
 if __name__ == "__main__":
     unittest.main()
 
@@ -6356,6 +8907,143 @@ FILE: tests\fixtures\research_mdn_requestanimationframe.json
     "For canvas animations, it is more efficient than setTimeout as it aligns with the browser's display refresh rate (usually 60Hz)."
   ]
 }
+
+
+
+--------------------------------------------------------------------------------
+FILE: tools\bootstrap_local_env.py
+--------------------------------------------------------------------------------
+import subprocess
+import sys
+import os
+import shutil
+import json
+
+def run_command(cmd, shell=True):
+    print(f"Running: {' '.join(cmd)}")
+    try:
+        result = subprocess.run(cmd, shell=shell, capture_output=True, text=True)
+        return result.returncode == 0, result.stdout, result.stderr
+    except Exception as e:
+        return False, "", str(e)
+
+def check_env():
+    print("--- Environment Check ---")
+    
+    # Python
+    py_ok, py_ver, _ = run_command(["python", "--version"])
+    print(f"Python: {'OK (' + py_ver.strip() + ')' if py_ok else 'FAILED'}")
+    
+    # Pip
+    pip_ok, pip_ver, _ = run_command(["python", "-m", "pip", "--version"])
+    print(f"Pip: {'OK (' + pip_ver.strip() + ')' if pip_ok else 'FAILED'}")
+    
+    # Playwright
+    try:
+        from playwright.sync_api import sync_playwright
+        print("Playwright Python Package: OK")
+        
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                browser.close()
+            print("Playwright Chromium: OK")
+        except Exception as e:
+            print(f"Playwright Chromium: FAILED ({str(e)})")
+    except ImportError:
+        print("Playwright Python Package: FAILED (not installed)")
+
+    # Node/NPM/NPX
+    node_ok, node_ver, _ = run_command(["node", "--version"])
+    print(f"Node: {'OK (' + node_ver.strip() + ')' if node_ok else 'FAILED'}")
+    
+    npm_ok, npm_ver, _ = run_command(["npm", "--version"])
+    print(f"NPM: {'OK (' + npm_ver.strip() + ')' if npm_ok else 'FAILED'}")
+    
+    npx_ok, npx_ver, _ = run_command(["npx", "--version"])
+    print(f"NPX: {'OK (' + npx_ver.strip() + ')' if npx_ok else 'FAILED'}")
+
+    # Package.json / node_modules
+    has_pkg = os.path.exists("package.json")
+    has_mods = os.path.exists("node_modules")
+    print(f"package.json: {'Found' if has_pkg else 'Not Found'}")
+    print(f"node_modules: {'Found' if has_mods else 'Not Found'}")
+
+    # TSC / Vitest
+    if npx_ok:
+        tsc_ok, tsc_ver, _ = run_command(["npx", "tsc", "--version"])
+        print(f"TSC: {'OK (' + tsc_ver.strip() + ')' if tsc_ok else 'FAILED'}")
+        
+        vitest_ok, vitest_ver, _ = run_command(["npx", "vitest", "--version"])
+        print(f"Vitest: {'OK (' + vitest_ver.strip() + ')' if vitest_ok else 'FAILED'}")
+    else:
+        print("TSC: SKIP (no npx)")
+        print("Vitest: SKIP (no npx)")
+
+    # KoboldCPP
+    print("KoboldCPP Reachability: ", end="", flush=True)
+    try:
+        import urllib.request
+        with urllib.request.urlopen("http://127.0.0.1:5001/api/v1/model", timeout=2) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode())
+                print(f"OK ({data.get('result', 'unknown')})")
+            else:
+                print(f"FAILED (Status {response.status})")
+    except Exception as e:
+        print(f"FAILED ({str(e)})")
+
+def install_python_deps():
+    print("--- Installing Python Dependencies ---")
+    if not os.path.exists("requirements.txt"):
+        print("Error: requirements.txt not found.")
+        return
+    success, out, err = run_command(["python", "-m", "pip", "install", "-r", "requirements.txt"])
+    if success:
+        print("Python dependencies installed successfully.")
+    else:
+        print(f"Failed to install python dependencies:\n{err}")
+
+def install_playwright():
+    print("--- Installing Playwright Chromium ---")
+    success, out, err = run_command(["python", "-m", "playwright", "install", "chromium"])
+    if success:
+        print("Playwright Chromium installed successfully.")
+    else:
+        print(f"Failed to install Playwright Chromium:\n{err}")
+
+def install_node_deps():
+    print("--- Installing Node Dependencies ---")
+    if not os.path.exists("package.json"):
+        print("package.json not found. Skipping.")
+        return
+    success, out, err = run_command(["npm", "install"])
+    if success:
+        print("Node dependencies installed successfully.")
+    else:
+        print(f"Failed to install node dependencies:\n{err}")
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--check", action="store_true")
+    parser.add_argument("--install-python-deps", action="store_true")
+    parser.add_argument("--install-playwright", action="store_true")
+    parser.add_argument("--install-node-deps", action="store_true")
+    
+    args = parser.parse_args()
+    
+    if args.check:
+        check_env()
+    if args.install_python_deps:
+        install_python_deps()
+    if args.install_playwright:
+        install_playwright()
+    if args.install_node_deps:
+        install_node_deps()
+    
+    if not any(vars(args).values()):
+        parser.print_help()
 
 
 
@@ -6828,9 +9516,21 @@ RUNTIME_PATTERNS = [
     ".agent/Loop_Flow/*.json",
     ".agent/Loop_Flow/context_packs/*.md",
     ".agent/Loop_Flow/research/*.md",
+    ".agent/logs/**/*",
     ".agent/logs/**/*.json",
     ".agent/logs/**/*.txt",
     ".agent/logs/**/*.md",
+]
+
+BUNDLE_RUNTIME_FILE_PREFIXES = [
+    "FILE: .agent\\Loop_Flow\\",
+    "FILE: .agent/Loop_Flow/",
+    "FILE: .agent\\logs\\",
+    "FILE: .agent/logs/",
+    "FILE: .agent\\state\\sessions\\",
+    "FILE: .agent/state/sessions/",
+    "FILE: .agent\\state\\studio_loop.lock",
+    "FILE: .agent/state/studio_loop.lock",
 ]
 
 PROOF_FORBIDDEN = [
@@ -6907,18 +9607,29 @@ def _is_gitkeep(path):
 
 
 def _verify_runtime_clean(base_path, dirty):
-    live_research = glob.glob(os.path.join(base_path, ".agent/Loop_Flow/research/*_research_brief.md"))
     for pattern in RUNTIME_PATTERNS:
         for match in glob.glob(os.path.join(base_path, pattern), recursive=True):
+            if os.path.isdir(match):
+                continue
             if _is_gitkeep(match):
                 continue
             rel = os.path.relpath(match, base_path).replace("\\", "/")
-            if live_research and (
-                rel.startswith(".agent/Loop_Flow/research/")
-                or rel.startswith(".agent/logs/research/cache/")
-            ):
-                continue
             dirty.append(f"Generated runtime artifact remains: {match}")
+
+    sessions_dir = os.path.join(base_path, ".agent/state/sessions")
+    if os.path.isdir(sessions_dir):
+        for match in glob.glob(os.path.join(sessions_dir, "*.json")):
+            try:
+                session = json.loads(_read_text(match))
+            except Exception as exc:
+                dirty.append(f"Unreadable session state remains: {match}: {exc}")
+                continue
+            if session.get("active") or session.get("status") in {"running", "failed", "blocked"}:
+                dirty.append(f"Active or non-archived runtime session remains: {match}")
+
+    lock_path = os.path.join(base_path, ".agent/state/studio_loop.lock")
+    if os.path.exists(lock_path):
+        dirty.append(f"Runtime lock remains: {lock_path}")
 
 
 def _verify_proof(base_path, dirty):
@@ -6965,6 +9676,11 @@ def _verify_bundle(base_path, dirty):
     for marker in NON_ASCII_PUNCTUATION:
         if marker in content:
             dirty.append(f"Bundle contains non-ASCII punctuation: {marker.encode('unicode_escape').decode('ascii')}")
+    file_headers = [line.strip() for line in content.splitlines() if line.startswith("FILE: ")]
+    for header in file_headers:
+        for marker in BUNDLE_RUNTIME_FILE_PREFIXES:
+            if header.startswith(marker):
+                dirty.append(f"Bundle contains generated runtime file: {header}")
 
 
 def _iter_production_text_files(base_path):
@@ -7016,14 +9732,20 @@ def _verify_allowlist_targets(base_path, dirty):
         allowlist = json.load(handle)
 
     drive = os.path.splitdrive(base_path)[0] or "C:"
+    path_tools = {"python", "npx", "node", "npm", "git"}
     for command in allowlist.get("allowed_commands", []):
         command_parts = command.get("command", [])
         if not command_parts:
             dirty.append(f"Allowlisted command has no command parts: {command.get('name')}")
             continue
-        exe = command_parts[0].replace("{drive}", drive)
-        if not (os.path.exists(exe) or shutil.which(exe) or shutil.which(os.path.basename(exe))):
-            dirty.append(f"Allowlisted command executable missing: {exe}")
+        exe = command_parts[0]
+        if exe in path_tools:
+            if not shutil.which(exe):
+                dirty.append(f"Allowlisted PATH command missing: {exe}")
+        else:
+            resolved_exe = exe.replace("{drive}", drive)
+            if not (os.path.exists(resolved_exe) or shutil.which(resolved_exe)):
+                dirty.append(f"Allowlisted command executable missing: {resolved_exe}")
         for part in command_parts[1:]:
             if _allowlist_part_points_to_repo_file(part):
                 full_path = os.path.join(base_path, part)

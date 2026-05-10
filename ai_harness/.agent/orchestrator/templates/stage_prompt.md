@@ -15,6 +15,16 @@ Runtime stack:
 - Artifacts: `.agent/Loop_Flow/`
 - Logs: `.agent/logs/`
 
+Project stack (MUST ADHERE):
+
+- Language: TypeScript (strict)
+- Environment: Browser
+- Source Directory: `src/`
+- Test Directory: `tests/`
+- Test Runner: Vitest
+- Logic: Vanilla JS/TS logic, Canvas/DOM APIs.
+- NO Python implementation plans for game source.
+
 The orchestrator executes only valid, safe actions requested through `ACTIONS_JSON`.
 
 ## Feature

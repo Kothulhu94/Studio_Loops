@@ -3,6 +3,7 @@ import subprocess
 import json
 import urllib.request
 import urllib.error
+import shutil
 
 class CapabilityRegistry:
     def __init__(self, config=None):
@@ -87,7 +88,6 @@ class CapabilityRegistry:
             self.capabilities["koboldcpp"]["error"] = str(e)
 
     def _detect_commands(self):
-        import shutil
         # We check common tools
         self.capabilities["commands"]["git_status"] = self._can_run(["git", "status", "--short"])
         self.capabilities["commands"]["git_diff"] = self.capabilities["commands"]["git_status"]
@@ -148,10 +148,21 @@ class CapabilityRegistry:
 
     def _can_run(self, cmd):
         try:
-            # We don't use shell=True for detection to avoid side effects
-            # For Windows, some commands like npx might need shell=True, 
-            # but shutil.which should have found the .cmd/.bat
-            result = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False, timeout=5, shell=True)
+            if not cmd:
+                return False
+            executable = shutil.which(cmd[0]) if isinstance(cmd, list) else shutil.which(cmd)
+            if not executable:
+                return False
+            resolved_cmd = [executable] + cmd[1:] if isinstance(cmd, list) else executable
+            use_shell = executable.lower().endswith((".bat", ".cmd"))
+            result = subprocess.run(
+                resolved_cmd,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+                timeout=5,
+                shell=use_shell
+            )
             return result.returncode == 0
         except:
             return False

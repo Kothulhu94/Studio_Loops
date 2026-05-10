@@ -207,4 +207,14 @@ class ResponseParser:
     def normalize_actions(self, actions):
         if actions.get("qa_result") == "null":
             actions["qa_result"] = None
+        for request in actions.get("research_requests", []):
+            if "query" not in request and "topic" in request:
+                request["query"] = request.pop("topic")
+            if "reason" not in request and "stack" in request:
+                request["reason"] = f"Research relevant to {request.pop('stack')}"
+            elif "stack" in request:
+                request["reason"] = f"{request.get('reason', '')} Stack: {request.pop('stack')}".strip()
+            if "constraints" in request:
+                constraints = request.pop("constraints")
+                request["reason"] = f"{request.get('reason', '')} Constraints: {constraints}".strip()
         return actions

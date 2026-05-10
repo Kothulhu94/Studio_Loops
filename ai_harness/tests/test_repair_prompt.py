@@ -126,6 +126,111 @@ class TestRepairPrompt(unittest.TestCase):
         self.assertEqual(state["failures"][-1]["stage"], "researcher")
         self.assertIn("ACTIONS_JSON validation failed after repair retries", state["failures"][-1]["reason"])
 
+    def test_post_execution_validation_failure_uses_repair_prompt_with_results(self):
+        self.orchestrator.state_store.reset_state()
+        self.orchestrator.state_store.start_feature(
+            "Bad concept feature", "bad_concept_feature", "concept_producer", kind="design"
+        )
+        first_response = """
+        ACTIONS_JSON:
+        {
+          "stage": "concept_producer",
+          "status": "complete",
+          "summary": "Concept blueprint written with missing required sections.",
+          "qa_result": null,
+          "writes": [
+            {
+              "path": ".agent/Loop_Flow/bad_concept_feature_blueprint.md",
+              "content": "# Vision\\nOnly the vision exists.",
+              "mode": "create"
+            }
+          ]
+        }
+        """
+        repair_response = """
+        ACTIONS_JSON:
+        {
+          "stage": "concept_producer",
+          "status": "blocked",
+          "summary": "Concept blueprint needs required sections repaired.",
+          "qa_result": null,
+          "blockers": [{"reason": "Required concept sections are missing."}]
+        }
+        """
+        self.orchestrator.client.call = MagicMock(side_effect=[first_response, repair_response])
+
+        success = self.orchestrator.execute_stage("concept_producer")
+
+        self.assertFalse(success)
+        self.assertEqual(self.orchestrator.client.call.call_count, 2)
+        repair_prompt = self.orchestrator.client.call.call_args_list[1].args[0]["user"]
+        self.assertIn("POST_EXECUTION_VALIDATION_FAILED", repair_prompt)
+        self.assertIn("Required section", repair_prompt)
+        self.assertIn("ACTION EXECUTION STATUS", repair_prompt)
+        self.assertIn(".agent/Loop_Flow/bad_concept_feature_blueprint.md", repair_prompt)
+        self.assertIn('"success": true', repair_prompt)
+        self.assertIn('use mode="overwrite"', repair_prompt)
+
+    def test_research_required_missing_repairs_before_writes(self):
+        self.orchestrator.state_store.reset_state()
+        self.orchestrator.state_store.start_feature(
+            "Research required feature", "research_required_feature", "researcher", kind="research"
+        )
+        first_response = """
+        ACTIONS_JSON:
+        {
+          "stage": "researcher",
+          "status": "complete",
+          "summary": "Technical blueprint written without required research.",
+          "qa_result": null,
+          "writes": [
+            {
+              "path": ".agent/Loop_Flow/research_required_feature_blueprint.md",
+              "content": "# Technical Audit\\nAudit.\\n# Implementation Blueprint\\nPlan.\\n# Context Pruning Map\\nMap.\\n# Implementation Checklist\\n- [ ] One.",
+              "mode": "create"
+            }
+          ]
+        }
+        """
+        repair_response = """
+        ACTIONS_JSON:
+        {
+          "stage": "researcher",
+          "status": "blocked",
+          "summary": "Research is required before writing the final technical blueprint.",
+          "qa_result": null,
+          "research_requests": [
+            {
+              "query": "TypeScript browser Vitest task queue data model best practices",
+              "reason": "Ground the required technical blueprint in current TypeScript/browser/Vitest practice.",
+              "required": true
+            }
+          ],
+          "blockers": [{"reason": "Waiting for required research pass."}]
+        }
+        """
+        self.orchestrator.client.call = MagicMock(side_effect=[first_response, repair_response])
+        self.orchestrator.research_client.perform_research = MagicMock(return_value={
+            "status": "blocked",
+            "query": "TypeScript browser Vitest task queue data model best practices",
+            "sources": [],
+            "findings": [],
+            "artifact_path": None,
+            "errors": ["mocked research not performed"],
+        })
+
+        success = self.orchestrator.execute_stage("researcher")
+
+        self.assertFalse(success)
+        repair_prompt = self.orchestrator.client.call.call_args_list[1].args[0]["user"]
+        self.assertIn("RESEARCH_REQUIRED_MISSING", repair_prompt)
+        self.assertIn("Return status blocked with one or more research_requests", repair_prompt)
+        self.assertIn("request research first", repair_prompt)
+        self.assertIn("TypeScript/browser/Vitest", repair_prompt)
+        self.assertFalse(
+            os.path.exists(os.path.join(self.base_dir, ".agent/Loop_Flow/research_required_feature_blueprint.md"))
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

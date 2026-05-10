@@ -122,6 +122,36 @@ class StudioLoopOrchestrator:
                 print(f"Autonomous loop stopped: Max retries exceeded for {current_stage}.")
                 break
 
+    def acquire_lock(self):
+        lock_path = os.path.join(self.base_path, ".agent/state/studio_loop.lock")
+        os.makedirs(os.path.dirname(lock_path), exist_ok=True)
+        pid = os.getpid()
+        
+        if os.path.exists(lock_path):
+            try:
+                with open(lock_path, 'r') as f:
+                    lock_data = json.load(f)
+                old_pid = lock_data.get("pid")
+                # Check if old_pid is still alive
+                import psutil
+                if psutil.pid_exists(old_pid):
+                    print(f"FAILED: Another orchestrator (PID {old_pid}) is already running in this workspace.")
+                    sys.exit(1)
+                else:
+                    print(f"Found stale lock from PID {old_pid}. Recovering...")
+            except Exception:
+                print("Found corrupted lock file. Recovering...")
+        
+        with open(lock_path, 'w') as f:
+            json.dump({"pid": pid, "timestamp": datetime.now().isoformat()}, f)
+        import atexit
+        atexit.register(self.release_lock)
+
+    def release_lock(self):
+        lock_path = os.path.join(self.base_path, ".agent/state/studio_loop.lock")
+        if os.path.exists(lock_path):
+            os.remove(lock_path)
+
     def execute_stage(self, stage_name, attempt=0, repair_prompt_override=None):
         state = self.state_store.load_state()
         if not state["active"]:
@@ -188,7 +218,7 @@ class StudioLoopOrchestrator:
         if not is_valid:
             print(f"Invalid ACTIONS_JSON: {err}")
             if self.retry_engine.should_retry(attempt):
-                return self.repair_output(response_text, err, stage_name, attempt + 1)
+                return self.repair_output(response_text, err, stage_name, attempt + 1, results=None)
             self.record_stage_validation_failure(stage_name, err, response_text)
             return False
 
@@ -198,12 +228,28 @@ class StudioLoopOrchestrator:
             print(f"Safety Guard Blocked Actions: {err}")
             # We treat safety violations as failures that require repair
             if self.retry_engine.should_retry(attempt):
-                return self.repair_output(response_text, f"SAFETY_VIOLATION: {err}", stage_name, attempt + 1)
+                return self.repair_output(response_text, f"SAFETY_VIOLATION: {err}", stage_name, attempt + 1, results=None)
+            return False
+
+        typecheck_ok, typecheck_error = self._validate_typecheck_available_for_source_actions(stage_name, actions)
+        if not typecheck_ok:
+            print(f"Typecheck gate blocked source actions: {typecheck_error}")
+            if self.retry_engine.should_retry(attempt):
+                return self.repair_output(response_text, typecheck_error, stage_name, attempt + 1, results=None)
+            self.record_stage_validation_failure(stage_name, typecheck_error, response_text)
+            return False
+
+        research_ok, research_error = self._validate_required_research_before_execution(stage_name, actions)
+        if not research_ok:
+            print(f"Research gate blocked final stage actions: {research_error}")
+            if self.retry_engine.should_retry(attempt):
+                return self.repair_output(response_text, research_error, stage_name, attempt + 1, results=None)
+            self.record_stage_validation_failure(stage_name, research_error, response_text)
             return False
 
         # 7. Execute Actions
         print("Executing actions...")
-        execution_results, research_performed = self.perform_actions(stage_name, actions)
+        execution_results, research_performed = self.perform_actions(stage_name, actions, attempt=attempt)
         
         # 7. Two-Pass Research Re-entry
         if research_performed:
@@ -243,7 +289,16 @@ class StudioLoopOrchestrator:
             if not val_report["valid"]:
                 print(f"Stage validation failed: {val_report['errors']}")
                 if self.retry_engine.should_retry(attempt):
-                    return self.execute_stage(stage_name, attempt + 1)
+                    repair_error = "POST_EXECUTION_VALIDATION_FAILED: " + "; ".join(val_report["errors"])
+                    repair_results = {
+                        "validation_errors": val_report["errors"],
+                        "execution_results": execution_results,
+                        "write_results": execution_results.get("writes", []),
+                        "patch_results": execution_results.get("patches", []),
+                        "instruction": "Use overwrite for existing artifacts that were already written successfully."
+                    }
+                    return self.repair_output(response_text, repair_error, stage_name, attempt + 1, results=repair_results)
+                self.record_stage_validation_failure(stage_name, "; ".join(val_report["errors"]), response_text)
                 return False
             
             # 8. Success & Transition
@@ -284,7 +339,7 @@ class StudioLoopOrchestrator:
             self.state_store.save_state(state)
         return False
 
-    def perform_actions(self, stage, actions):
+    def perform_actions(self, stage, actions, attempt=0):
         state = self.state_store.load_state()
         self._apply_policy_context(state)
         feature_slug = state.get("feature_slug")
@@ -365,10 +420,33 @@ class StudioLoopOrchestrator:
         # 2. Writes
         all_writes = actions.get("writes", [])
         for w in all_writes:
-            self.hooks.trigger("before_write", {"stage": stage, "path": w["path"]})
-            success, err = self.file_writer.write(stage, w["path"], w["content"], w.get("mode", "overwrite"))
-            self.hooks.trigger("after_write", {"stage": stage, "path": w["path"], "success": success})
-            results["writes"].append({"path": w["path"], "success": success, "error": err})
+            path = w["path"]
+            mode = w.get("mode", "overwrite")
+            content = w["content"]
+            
+            # Preflight Conflict Detection
+            full_path = os.path.join(self.base_path, path)
+            if mode == "create" and os.path.exists(full_path):
+                # If content identical, success (FileWriter handles this too but we check here for logs/logic)
+                try:
+                    with open(full_path, 'r', encoding='utf-8') as f:
+                        if f.read() == content:
+                            print(f"Preflight: {path} already exists with identical content. Marking as success.")
+                            results["writes"].append({"path": path, "success": True, "error": None})
+                            continue
+                except:
+                    pass
+                
+                # If stage artifact and retry, convert to overwrite
+                is_stage_artifact = ".agent/Loop_Flow" in path.replace("\\", "/")
+                if is_stage_artifact and attempt > 0:
+                    print(f"Preflight: Detected create conflict for stage artifact {path} on retry {attempt}. Converting to overwrite.")
+                    mode = "overwrite"
+
+            self.hooks.trigger("before_write", {"stage": stage, "path": path})
+            success, err = self.file_writer.write(stage, path, content, mode)
+            self.hooks.trigger("after_write", {"stage": stage, "path": path, "success": success})
+            results["writes"].append({"path": path, "success": success, "error": err})
 
         # 3. Patches
         all_patches = actions.get("patches", [])
@@ -392,10 +470,19 @@ class StudioLoopOrchestrator:
         state = self.state_store.load_state()
         skill_manifests = self.role_loader.load_role_skill_manifests(stage_name)
         val_rules = self.graph.get_validation_rules(stage_name)
-        
+
         # 1. Structural & File Validation
         report = self.artifact_validator.validate(stage_name, actions, results, val_rules, state, skill_manifests=skill_manifests)
         errors = report["errors"]
+        
+        # 1b. Research Enforcement (Point 6)
+        if val_rules.get("research_required"):
+            has_complete_research = any(
+                r.get("status") == "complete" for r in state.get("research_results", [])
+                if r.get("stage") == stage_name
+            )
+            if actions.get("status") == "complete" and not has_complete_research:
+                errors.append("Research is required for this stage but no complete research was performed or found.")
         
         # 2. Copyright Scan
         summary_violations = self.copyright_guard.scan_text(actions.get("summary", ""))
@@ -434,7 +521,8 @@ class StudioLoopOrchestrator:
         source_dirs = ('src/', 'tests/', 'tools/', 'data/')
         
         is_source_change = any(
-            p.endswith(source_extensions) or any(p.startswith(sd) for sd in source_dirs)
+            (p.endswith(source_extensions) and not p.startswith(".agent/")) 
+            or any(p.startswith(sd) for sd in source_dirs)
             for p in changed_paths
         )
         
@@ -470,6 +558,50 @@ class StudioLoopOrchestrator:
 
         return {"valid": len(errors) == 0, "errors": errors}
 
+    def _validate_typecheck_available_for_source_actions(self, stage_name, actions):
+        if stage_name not in ["developer", "debug_dev"]:
+            return True, None
+        changed_paths = [w.get("path", "") for w in actions.get("writes", [])] + [
+            p.get("path", "") for p in actions.get("patches", [])
+        ]
+        source_dirs = ("src/", "tests/", "tools/", "data/")
+        source_extensions = (".ts", ".tsx", ".js", ".jsx", ".json", ".py", ".css")
+        has_source_change = any(
+            (path.endswith(source_extensions) and not path.startswith(".agent/"))
+            or any(path.startswith(root) for root in source_dirs)
+            for path in changed_paths
+        )
+        if not has_source_change:
+            return True, None
+        capabilities = self.capability_registry.detect_all()
+        if capabilities.get("commands", {}).get("typecheck"):
+            return True, None
+        return False, (
+            "TYPECHECK_UNAVAILABLE: Developer source writes are blocked because TypeScript typecheck is not configured. "
+            "Configure package.json/tsconfig and make `npx tsc --noEmit` available before writing source files."
+        )
+
+    def _validate_required_research_before_execution(self, stage_name, actions):
+        val_rules = self.graph.get_validation_rules(stage_name)
+        if not val_rules.get("research_required"):
+            return True, None
+        if actions.get("status") != "complete":
+            return True, None
+        if actions.get("research_requests"):
+            return True, None
+        state = self.state_store.load_state()
+        has_complete_research = any(
+            r.get("status") == "complete" and r.get("stage") == stage_name
+            for r in state.get("research_results", [])
+        )
+        if has_complete_research:
+            return True, None
+        return False, (
+            "RESEARCH_REQUIRED_MISSING: This stage has research_required=true, but the response marked the stage complete "
+            "without research_requests and without any complete research for this stage. Request research first; do not write "
+            "the final technical blueprint until research has completed; use the TypeScript/browser/Vitest stack only."
+        )
+
     def _apply_policy_context(self, state):
         stage_write_policy = {}
         for role in self.graph.schema.get("stages", {}).keys():
@@ -486,7 +618,7 @@ class StudioLoopOrchestrator:
         self.state_store.update_capabilities(caps)
         print("Capabilities detected and stored.")
 
-    def repair_output(self, raw_response, error, stage_name, attempt):
+    def repair_output(self, raw_response, error, stage_name, attempt, results=None):
         print(f"Attempting output repair (attempt {attempt})...")
         
         # 1. Generate repair prompt
@@ -494,8 +626,9 @@ class StudioLoopOrchestrator:
         repair_prompt = self.retry_engine.get_repair_prompt(
             error_type,
             error,
-            context_snippet=raw_response[:1000],
-            stage_name=stage_name
+            context_snippet=raw_response[:1000] if raw_response else None,
+            stage_name=stage_name,
+            results=results
         )
         repair_prompt_packet = {
             "system": (
@@ -575,18 +708,37 @@ class StudioLoopOrchestrator:
                     if os.path.isfile(item_path):
                         os.remove(item_path)
                     elif os.path.isdir(item_path):
-                        # For subdirectories like .agent/logs/validation, we want to clean them too
-                        # but keep their .gitkeep if they have one? 
-                        # Actually, instruction says clean everything but .gitkeep.
-                        # If it's a directory, we can rmtree but we might lose .gitkeep inside.
-                        # Let's be surgical.
                         self._surgical_dir_clean(item_path)
+                        # After surgical clean, if it's empty and not one of the root cleanup_dirs, remove it
+                        if d not in cleanup_dirs and not os.listdir(item_path):
+                             shutil.rmtree(item_path)
                 except Exception as e:
                     print(f"Error cleaning {item_path}: {e}")
         
         # Also clean any test_final.txt in root
         if os.path.exists(os.path.join(self.base_path, "test_final.txt")):
             os.remove(os.path.join(self.base_path, "test_final.txt"))
+
+        sessions_dir = os.path.join(self.base_path, ".agent/state/sessions")
+        if os.path.isdir(sessions_dir):
+            for item in os.listdir(sessions_dir):
+                item_path = os.path.join(sessions_dir, item)
+                try:
+                    if item == ".gitkeep":
+                        continue
+                    if os.path.isfile(item_path):
+                        os.remove(item_path)
+                    elif os.path.isdir(item_path):
+                        shutil.rmtree(item_path)
+                except Exception as e:
+                    print(f"Error cleaning session state {item_path}: {e}")
+
+        lock_path = os.path.join(self.base_path, ".agent/state/studio_loop.lock")
+        if os.path.exists(lock_path):
+            try:
+                os.remove(lock_path)
+            except Exception as e:
+                print(f"Error removing lock file {lock_path}: {e}")
                 
         print("State, artifacts, and logs reset.")
 
@@ -623,21 +775,26 @@ if __name__ == "__main__":
     state = orchestrator.state_store.load_state()
 
     if args.command == "run":
+        orchestrator.acquire_lock()
         orchestrator.run(args.payload or "New task", mode="single_stage")
     elif args.command == "auto":
+        orchestrator.acquire_lock()
         orchestrator.run(args.payload or "New task", mode="auto")
     elif args.command == "continue":
         if state["active"]:
+            orchestrator.acquire_lock()
             orchestrator.autonomous_loop()
         else:
             print("No active feature to continue.")
     elif args.command == "step":
         if state["active"]:
+            orchestrator.acquire_lock()
             orchestrator.execute_stage(state["current_stage"])
         else:
             print("No active feature to step.")
     elif args.command == "retry":
         if state["active"]:
+            orchestrator.acquire_lock()
             orchestrator.retry_stage(state["current_stage"])
         else:
             print("No active feature to retry.")
