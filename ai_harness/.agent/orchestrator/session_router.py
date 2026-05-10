@@ -42,6 +42,8 @@ class SessionRouter:
 
     def infer_kind(self, request_text):
         request = (request_text or "").lower()
+        if any(word in request for word in ["harness", "orchestrator", "self-improve", "improve agents", "workflow", "context pruning", "research system", "retry handling", "state/session routing", "skill registry", "modify .agent/orchestrator", "autonomous harness improvement"]):
+            return "harness_upgrade"
         if any(word in request for word in ["bug", "fix", "broken", "error", "failure", "crash", "regression"]):
             return "bug"
         if any(word in request for word in ["asset", "sprite", "icon", "tileset", "sound", "animation"]):
@@ -52,8 +54,6 @@ class SessionRouter:
             return "design"
         if any(word in request for word in ["implement", "build", "code", "add", "create"]):
             return "implementation"
-        if any(word in request for word in ["harness", "orchestrator", "self-improve", "improve agents", "workflow", "context pruning", "research system", "retry handling", "state/session routing", "skill registry", "modify .agent/orchestrator", "autonomous harness improvement"]):
-            return "harness_upgrade"
         return "feature"
 
     def route_initial_stage(self, request_text, kind=None):
