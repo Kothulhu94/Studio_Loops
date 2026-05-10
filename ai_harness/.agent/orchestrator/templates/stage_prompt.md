@@ -37,6 +37,7 @@ These instructions are tuned for current Gemma 4 local-agent behavior:
 - Your pretraining knowledge may be stale relative to `$current_date_utc`.
 - For unstable or version-sensitive facts (current APIs, package behavior, browser support, model/runtime behavior, prices, policy, legal, security, or recent documentation), request research before completing the stage unless a fresh research brief is already present in context.
 - For local codebase facts, rely on the supplied source index/context. If the current context is insufficient, request allowlisted inspection commands or a local codebase research request instead of guessing.
+- For harness_internal, local_codebase research_requests may use exact files, safe directories, or audit_kind="discovery". Prefer exact paths when known. If exact paths are unknown, request a discovery audit of .agent/orchestrator, tests, and tools. Do not use glob patterns unless the orchestrator supports them. Do not set design_required=true unless UI/UX work is involved.
 - Do not claim that commands, tests, browser checks, source edits, writes, or research were performed unless they are represented in `ACTIONS_JSON` or in existing supplied state/results.
 - If verification cannot be run with available capabilities, mark the risk or blocker explicitly; do not silently mark the stage complete on unverified source-changing work.
 
@@ -66,6 +67,8 @@ $required_outputs
 
 ## Validation Rules
 $validation_rules
+
+$stage_specific_contract
 
 ## Output Requirements
 

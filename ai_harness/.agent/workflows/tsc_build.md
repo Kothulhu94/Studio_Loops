@@ -1,5 +1,5 @@
 ---
-description: stale compatibility note for the former tsc_build workflow
+description: compatibility note for the typecheck command
 ---
 
 # Typecheck Command

@@ -93,6 +93,22 @@ PRODUCTION_FORBIDDEN = [
     "mock_verification",
 ]
 
+WORKFLOW_SKILL_FORBIDDEN = [
+    "Gemistein Protocol",
+    "thought_process",
+    "action tags",
+    "artifact tags",
+    "browser_subagent",
+    "run_command",
+    "chrome-devtools-mcp",
+    "take_screenshot",
+    "take_memory_snapshot",
+    "list_console_messages",
+    "PortablePython",
+    "logs.bat",
+    "tsc_build",
+]
+
 
 def _read_text(path):
     with open(path, "r", encoding="utf-8", errors="replace") as handle:
@@ -210,6 +226,24 @@ def _verify_production_terms(base_path, dirty):
                 dirty.append(f"Production file contains forbidden term '{term}': {path}")
 
 
+def _verify_workflow_skill_terms(base_path, dirty):
+    roots = [".agent/workflows", ".agent/skills"]
+    for root in roots:
+        full = os.path.join(base_path, root)
+        if not os.path.isdir(full):
+            continue
+        for dirpath, dirnames, filenames in os.walk(full):
+            dirnames[:] = [dirname for dirname in dirnames if dirname != "__pycache__"]
+            for filename in filenames:
+                if not filename.endswith((".md", ".json", ".txt")):
+                    continue
+                path = os.path.join(dirpath, filename)
+                content = _read_text(path)
+                for term in WORKFLOW_SKILL_FORBIDDEN:
+                    if term in content:
+                        dirty.append(f"Workflow/skill file contains forbidden legacy term '{term}': {path}")
+
+
 def _allowlist_part_points_to_repo_file(part):
     if "{drive}" in part or ":" in part or part.startswith("\\"):
         return False
@@ -258,6 +292,7 @@ def verify_clean_runtime():
     _verify_proof(base_path, dirty)
     _verify_bundle(base_path, dirty)
     _verify_production_terms(base_path, dirty)
+    _verify_workflow_skill_terms(base_path, dirty)
     _verify_allowlist_targets(base_path, dirty)
 
     if dirty:

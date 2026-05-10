@@ -35,7 +35,13 @@
         "properties": {
           "query": { "type": "string" },
           "reason": { "type": "string" },
-          "required": { "type": "boolean" }
+          "required": { "type": "boolean" },
+          "mode": { "type": "string", "enum": ["web", "local_codebase"] },
+          "audit_kind": { "type": "string", "enum": ["discovery", "file_audit"] },
+          "target_files": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
         }
       }
     },
@@ -116,4 +122,3 @@
     }
   }
 }
-

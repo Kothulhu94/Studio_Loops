@@ -298,6 +298,114 @@ class TestResponseParser(unittest.TestCase):
         self.assertNotIn("noise", req)
         self.assertNotIn("topic", req)
 
+    def test_research_request_description_target_files_normalizes_to_local_codebase(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "blocked",
+              "summary": "Requesting a local codebase audit.",
+              "research_requests": [
+                {
+                  "description": "Analyze ContextPruner and ContextCompactor.",
+                  "reason": "Needed for harness audit.",
+                  "required": true,
+                  "target_files": [
+                    ".agent/orchestrator/context_pruner.py",
+                    ".agent/orchestrator/context_compactor.py"
+                  ],
+                  "extra": "drop me"
+                }
+              ]
+            }
+            """
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        req = parsed["actions"]["research_requests"][0]
+        self.assertEqual(req["query"], "Analyze ContextPruner and ContextCompactor.")
+        self.assertEqual(req["mode"], "local_codebase")
+        self.assertEqual(len(req["target_files"]), 2)
+        self.assertNotIn("extra", req)
+
+    def test_schema_accepts_local_codebase_mode_and_target_files(self):
+        actions = {
+            "stage": "researcher",
+            "status": "blocked",
+            "summary": "Requesting local audit with explicit mode.",
+            "research_requests": [{
+                "query": "Analyze orchestrator files.",
+                "reason": "Needed for harness audit.",
+                "required": True,
+                "mode": "local_codebase",
+                "audit_kind": "file_audit",
+                "target_files": [".agent/orchestrator/studio_loop.py"]
+            }]
+        }
+
+        valid, error = self.parser.validate_actions(actions)
+
+        self.assertTrue(valid, error)
+
+    def test_research_request_evidence_type_local_codebase_converts_to_mode(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "blocked",
+              "summary": "Requesting local discovery.",
+              "research_requests": [
+                {
+                  "description": "List all files within the .agent directory to identify exact paths.",
+                  "evidence_type": "local_codebase",
+                  "target_files": [".agent"],
+                  "unknown": "drop"
+                }
+              ]
+            }
+            """
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        req = parsed["actions"]["research_requests"][0]
+        self.assertEqual(req["mode"], "local_codebase")
+        self.assertEqual(req["audit_kind"], "discovery")
+        self.assertEqual(req["target_files"], [".agent"])
+        self.assertNotIn("evidence_type", req)
+        self.assertNotIn("unknown", req)
+
+    def test_artifact_paths_normalize_to_schema_objects(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "researcher",
+              "status": "complete",
+              "summary": "Researcher wrote required artifacts.",
+              "artifacts": [
+                ".agent/Loop_Flow/context_map.json",
+                {
+                  "path": ".agent/Loop_Flow/sample_blueprint.md",
+                  "type": "markdown",
+                  "extra": "drop"
+                }
+              ]
+            }
+            """
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        self.assertEqual(parsed["actions"]["artifacts"][0], {"name": "context_map.json", "type": "context_map"})
+        self.assertEqual(parsed["actions"]["artifacts"][1], {"name": "sample_blueprint.md", "type": "markdown"})
+
 
 if __name__ == "__main__":
     unittest.main()

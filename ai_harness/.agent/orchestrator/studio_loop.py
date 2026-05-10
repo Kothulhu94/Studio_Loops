@@ -252,6 +252,9 @@ class StudioLoopOrchestrator:
             self.record_stage_validation_failure(stage_name, research_error, response_text)
             return False
 
+        if state.get("stack_profile") == "harness_internal" and "design" not in state.get("feature", "").lower():
+            actions["design_required"] = False
+
         # 7. Execute Actions
         print("Executing actions...")
         execution_results, research_performed = self.perform_actions(stage_name, actions, attempt=attempt)
@@ -266,15 +269,39 @@ class StudioLoopOrchestrator:
                 bad_required_research.extend(self.artifact_validator.validate_research_result(res))
 
             if required and bad_required_research:
-                print(f"Mandatory research failed quality checks: {bad_required_research}. Marking stage as failed.")
-                state["status"] = "failed"
-                state["failures"].append({
-                    "stage": stage_name,
-                    "reason": "Mandatory research failed: " + "; ".join(bad_required_research),
-                    "timestamp": datetime.now().isoformat()
-                })
-                self.state_store.save_state(state)
-                return False
+                has_complete_local_audit = (
+                    state.get("stack_profile") == "harness_internal"
+                    and self._has_complete_local_codebase_research(execution_results["research"])
+                )
+                if has_complete_local_audit:
+                    print(
+                        "Some local codebase research requests were blocked, but at least one complete "
+                        "local audit/discovery was saved. Re-entering stage with available evidence."
+                    )
+                else:
+                    print(f"Mandatory research failed quality checks: {bad_required_research}. Marking stage as failed.")
+                    if state.get("stack_profile") == "harness_internal" and self.retry_engine.should_retry(attempt):
+                        repair_error = (
+                            "RESEARCH_REQUEST_FAILED: " + "; ".join(bad_required_research) + ". "
+                            "For harness_internal local_codebase research, provide target_files that exist inside the workspace, "
+                            "or explicitly set mode=\"web\" for web research."
+                        )
+                        return self.repair_output(
+                            response_text,
+                            repair_error,
+                            stage_name,
+                            attempt + 1,
+                            results={"execution_results": execution_results},
+                            stack_profile=state.get("stack_profile", "game_source")
+                        )
+                    state["status"] = "failed"
+                    state["failures"].append({
+                        "stage": stage_name,
+                        "reason": "Mandatory research failed: " + "; ".join(bad_required_research),
+                        "timestamp": datetime.now().isoformat()
+                    })
+                    self.state_store.save_state(state)
+                    return False
             
             # Optional research check
             any_blocked = any(r.get("status") == "blocked" for r in execution_results["research"])
@@ -356,7 +383,19 @@ class StudioLoopOrchestrator:
             state["research_duplicate_warnings"] = {}
 
         # 1. Research
-        for req in actions.get("research_requests", []):
+        research_requests = actions.get("research_requests", [])
+        has_local_discovery_request = any(
+            req.get("audit_kind") == "discovery"
+            or any(
+                isinstance(path, str)
+                and os.path.isdir(os.path.join(self.base_path, path.replace("\\", "/")))
+                for path in req.get("target_files", [])
+            )
+            for req in research_requests
+            if isinstance(req, dict)
+        )
+
+        for req in research_requests:
             query = req["query"]
             fingerprint = f"{stage}:{query.lower().strip()}"
             
@@ -404,24 +443,92 @@ class StudioLoopOrchestrator:
                 }
             else:
                 self.hooks.trigger("before_research", {"stage": stage, "query": query})
-                # Check for local codebase research hint
-                is_local = any(word in query.lower() for word in ["local", "codebase", "audit", "inspect", "files", "existing"]) or (state.get("stack_profile") == "harness_internal")
-                res = self.research_client.perform_research(query, req.get("reason"), feature_slug=feature_slug, stage=stage, local_only=is_local)
+                target_files = req.get("target_files", [])
+                audit_kind = req.get("audit_kind")
+                is_harness = state.get("stack_profile") == "harness_internal"
+                if req.get("mode") == "local_codebase":
+                    is_local = True
+                elif is_harness and (target_files or audit_kind or req.get("evidence_type") == "local_codebase"):
+                    is_local = True
+                elif is_harness and req.get("mode") == "web":
+                    is_local = False
+                elif is_harness:
+                    is_local = True
+                    target_files = []
+                else:
+                    is_local = any(word in query.lower() for word in ["local", "codebase", "audit", "inspect", "files", "existing"])
+                if is_local and not target_files and audit_kind != "discovery" and has_local_discovery_request:
+                    print(f"Deferring dependent local audit without target_files until discovery re-entry: {query}")
+                    continue
+                if is_harness and is_local and not target_files and not audit_kind:
+                    audit_kind = "discovery"
+                res = self.research_client.perform_research(
+                    query,
+                    req.get("reason"),
+                    feature_slug=feature_slug,
+                    stage=stage,
+                    local_only=is_local,
+                    target_files=target_files,
+                    audit_kind=audit_kind
+                )
                 res["stage"] = stage
                 state["research_request_history"].append(fingerprint)
             
-            results["research"].append(res)
-            
-            # Record in state
-            if res.get("artifact_path"):
-                if "research_briefs" not in state:
-                    state["research_briefs"] = []
-                if "research_results" not in state:
-                    state["research_results"] = []
-                state["research_briefs"].append(res["artifact_path"])
-                state["research_results"].append(res)
-                self.hooks.trigger("after_research", {"stage": stage, "query": query, "results": res})
-            
+            research_results_to_record = [res]
+            local_request = (
+                req.get("mode") == "local_codebase"
+                or bool(req.get("target_files"))
+                or req.get("audit_kind") is not None
+                or (state.get("stack_profile") == "harness_internal" and req.get("mode") != "web")
+            )
+            has_fetched_local_source = any(
+                source.get("url", "").startswith("local://")
+                and source.get("status") == "fetched"
+                and source.get("relevant") is True
+                for source in res.get("sources", [])
+            )
+            if (
+                state.get("stack_profile") == "harness_internal"
+                and local_request
+                and req.get("audit_kind") != "discovery"
+                and res.get("evidence_type") == "local_codebase"
+                and res.get("status") == "blocked"
+                and not has_fetched_local_source
+            ):
+                fallback_query = f"Discover valid local audit targets for: {query}"
+                print(f"Running discovery fallback for blocked local audit: {query}")
+                fallback_res = self.research_client.perform_research(
+                    fallback_query,
+                    "Fallback discovery after requested local audit targets did not resolve.",
+                    feature_slug=feature_slug,
+                    stage=stage,
+                    local_only=True,
+                    target_files=[".agent", "tests", "tools"],
+                    audit_kind="discovery"
+                )
+                fallback_res["stage"] = stage
+                fallback_res["notes"] = (
+                    fallback_res.get("notes", "")
+                    + " Discovery fallback for blocked exact-file local audit."
+                )
+                research_results_to_record.append(fallback_res)
+
+            for recorded_res in research_results_to_record:
+                results["research"].append(recorded_res)
+
+                # Record in state
+                if recorded_res.get("artifact_path"):
+                    if "research_briefs" not in state:
+                        state["research_briefs"] = []
+                    if "research_results" not in state:
+                        state["research_results"] = []
+                    state["research_briefs"].append(recorded_res["artifact_path"])
+                    state["research_results"].append(recorded_res)
+                    self.hooks.trigger(
+                        "after_research",
+                        {"stage": stage, "query": recorded_res.get("query", query), "results": recorded_res}
+                    )
+
             self.state_store.save_state(state)
 
         # 2. Writes
@@ -446,8 +553,8 @@ class StudioLoopOrchestrator:
                 
                 # If stage artifact and retry, convert to overwrite
                 is_stage_artifact = ".agent/Loop_Flow" in path.replace("\\", "/")
-                if is_stage_artifact and attempt > 0:
-                    print(f"Preflight: Detected create conflict for stage artifact {path} on retry {attempt}. Converting to overwrite.")
+                if is_stage_artifact:
+                    print(f"Preflight: Detected create conflict for generated stage artifact {path}. Converting to overwrite.")
                     mode = "overwrite"
 
             self.hooks.trigger("before_write", {"stage": stage, "path": path})
@@ -679,6 +786,15 @@ class StudioLoopOrchestrator:
         
         # 2. Get repair response from model
         return self.execute_stage(stage_name, attempt, repair_prompt_override=repair_prompt_packet)
+
+    def _has_complete_local_codebase_research(self, research_results):
+        """Return True when a batch contains at least one usable local audit result."""
+        for result in research_results:
+            if result.get("evidence_type") != "local_codebase":
+                continue
+            if not self.artifact_validator.validate_research_result(result):
+                return True
+        return False
 
     def record_stage_validation_failure(self, stage_name, error, response_text):
         excerpt = response_text[:1000] if response_text else ""

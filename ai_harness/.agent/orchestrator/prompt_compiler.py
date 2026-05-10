@@ -36,6 +36,17 @@ class PromptCompiler:
             )
 
         current_date_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        stage_specific_contract = ""
+        if stage == "researcher":
+            feature_slug = state.get("feature_slug", "{feature}")
+            stage_specific_contract = (
+                "## Stage Artifact Contract\n"
+                "When completing researcher, write these artifacts in ACTIONS_JSON:\n"
+                f"- `.agent/Loop_Flow/{feature_slug}_blueprint.md` with sections: "
+                "Technical Audit, Implementation Blueprint, Context Pruning Map, Implementation Checklist.\n"
+                "- `.agent/Loop_Flow/context_map.json` as valid JSON.\n"
+                "Set status=\"complete\" only when both writes are present.\n"
+            )
 
         if os.path.exists(self.template_path):
             from string import Template
@@ -55,7 +66,8 @@ class PromptCompiler:
                 artifacts=".agent/Loop_Flow/", 
                 context=context_pack_content,
                 required_outputs=json.dumps(required_outputs, indent=2),
-                validation_rules=json.dumps(validation_rules, indent=2)
+                validation_rules=json.dumps(validation_rules, indent=2),
+                stage_specific_contract=stage_specific_contract
             )
         else:
             # Fallback (updated to remove forbidden terms)

@@ -1,0 +1,938 @@
+[
+  {
+    "path": "README.md",
+    "line_count": 33,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": "vitest.config.ts",
+    "line_count": 8,
+    "symbols": [],
+    "imports": [
+      "vitest/config"
+    ]
+  },
+  {
+    "path": ".agent/bin/licenses/github.com/fogleman/gg/LICENSE.md",
+    "line_count": 19,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/bin/licenses/github.com/makeworld-the-better-one/dither/v2/CHANGELOG.md",
+    "line_count": 63,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/bin/licenses/github.com/makeworld-the-better-one/dither/v2/README.md",
+    "line_count": 196,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/bin/licenses/github.com/microcosm-cc/bluemonday/LICENSE.md",
+    "line_count": 28,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/orchestrator/artifact_store.py",
+    "line_count": 32,
+    "symbols": [
+      "ArtifactStore"
+    ],
+    "imports": [
+      "os",
+      "json"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/artifact_validator.py",
+    "line_count": 234,
+    "symbols": [
+      "ArtifactValidator"
+    ],
+    "imports": [
+      "json",
+      "os",
+      "re"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/browser_bridge.py",
+    "line_count": 13,
+    "symbols": [
+      "BrowserBridge"
+    ],
+    "imports": [
+      "os",
+      "playwright_research"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/browser_research.py",
+    "line_count": 364,
+    "symbols": [
+      "BrowserResearch"
+    ],
+    "imports": [
+      "os",
+      "json",
+      "sys",
+      "urllib.parse",
+      "re",
+      "playwright_research",
+      "search_result_parser",
+      "page_extractor"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/capability_registry.py",
+    "line_count": 173,
+    "symbols": [
+      "CapabilityRegistry"
+    ],
+    "imports": [
+      "os",
+      "subprocess",
+      "json",
+      "urllib.request",
+      "urllib.error",
+      "shutil"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/command_runner.py",
+    "line_count": 107,
+    "symbols": [
+      "CommandRunner"
+    ],
+    "imports": [
+      "subprocess",
+      "os",
+      "json",
+      "re",
+      "datetime"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/context_compactor.py",
+    "line_count": 92,
+    "symbols": [
+      "ContextCompactor"
+    ],
+    "imports": [
+      "os",
+      "json",
+      "datetime"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/context_pruner.py",
+    "line_count": 138,
+    "symbols": [
+      "_portable_basename",
+      "ContextPruner"
+    ],
+    "imports": [
+      "os",
+      "subprocess",
+      "json",
+      "ntpath"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/copyright_guard.py",
+    "line_count": 72,
+    "symbols": [
+      "CopyrightGuard"
+    ],
+    "imports": [
+      "json",
+      "os",
+      "re"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/file_writer.py",
+    "line_count": 102,
+    "symbols": [
+      "FileWriter"
+    ],
+    "imports": [
+      "os",
+      "shutil",
+      "datetime"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/graph.py",
+    "line_count": 42,
+    "symbols": [
+      "StudioLoopGraph"
+    ],
+    "imports": [
+      "json",
+      "os"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/hooks.py",
+    "line_count": 37,
+    "symbols": [
+      "OrchestratorHooks"
+    ],
+    "imports": [
+      "os",
+      "json",
+      "datetime"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/kobold_client.py",
+    "line_count": 77,
+    "symbols": [
+      "KoboldClientError",
+      "KoboldTransportError",
+      "KoboldResponseError",
+      "KoboldClient"
+    ],
+    "imports": [
+      "requests",
+      "json",
+      "os",
+      "datetime"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/page_extractor.py",
+    "line_count": 97,
+    "symbols": [
+      "PageExtractor"
+    ],
+    "imports": [
+      "hashlib",
+      "os",
+      "re",
+      "datetime"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/patch_applier.py",
+    "line_count": 109,
+    "symbols": [
+      "PatchApplier"
+    ],
+    "imports": [
+      "os",
+      "subprocess",
+      "tempfile",
+      "datetime",
+      "pathlib"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/playwright_research.py",
+    "line_count": 131,
+    "symbols": [
+      "PlaywrightResearch"
+    ],
+    "imports": [
+      "os",
+      "json",
+      "time"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/prompt_compiler.py",
+    "line_count": 89,
+    "symbols": [
+      "PromptCompiler"
+    ],
+    "imports": [
+      "json",
+      "os",
+      "datetime"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/research_client.py",
+    "line_count": 526,
+    "symbols": [
+      "normalize_ascii_text",
+      "ResearchClient"
+    ],
+    "imports": [
+      "os",
+      "json",
+      "ast",
+      "re",
+      "glob",
+      "datetime",
+      "browser_research"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/response_parser.py",
+    "line_count": 380,
+    "symbols": [
+      "SchemaValidator",
+      "ResponseParser"
+    ],
+    "imports": [
+      "json",
+      "re"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/retry_engine.py",
+    "line_count": 113,
+    "symbols": [
+      "RetryEngine"
+    ],
+    "imports": [
+      "json",
+      "os"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/role_loader.py",
+    "line_count": 73,
+    "symbols": [
+      "RoleLoader"
+    ],
+    "imports": [
+      "os",
+      "skill_registry"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/safety_guard.py",
+    "line_count": 143,
+    "symbols": [
+      "SafetyGuard"
+    ],
+    "imports": [
+      "os",
+      "json",
+      "re"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/search_result_parser.py",
+    "line_count": 129,
+    "symbols": [
+      "SearchResultParser"
+    ],
+    "imports": [
+      "re",
+      "urllib.parse",
+      "html"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/session_router.py",
+    "line_count": 135,
+    "symbols": [
+      "SessionRouter"
+    ],
+    "imports": [
+      "json",
+      "os",
+      "datetime"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/skill_registry.py",
+    "line_count": 113,
+    "symbols": [
+      "SkillRegistry"
+    ],
+    "imports": [
+      "json",
+      "os"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/source_indexer.py",
+    "line_count": 79,
+    "symbols": [
+      "SourceIndexer"
+    ],
+    "imports": [
+      "os",
+      "re",
+      "json"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/source_summarizer.py",
+    "line_count": 17,
+    "symbols": [
+      "SourceSummarizer"
+    ],
+    "imports": [
+      "re"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/state_store.py",
+    "line_count": 215,
+    "symbols": [
+      "StateStore"
+    ],
+    "imports": [
+      "json",
+      "os",
+      "datetime",
+      "session_router"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/studio_loop.py",
+    "line_count": 1018,
+    "symbols": [
+      "StudioLoopOrchestrator"
+    ],
+    "imports": [
+      "sys",
+      "os",
+      "json",
+      "argparse",
+      "datetime",
+      "graph",
+      "state_store",
+      "role_loader",
+      "context_pruner",
+      "prompt_compiler",
+      "kobold_client",
+      "artifact_validator",
+      "transition_engine",
+      "command_runner",
+      "capability_registry",
+      "response_parser",
+      "file_writer",
+      "patch_applier",
+      "test_runner",
+      "research_client",
+      "copyright_guard",
+      "safety_guard",
+      "retry_engine",
+      "artifact_store",
+      "source_indexer",
+      "hooks",
+      "context_compactor",
+      "session_router"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/test_runner.py",
+    "line_count": 52,
+    "symbols": [
+      "TestRunner"
+    ],
+    "imports": [
+      "os",
+      "json"
+    ]
+  },
+  {
+    "path": ".agent/orchestrator/transition_engine.py",
+    "line_count": 69,
+    "symbols": [
+      "TransitionEngine"
+    ],
+    "imports": []
+  },
+  {
+    "path": ".agent/orchestrator/templates/stage_prompt.md",
+    "line_count": 121,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/asset_creator_skills.md",
+    "line_count": 43,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/designer_skills.md",
+    "line_count": 60,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/developer_skills.md",
+    "line_count": 63,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/producer_skills.md",
+    "line_count": 48,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/qa_skills.md",
+    "line_count": 48,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/researcher_skills.md",
+    "line_count": 97,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/asset_creator/SKILL.md",
+    "line_count": 3,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/bug_hunter/SKILL.md",
+    "line_count": 3,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/debug_dev/SKILL.md",
+    "line_count": 3,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/designer/SKILL.md",
+    "line_count": 3,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/developer/SKILL.md",
+    "line_count": 3,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/producer/SKILL.md",
+    "line_count": 3,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/qa/SKILL.md",
+    "line_count": 3,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/skills/researcher/SKILL.md",
+    "line_count": 3,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/workflows/asset_creator.md",
+    "line_count": 42,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/workflows/bug_hunter.md",
+    "line_count": 40,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/workflows/concept_producer.md",
+    "line_count": 51,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/workflows/debug_dev.md",
+    "line_count": 41,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/workflows/designer.md",
+    "line_count": 43,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/workflows/developer.md",
+    "line_count": 63,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/workflows/qa_tester.md",
+    "line_count": 67,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/workflows/researcher.md",
+    "line_count": 61,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/workflows/STUDIO_LOOP_WORKFLOW.md",
+    "line_count": 96,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/workflows/task_template.md",
+    "line_count": 54,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": ".agent/workflows/tsc_build.md",
+    "line_count": 7,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": "docs/local_setup.md",
+    "line_count": 63,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": "docs/verification/browser_research_mdn_requestanimationframe.md",
+    "line_count": 53,
+    "symbols": [],
+    "imports": []
+  },
+  {
+    "path": "src/feature_x.ts",
+    "line_count": 1,
+    "symbols": [
+      "x"
+    ],
+    "imports": []
+  },
+  {
+    "path": "tests/e2e_loop_test.py",
+    "line_count": 148,
+    "symbols": [
+      "TestFullLoop"
+    ],
+    "imports": [
+      "unittest",
+      "unittest.mock",
+      "os",
+      "json",
+      "sys",
+      "studio_loop"
+    ]
+  },
+  {
+    "path": "tests/feature_x.test.ts",
+    "line_count": 1,
+    "symbols": [],
+    "imports": [
+      "../src/feature_x'; test('x"
+    ]
+  },
+  {
+    "path": "tests/real_browser_research_check.py",
+    "line_count": 65,
+    "symbols": [
+      "main"
+    ],
+    "imports": [
+      "os",
+      "sys",
+      "browser_research",
+      "studio_loop"
+    ]
+  },
+  {
+    "path": "tests/regression_page_extractor.py",
+    "line_count": 30,
+    "symbols": [
+      "test_page_extractor_does_not_flag_clean_mdn_text",
+      "test_page_extractor_flags_visible_mojibake"
+    ],
+    "imports": [
+      "sys",
+      "os",
+      "tempfile",
+      "page_extractor"
+    ]
+  },
+  {
+    "path": "tests/test_autonomous_loop.py",
+    "line_count": 107,
+    "symbols": [
+      "TestAutonomousLoop"
+    ],
+    "imports": [
+      "unittest",
+      "os",
+      "json",
+      "shutil",
+      "sys",
+      "unittest.mock",
+      "studio_loop"
+    ]
+  },
+  {
+    "path": "tests/test_browser_research_mock.py",
+    "line_count": 190,
+    "symbols": [
+      "TestBrowserResearchMock"
+    ],
+    "imports": [
+      "unittest",
+      "json",
+      "os",
+      "sys",
+      "unittest.mock",
+      "browser_research"
+    ]
+  },
+  {
+    "path": "tests/test_gemma4_factory_tuning.py",
+    "line_count": 51,
+    "symbols": [
+      "TestGemma4FactoryTuning"
+    ],
+    "imports": [
+      "os",
+      "sys",
+      "unittest",
+      "prompt_compiler",
+      "retry_engine"
+    ]
+  },
+  {
+    "path": "tests/test_kobold_client.py",
+    "line_count": 59,
+    "symbols": [
+      "TestKoboldClient"
+    ],
+    "imports": [
+      "os",
+      "sys",
+      "unittest",
+      "unittest.mock",
+      "requests",
+      "kobold_client"
+    ]
+  },
+  {
+    "path": "tests/test_local_codebase_audit.py",
+    "line_count": 470,
+    "symbols": [
+      "TestLocalCodebaseAudit",
+      "TestHarnessInternalAuditLoop"
+    ],
+    "imports": [
+      "json",
+      "os",
+      "shutil",
+      "sys",
+      "tempfile",
+      "unittest",
+      "unittest.mock",
+      "artifact_validator",
+      "research_client",
+      "studio_loop",
+      "transition_engine"
+    ]
+  },
+  {
+    "path": "tests/test_repair_prompt.py",
+    "line_count": 273,
+    "symbols": [
+      "TestRepairPrompt"
+    ],
+    "imports": [
+      "json",
+      "os",
+      "shutil",
+      "sys",
+      "tempfile",
+      "unittest",
+      "unittest.mock",
+      "studio_loop",
+      "kobold_client"
+    ]
+  },
+  {
+    "path": "tests/test_response_parser.py",
+    "line_count": 411,
+    "symbols": [
+      "TestResponseParser"
+    ],
+    "imports": [
+      "os",
+      "sys",
+      "unittest",
+      "json",
+      "response_parser"
+    ]
+  },
+  {
+    "path": "tests/test_robustness.py",
+    "line_count": 105,
+    "symbols": [
+      "TestRobustness"
+    ],
+    "imports": [
+      "unittest",
+      "os",
+      "shutil",
+      "json",
+      "subprocess",
+      "time",
+      "datetime",
+      "sys",
+      "context_pruner"
+    ]
+  },
+  {
+    "path": "tests/test_sessions_and_skills.py",
+    "line_count": 250,
+    "symbols": [
+      "TestSessionsAndSkills"
+    ],
+    "imports": [
+      "json",
+      "os",
+      "shutil",
+      "sys",
+      "tempfile",
+      "unittest",
+      "artifact_validator",
+      "safety_guard",
+      "session_router",
+      "skill_registry",
+      "state_store"
+    ]
+  },
+  {
+    "path": "tools/bootstrap_local_env.py",
+    "line_count": 131,
+    "symbols": [
+      "run_command",
+      "check_env",
+      "install_python_deps",
+      "install_playwright",
+      "install_node_deps"
+    ],
+    "imports": [
+      "subprocess",
+      "sys",
+      "os",
+      "shutil",
+      "json"
+    ]
+  },
+  {
+    "path": "tools/bundle_project.py",
+    "line_count": 112,
+    "symbols": [
+      "bundle_project",
+      "write_file_to_bundle",
+      "log_decision"
+    ],
+    "imports": [
+      "os",
+      "pathlib",
+      "datetime"
+    ]
+  },
+  {
+    "path": "tools/check_perms.py",
+    "line_count": 25,
+    "symbols": [],
+    "imports": [
+      "os",
+      "sys"
+    ]
+  },
+  {
+    "path": "tools/context_culler.py",
+    "line_count": 104,
+    "symbols": [
+      "get_context_map"
+    ],
+    "imports": [
+      "os",
+      "sys",
+      "argparse",
+      "json",
+      "re"
+    ]
+  },
+  {
+    "path": "tools/find_bloat.py",
+    "line_count": 45,
+    "symbols": [
+      "find_bloat"
+    ],
+    "imports": [
+      "os",
+      "sys",
+      "pathlib"
+    ]
+  },
+  {
+    "path": "tools/test_orchestrator.py",
+    "line_count": 135,
+    "symbols": [
+      "TestStudioLoopOrchestrator"
+    ],
+    "imports": [
+      "os",
+      "sys",
+      "json",
+      "unittest",
+      "shutil",
+      "unittest.mock"
+    ]
+  },
+  {
+    "path": "tools/verify_clean_runtime.py",
+    "line_count": 309,
+    "symbols": [
+      "_read_text",
+      "_is_gitkeep",
+      "_verify_runtime_clean",
+      "_verify_proof",
+      "_verify_bundle",
+      "_iter_production_text_files",
+      "_verify_production_terms",
+      "_verify_workflow_skill_terms",
+      "_allowlist_part_points_to_repo_file",
+      "_verify_allowlist_targets",
+      "verify_clean_runtime"
+    ],
+    "imports": [
+      "glob",
+      "json",
+      "os",
+      "shutil",
+      "sys"
+    ]
+  },
+  {
+    "path": "tools/__init__.py",
+    "line_count": 1,
+    "symbols": [],
+    "imports": []
+  }
+]

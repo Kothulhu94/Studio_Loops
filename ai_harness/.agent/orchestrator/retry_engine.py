@@ -26,6 +26,7 @@ class RetryEngine:
             prompt += "- Do not include writes or patches in this repair response.\n"
             if stack_profile == "harness_internal":
                 prompt += "- For harness_internal: use Python for orchestrator/tooling changes; use tests/*.py and tools/verify_clean_runtime.py for verification.\n\n"
+                prompt += "- If exact local paths are unknown, request mode=\"local_codebase\" with audit_kind=\"discovery\" and target_files [\".agent\", \"tests\", \"tools\"] instead of guessing paths.\n\n"
             else:
                 prompt += "- Use TypeScript/browser/Vitest stack research only.\n\n"
         
@@ -43,6 +44,12 @@ class RetryEngine:
                     status = "SUCCESS" if p["success"] else f"FAILED: {p['error']}"
                     prompt += f"- {p['path']}: {status}\n"
             prompt += "\n"
+
+        if "POST_EXECUTION_VALIDATION_FAILED" in error_message:
+            prompt += "POST-VALIDATION REPAIR:\n"
+            prompt += "- If you can fix the validation error by writing missing or corrected artifacts, return status complete.\n"
+            prompt += "- Preserve required artifact filenames and required section headings exactly as named in the validation error/status.\n"
+            prompt += "- Do not return status blocked merely because the previous attempt failed validation.\n\n"
 
         if context_snippet:
             prompt += f"PREVIOUS RESPONSE EXCERPT:\n{context_snippet}\n\n"
@@ -63,6 +70,7 @@ class RetryEngine:
         
         if stack_profile == "harness_internal":
             prompt += "13. For harness_internal: use Python for orchestrator/tooling changes; use tests/*.py and tools/verify_clean_runtime.py for verification.\n"
+            prompt += "13a. For harness_internal local research, use mode=\"local_codebase\". Use exact target_files when known; otherwise use audit_kind=\"discovery\" with target_files [\".agent\", \"tests\", \"tools\"].\n"
         else:
             prompt += "13. For game_source: use TypeScript/browser/Vitest; do not propose Python game source implementation.\n"
             
@@ -74,9 +82,10 @@ class RetryEngine:
         prompt += "19. For version-sensitive or current facts, request research instead of relying on stale model knowledge.\n\n"
         prompt += "REQUIRED ROOT SHAPE:\n"
         prompt += "ACTIONS_JSON:\n"
+        root_status = "complete" if "POST_EXECUTION_VALIDATION_FAILED" in error_message else "blocked"
         prompt += json.dumps({
             "stage": current_stage,
-            "status": "blocked",
+            "status": root_status,
             "summary": "Brief valid summary of at least 10 characters.",
             "research_requests": [],
             "writes": [],

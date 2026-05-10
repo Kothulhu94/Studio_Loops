@@ -1,0 +1,30 @@
+{
+  "context_management_strategy": "semantic_retention",
+  "pinned_elements": [
+    "task_goal",
+    "current_role",
+    "active_workspace_root",
+    "critical_error_state"
+  ],
+  "pruning_tiers": {
+    "tier_0": {
+      "description": "Essential state",
+      "retention": "permanent",
+      "examples": ["goal", "identity"]
+    },
+    "tier_1": {
+      "description": "Recent semantic history",
+      "retention": "summarized",
+      "examples": ["recent_reasoning", "active_file_context"]
+    },
+    "tier_2": {
+      "description": "Transient tool data",
+      "retention": "ephemeral",
+      "examples": ["raw_stdout", "search_results"]
+    }
+  },
+  "safety_thresholds": {
+    "max_risk_score": 5,
+    "require_human_approval_on": ["destructive_filesystem_ops", "network_egress"]
+  }
+}

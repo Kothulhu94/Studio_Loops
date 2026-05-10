@@ -11,13 +11,21 @@ class ArtifactValidator:
         if result.get("status") != "complete":
             errors.append(f"Research status is not complete: {result.get('status')}")
 
+        is_local = result.get("evidence_type") == "local_codebase"
         fetched_relevant_sources = [
             source for source in result.get("sources", [])
             if source.get("status") == "fetched"
             and source.get("relevant", True)
             and not source.get("rejected", False)
         ]
-        if len(fetched_relevant_sources) < 2:
+        if is_local:
+            local_sources = [
+                source for source in fetched_relevant_sources
+                if str(source.get("url", "")).startswith("local://")
+            ]
+            if not local_sources:
+                errors.append("Local codebase research has no fetched relevant local:// source.")
+        elif len(fetched_relevant_sources) < 2:
             errors.append("Research has fewer than 2 fetched relevant sources.")
         if len(result.get("findings", [])) < 2:
             errors.append("Research has fewer than 2 findings.")

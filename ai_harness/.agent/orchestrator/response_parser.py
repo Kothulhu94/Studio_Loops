@@ -274,6 +274,30 @@ class ResponseParser:
                     new_blockers.append(b)
             actions["blockers"] = new_blockers
 
+        # Normalize artifact declarations
+        artifacts = actions.get("artifacts", [])
+        if isinstance(artifacts, list):
+            new_artifacts = []
+            for artifact in artifacts:
+                if isinstance(artifact, str):
+                    name = artifact.replace("\\", "/").rstrip("/").split("/")[-1]
+                    if name:
+                        new_artifacts.append({"name": name, "type": self._infer_artifact_type(name)})
+                    continue
+                if not isinstance(artifact, dict):
+                    continue
+                name = artifact.get("name") or artifact.get("path")
+                if not name:
+                    continue
+                name = str(name).replace("\\", "/").rstrip("/").split("/")[-1]
+                if not name:
+                    continue
+                new_artifacts.append({
+                    "name": name,
+                    "type": str(artifact.get("type") or self._infer_artifact_type(name))
+                })
+            actions["artifacts"] = new_artifacts
+
         # Normalize research_requests
         requests = actions.get("research_requests", [])
         if isinstance(requests, list):
@@ -290,9 +314,11 @@ class ResponseParser:
                 if not isinstance(req, dict):
                     continue
                     
-                # Handle topic -> query
+                # Handle topic/description -> query
                 if "query" not in req and "topic" in req:
                     req["query"] = req.pop("topic")
+                if "query" not in req and "description" in req:
+                    req["query"] = req["description"]
                 
                 if "query" not in req:
                     continue # Drop invalid
@@ -307,12 +333,48 @@ class ResponseParser:
                 
                 if "required" not in req:
                     req["required"] = True
+
+                if req.get("evidence_type") == "local_codebase":
+                    req["mode"] = "local_codebase"
+                req.pop("evidence_type", None)
+
+                target_files = req.get("target_files")
+                if isinstance(target_files, list):
+                    req["target_files"] = [str(path) for path in target_files if isinstance(path, str) and path.strip()]
+                    if req["target_files"]:
+                        req["mode"] = "local_codebase"
+                elif target_files is not None:
+                    req.pop("target_files", None)
+
+                audit_kind = req.get("audit_kind")
+                if audit_kind not in ("discovery", "file_audit"):
+                    query_text = str(req.get("query", "")).lower()
+                    if "list all files" in query_text or "identify exact paths" in query_text:
+                        req["audit_kind"] = "discovery"
+                        req["mode"] = "local_codebase"
+                    else:
+                        req.pop("audit_kind", None)
+                elif audit_kind == "discovery":
+                    req["mode"] = "local_codebase"
+
+                if req.get("mode") not in ("web", "local_codebase"):
+                    req.pop("mode", None)
                     
                 # Drop unknown properties (keep only schema properties)
-                schema_props = {"query", "reason", "required"}
+                schema_props = {"query", "reason", "required", "mode", "audit_kind", "target_files"}
                 cleaned_req = {k: v for k, v in req.items() if k in schema_props}
                 new_requests.append(cleaned_req)
                 
             actions["research_requests"] = new_requests
             
         return actions
+
+    def _infer_artifact_type(self, name):
+        lowered = name.lower()
+        if "blueprint" in lowered:
+            return "blueprint"
+        if "context_map" in lowered or lowered.endswith(".json"):
+            return "context_map"
+        if "research" in lowered:
+            return "research"
+        return "file"

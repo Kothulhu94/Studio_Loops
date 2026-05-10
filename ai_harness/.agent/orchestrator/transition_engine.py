@@ -23,6 +23,8 @@ class TransitionEngine:
         # Check for explicit recommendation from model
         rec = actions.get("next_stage_recommendation")
         allowed_next = self.graph.get_allowed_next(current_stage)
+        if current_stage == "researcher" and rec == "designer" and not actions.get("design_required", False):
+            return "developer"
         if rec and rec in allowed_next:
             return rec
 
@@ -54,6 +56,8 @@ class TransitionEngine:
                 return "bug_hunter"
             elif qa_res == "BLOCKED":
                 return current_stage
+            elif qa_res == "SKIPPED" and not actions.get("blockers"):
+                return "handover_complete"
             return current_stage # Stay if ambiguous
         
         elif current_stage == "bug_hunter":

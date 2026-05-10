@@ -20,6 +20,13 @@ exit /b
 $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $outfile = "ai_harness_bundle.txt"
 $exclude = @("logs", "bin", ".git", "node_modules", "__pycache__")
+$runtimeSubtrees = @(
+    ".agent\Loop_Flow",
+    ".agent\state\sessions"
+)
+$runtimeFiles = @(
+    ".agent\state\studio_loop.lock"
+)
 $extensions = @(".json", ".md", ".py", ".bat", ".ps1", ".txt", ".yml", ".yaml", ".sh", ".skill", ".workflow")
 
 function Normalize-AsciiText([string]$text) {
@@ -44,11 +51,22 @@ $files = Get-ChildItem -Path . -Recurse -File | Where-Object {
     $path = $_.FullName
     $name = $_.Name
     $ext = $_.Extension
+    $relPath = Resolve-Path $_.FullName -Relative
+    $relPath = $relPath -replace '^\.\\', ''
     
     $shouldSkip = $false
     foreach ($ex in $exclude) {
         if ($path -like "*\$ex\*") { $shouldSkip = $true; break }
     }
+
+    foreach ($subtree in $runtimeSubtrees) {
+        if ($relPath -eq $subtree -or $relPath.StartsWith($subtree + "\")) {
+            $shouldSkip = $true
+            break
+        }
+    }
+
+    if ($runtimeFiles -contains $relPath) { $shouldSkip = $true }
     
     if ($name -eq $outfile -or $name -eq "bundle_harness.bat") { $shouldSkip = $true }
     

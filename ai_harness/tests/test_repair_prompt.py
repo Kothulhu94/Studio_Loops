@@ -238,6 +238,18 @@ class TestRepairPrompt(unittest.TestCase):
             os.path.exists(os.path.join(self.base_dir, ".agent/Loop_Flow/research_required_feature_blueprint.md"))
         )
 
+    def test_harness_internal_repair_prompt_offers_discovery_audit(self):
+        repair_prompt = self.orchestrator.retry_engine.get_repair_prompt(
+            "VALIDATION_FAILED",
+            "RESEARCH_REQUIRED_MISSING: This stage has research_required=true.",
+            stage_name="researcher",
+            stack_profile="harness_internal",
+        )
+
+        self.assertIn('audit_kind="discovery"', repair_prompt)
+        self.assertIn('target_files [".agent", "tests", "tools"]', repair_prompt)
+        self.assertIn('mode="local_codebase"', repair_prompt)
+
     def test_transport_timeout_does_not_trigger_schema_repair(self):
         self.orchestrator.state_store.reset_state()
         self.orchestrator.state_store.start_feature(
