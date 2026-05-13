@@ -1,0 +1,7 @@
+
+[2026-05-13T02:46:53] Stop model requested from Loop_Central.
+SUCCESS: The process "koboldcpp.exe" with PID 25948 has been terminated.
+SUCCESS: The process "koboldcpp.exe" with PID 25328 has been terminated.
+
+[Wed 05/13/2026  2:56:42.13] Launching Gemma E4B Vulkan
+Model: C:\Users\rchos\Desktop\Studio_Loop\models\gemma-4-E4B-it-Q5_K_M.gguf

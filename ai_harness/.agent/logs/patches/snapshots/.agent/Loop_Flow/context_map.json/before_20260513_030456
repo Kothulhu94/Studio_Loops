@@ -1,0 +1,18 @@
+{
+  "feature_slug": "implement_the_html_and_css_for_the_scifi_start_m",
+  "target_stage": "developer",
+  "pruned_context": [
+    {
+      "path": "src/engine/Game.ts",
+      "description": "GameState enum and Game class core logic."
+    },
+    {
+      "path": "public/index.html",
+      "description": "Base HTML structure for UI injection."
+    },
+    {
+      "path": "public/style.css",
+      "description": "Existing styles to be extended with sci-fi theme."
+    }
+  ]
+}

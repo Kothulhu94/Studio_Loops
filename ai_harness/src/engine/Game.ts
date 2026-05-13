@@ -6,7 +6,8 @@ export enum GameState {
   LOADING = 'LOADING',
   ENTRY_SEQUENCE = 'ENTRY_SEQUENCE',
   MAIN_MENU = 'MAIN_MENU',
-  GAMEPLAY = 'GAMEPLAY'
+  GAMEPLAY = 'GAMEPLAY',
+  KEEPER_INTERFACE = 'KEEPER_INTERFACE'
 }
 
 export class Game {
@@ -15,11 +16,12 @@ export class Game {
   private entityManager: EntityManager;
   private blueprintLoader: BlueprintLoader;
   private stateChangeListeners: ((newState: GameState) => void)[] = [];
+  private keeperStatus: string = "Nominal"; // New property for Keeper UI interaction
 
-  constructor(worldMap: WorldMap) {
+  constructor(worldMap: WorldMap, entityManager: EntityManager, blueprintLoader: BlueprintLoader) {
     this.worldMap = worldMap;
-    this.entityManager = new EntityManager(this.worldMap);
-    this.blueprintLoader = new BlueprintLoader();
+    this.entityManager = entityManager;
+    this.blueprintLoader = blueprintLoader;
   }
 
   public getState(): GameState {
@@ -28,19 +30,9 @@ export class Game {
 
   public setState(newState: GameState): void {
     if (this.state === newState) return;
+    console.log(`State transition: ${this.state} -> ${newState}`);
     this.state = newState;
-    console.log(`[Game] State transitioned to: ${newState}`);
-    this.notifyStateChange(newState);
-  }
-
-  public onStateChange(listener: (newState: GameState) => void): void {
-    this.stateChangeListeners.push(listener);
-  }
-
-  private notifyStateChange(newState: GameState): void {
-    for (const listener of this.stateChangeListeners) {
-      listener(newState);
-    }
+    this.stateChangeListeners.forEach(listener => listener(newState));
   }
 
   public getEntityManager(): EntityManager {
@@ -48,18 +40,19 @@ export class Game {
   }
 
   public startGame(): void {
-    console.log('[Game] Starting simulation...');
-    
-    // Initial state logic
+    // Initial setup logic here
     this.setState(GameState.LOADING);
-
-    // Simulate asset loading completion after a short delay
-    setTimeout(() => {
-      this.setState(GameState.ENTRY_SEQUENCE);
-    }, 1500);
   }
 
-  public stopGame(): void {
-    console.log('[Game] Stopping simulation...');
+  public addStateChangeListener(listener: (newState: GameState) => void): void {
+    this.stateChangeListeners.push(listener);
+  }
+
+  public getKeeperStatus(): string {
+    return this.keeperStatus;
+  }
+
+  public setKeeperStatus(status: string): void {
+    this.keeperStatus = status;
   }
 }

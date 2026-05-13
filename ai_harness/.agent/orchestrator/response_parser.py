@@ -434,14 +434,6 @@ class ResponseParser:
                     req["mode"] = "local_codebase"
                 req.pop("evidence_type", None)
 
-                target_files = req.get("target_files") or req.get("pruned_context") or []
-                if isinstance(target_files, list):
-                    req["target_files"] = [str(path) for path in target_files if isinstance(path, str) and path.strip()]
-                    if req["target_files"]:
-                        req["mode"] = "local_codebase"
-                elif target_files is not None:
-                    req.pop("target_files", None)
-
                 # 0. Handle model hallucination: stringified dict in query
                 # Example: "query": "audit_kind='discovery' target_files=['a.ts']"
                 query_str = str(req.get("query", ""))
@@ -465,8 +457,18 @@ class ResponseParser:
                         new_query = re.sub(r"(audit_kind|target_files)=.*?([, ]|$)", "", query_str).strip(", ")
                         if new_query:
                             req["query"] = new_query
+                        else:
+                            req["query"] = "Local codebase technical audit"
                     except:
                         pass
+
+                target_files = req.get("target_files") or req.get("pruned_context") or []
+                if isinstance(target_files, list):
+                    req["target_files"] = [str(path) for path in target_files if isinstance(path, str) and path.strip()]
+                    if req["target_files"]:
+                        req["mode"] = "local_codebase"
+                elif target_files is not None:
+                    req.pop("target_files", None)
 
                 audit_kind = req.get("audit_kind")
                 if audit_kind not in ("discovery", "file_audit"):

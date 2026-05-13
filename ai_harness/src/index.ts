@@ -1,40 +1,17 @@
-/**
- * @fileoverview Entry point for the game simulation.
- */
-
-import { WorldMap } from './world/Map';
 import { Game } from './engine/Game';
+import { WorldMap } from './world/WorldMap';
 import { EntityManager } from './entities/EntityManager';
+import { BlueprintLoader } from './BlueprintLoader';
 
-function initializeGame(): void {
-    console.log("--- Initializing Game Engine ---");
+const worldMap = new WorldMap();
+const entityManager = new EntityManager();
+const blueprintLoader = new BlueprintLoader();
+const game = new Game(worldMap, entityManager, blueprintLoader);
 
-    // 1. Initialize World Map
-    const worldMap = new WorldMap();
-    
-    // Seed the map with some initial terrain
-    worldMap.setTerrain(0, 0, 'HabitableZone');
-    worldMap.setTerrain(1, 0, 'Vines');
+// Example usage
+game.setState(GameState.LOADING);
+console.log(`Game State: ${game.getState()}`);
 
-    // 2. Initialize Game Engine
-    const game = new Game(worldMap);
-
-    // 3. Initialize Entities
-    const entityManager = game.getEntityManager();
-    const player = entityManager.createEntity('Player', { x: 0, y: 0 });
-    const resourceNode = entityManager.createEntity('Resource', { x: 5, y: 5 });
-    
-    console.log(`Entities created: ${entityManager.getAllEntities().length}`);
-
-    // 4. Start Simulation
-    game.startGame();
-
-    // 5. Expose globally for the UI layer
-    (window as any).gameInstance = game;
-
-    // In a real application, you would handle window closing/events to call game.stopGame()
-}
-
-// Start the application
-initializeGame();
-
+// Simulate game start
+game.startGame();
+console.log(`Game Started. Current State: ${game.getState()}`);

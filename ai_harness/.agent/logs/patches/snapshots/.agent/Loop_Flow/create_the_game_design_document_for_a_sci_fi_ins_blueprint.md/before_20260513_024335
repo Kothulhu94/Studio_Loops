@@ -1,0 +1,27 @@
+# Game Design Document: Stellar Crypt Keeper
+
+## Vision
+
+**Core Concept:** A real-time, strategic dungeon-digging simulation set in a grim, high-tech sci-fi universe. The player controls a subterranean faction (the 'Keepers') tasked with expanding their biomechanical fortress beneath a hostile, alien planet's crust. Instead of goblins and orcs, the player manages cybernetic drones, bio-engineered monstrosities, and advanced AI constructs to excavate, defend, and conquer resource-rich strata against relentless, technologically superior alien invaders.
+
+**Elevator Pitch:** *Dungeon Keeper meets StarCraft in a claustrophobic, subterranean sci-fi horror setting.* 
+
+**Goal:** Achieve planetary dominance by establishing the largest, most technologically advanced subterranean network while surviving periodic, catastrophic incursions from the surface-dwelling alien empire.
+
+## Target User Experience
+
+1.  **Strategic Depth (The Architect):** Players must feel like a master engineer and subterranean warlord. Decisions about resource allocation (power, rare minerals, bio-matter) must have cascading, visible effects on the dungeon's structure and troop capabilities. The digging mechanic must feel tactile and consequential.
+2.  **Tension & Threat (The Survivor):** The game must maintain a constant sense of dread. Invader waves should not be predictable; they should adapt based on the player's defensive strengths. The environment itself (geological instability, radiation pockets) should be a constant threat.
+3.  **Emergent Narrative (The Lore):** While the core loop is strategic, the technology and enemy factions should suggest a deep, tragic backstory—a war between two incompatible forms of life (organic vs. synthetic/alien). Dialogue/UI elements should hint at this conflict.
+
+## Thematic Alignment
+
+**Setting:** Post-apocalyptic, subterranean, hard sci-fi/biopunk. Think *Alien* meets *Dwarf Fortress* meets *StarCraft II* (in terms of tactical depth).
+
+**Aesthetics:** Dark, metallic, glowing bio-luminescence, exposed wiring, pressurized environments. The 'dungeon' is a complex, engineered habitat, not a natural cave system.
+
+**Mechanics Translation:**
+*   **Dungeon Keeper:** Digging, room placement, troop management, resource harvesting.
+*   **Sci-Fi Twist:** Digging reveals mineral veins, geothermal vents, or alien ruins. Troops are specialized units (e.g., Heavy Chassis, Bio-Scout, Energy Shield Generator). Invaders are organized military units (e.g., Drone Swarms, Siege Walkers).
+
+**Key Systems to Define Next:** Resource Flow (Power/Data/Matter), Unit Specialization Trees, and the procedural generation logic for geological strata.

@@ -36,14 +36,38 @@ class KoboldClient:
             "max_tokens": self.config["max_output_tokens"]
         }
 
+        # Use a fixed timestamp for this entire call so logs match
+        call_timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Log the prompt BEFORE calling the model so the UI updates
+        self.log_interaction(prompt_packet, "[Request Sent... Waiting for response]", timestamp=call_timestamp)
+
+        start_time = datetime.now()
         try:
             response = requests.post(url, json=payload, timeout=(self.connect_timeout, self.read_timeout))
             response.raise_for_status()
             result = response.json()
             content = result["choices"][0]["message"]["content"]
             
-            # Log the interaction
-            self.log_interaction(prompt_packet, content)
+            # Calculate t/s if possible
+            end_time = datetime.now()
+            duration = (end_time - start_time).total_seconds()
+            
+            usage = result.get("usage", {})
+            prompt_tokens = usage.get("prompt_tokens", 0)
+            completion_tokens = usage.get("completion_tokens", 0)
+            
+            tokens_per_second = 0
+            if duration > 0 and completion_tokens > 0:
+                tokens_per_second = round(completion_tokens / duration, 2)
+            
+            # Log the full interaction with response and stats
+            self.log_interaction(prompt_packet, content, stats={
+                "prompt_tokens": prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "tps": tokens_per_second,
+                "duration": duration
+            }, timestamp=call_timestamp)
             
             return content
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
@@ -66,8 +90,9 @@ class KoboldClient:
             print(message)
             raise KoboldClientError(message) from e
 
-    def log_interaction(self, prompt, response):
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    def log_interaction(self, prompt, response, stats=None, timestamp=None):
+        if not timestamp:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_dir = os.path.join(self.logs_path, "orchestrator_runs")
         os.makedirs(log_dir, exist_ok=True)
         
@@ -76,9 +101,9 @@ class KoboldClient:
         with open(os.path.join(log_dir, f"{timestamp}_response.txt"), 'w', encoding='utf-8') as f:
             f.write(response)
 
-        self.log_watch_interaction(prompt, response, timestamp)
+        self.log_watch_interaction(prompt, response, timestamp, stats)
 
-    def log_watch_interaction(self, prompt, response, timestamp):
+    def log_watch_interaction(self, prompt, response, timestamp, stats=None):
         watch_dir = os.path.join(self.base_path, "logs", "loop_central")
         os.makedirs(watch_dir, exist_ok=True)
 
@@ -92,20 +117,35 @@ class KoboldClient:
             "prompt_chars": len(prompt_text),
             "response_chars": len(response),
         }
-
-        generations_path = os.path.join(watch_dir, "generations.jsonl")
-        with open(generations_path, "a", encoding="utf-8") as f:
-            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        if stats:
+            entry.update(stats)
+        
+        # Only append to generations.jsonl if we have real response stats
+        if stats:
+            generations_path = os.path.join(watch_dir, "generations.jsonl")
+            with open(generations_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
         state_path = os.path.join(watch_dir, "loop_central_state.json")
-        state = {
-            "status": "model_response_captured",
+        state = {}
+        if os.path.exists(state_path):
+            try:
+                with open(state_path, "r", encoding="utf-8") as f:
+                    state = json.load(f)
+            except:
+                pass
+
+        state.update({
+            "status": "model_response_captured" if stats else "prompt_sent",
             "updated_at": entry["timestamp"],
             "last_generation_timestamp": entry["timestamp"],
             "last_prompt_chars": entry["prompt_chars"],
             "last_response_chars": entry["response_chars"],
             "last_orchestrator_log_prefix": timestamp,
-        }
+        })
+        if stats:
+            state["last_stats"] = stats
+            
         with open(state_path, "w", encoding="utf-8") as f:
             json.dump(state, f, indent=2)
 

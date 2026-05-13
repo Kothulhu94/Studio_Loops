@@ -1,0 +1,50 @@
+/**
+ * @fileoverview Entry point for the game simulation.
+ */
+
+import { WorldMap } from './world/Map';
+import { Game, GameState } from './engine/Game';
+import { EntityManager } from './entities/EntityManager';
+import { BlueprintLoader } from './engine/BlueprintLoader';
+
+function initializeGame(): void {
+    console.log("--- Initializing Game Engine ---");
+
+    // 1. Initialize World Map
+    const worldMap = new WorldMap();
+    
+    // Seed the map with some initial terrain
+    worldMap.setTerrain(0, 0, 'HabitableZone');
+    worldMap.setTerrain(1, 0, 'Vines');
+
+    // 2. Initialize Entities
+    const entityManager = new EntityManager();
+    const player = entityManager.createEntity('Player', { x: 0, y: 0 });
+    const resourceNode = entityManager.createEntity('Resource', { x: 5, y: 5 });
+    
+    console.log(`Entities created: ${entityManager.getAllEntities().length}`);
+
+    // 3. Initialize Blueprint Loader
+    const blueprintLoader = new BlueprintLoader();
+
+    // 4. Initialize Game Engine
+    const game = new Game(worldMap, entityManager, blueprintLoader);
+
+    // 5. Register UI Listener
+    // This allows the UI in public/index.html to react to state changes.
+    game.addStateChangeListener((newState) => {
+        console.log(`[Engine Hook] UI notified of state change: ${newState}`);
+    });
+
+    // 6. Start Simulation
+    game.startGame();
+
+    // 7. Expose globally for the UI layer
+    (window as any).gameInstance = game;
+
+    // --- Keeper Integration Stub ---
+    // The UI now has access to game.getKeeperStatus() and game.setKeeperStatus()
+}
+
+// Start the application
+initializeGame();

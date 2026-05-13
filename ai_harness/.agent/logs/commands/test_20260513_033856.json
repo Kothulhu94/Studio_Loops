@@ -1,0 +1,8 @@
+{
+  "name": "test",
+  "success": false,
+  "stdout": "\n RUN  v4.1.5 C:/Users/rchos/Desktop/Studio_Loop/ai_harness\n\n \u276f tests/feature_x.test.ts (0 test)\n\n Test Files  1 failed (1)\n      Tests  no tests\n   Start at  03:38:58\n   Duration  379ms (transform 46ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)\n\n",
+  "stderr": "\n\u23af\u23af\u23af\u23af\u23af\u23af Failed Suites 1 \u23af\u23af\u23af\u23af\u23af\u23af\u23af\n\n FAIL  tests/feature_x.test.ts [ tests/feature_x.test.ts ]\nError: Cannot find module '../src/feature_x' imported from C:/Users/rchos/Desktop/Studio_Loop/ai_harness/tests/feature_x.test.ts\n \u276f tests/feature_x.test.ts:1:1\n      1| import {x} from '../src/feature_x'; test('x', () => expect(x).toBe(1));\n       | ^\n\n\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af\u23af[1/1]\u23af\n\n",
+  "returncode": 1,
+  "command": "npx vitest run"
+}

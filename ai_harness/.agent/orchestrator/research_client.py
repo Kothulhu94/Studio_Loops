@@ -109,8 +109,8 @@ class ResearchClient:
                 "notes": "Local codebase audit"
             })
 
-        status = "complete" if inspected and not errors and len(findings) >= 1 else "blocked"
-        if not target_files:
+        status = "complete" if (inspected or audit_kind == "discovery") and not errors and len(findings) >= 1 else "blocked"
+        if not target_files and audit_kind != "discovery":
             errors.append("Local codebase audit requires target_files.")
         if inspected and len(findings) < 1:
             errors.append("Local codebase audit produced no findings.")

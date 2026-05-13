@@ -1,0 +1,44 @@
+import { WorldMap } from '../world/Map';
+import { EntityManager } from '../entities/EntityManager';
+import { BlueprintLoader } from './BlueprintLoader';
+
+export enum GameState {
+  LOADING = 'LOADING',
+  ENTRY_SEQUENCE = 'ENTRY_SEQUENCE',
+  MAIN_MENU = 'MAIN_MENU',
+  GAMEPLAY = 'GAMEPLAY',
+  KEEPER_INTERFACE = 'KEEPER_INTERFACE' // New state for the Keeper UI
+}
+
+export class Game {
+  private state: GameState = GameState.LOADING;
+  private worldMap: WorldMap;
+  private entityManager: EntityManager;
+  private blueprintLoader: BlueprintLoader;
+  private stateChangeListeners: ((newState: GameState) => void)[] = [];
+
+  constructor(worldMap: WorldMap) {
+    this.worldMap = worldMap;
+    this.entityManager = new EntityManager(this.worldMap);
+    this.blueprintLoader = new BlueprintLoader();
+  }
+
+  public getState(): GameState {
+    return this.state;
+  }
+
+  public setState(newState: GameState): void {
+    if (this.state === newState) return;
+    this.state = newState;
+    console.log(`[Game] State transitioned to: ${newState}`);
+    this.notifyStateChange(newState);
+  }
+
+  public onStateChange(listener: (newState: GameState) => void): void {
+    this.stateChangeListeners.push(listener);
+  }
+
+  private notifyStateChange(newState: GameState): void {
+    this.stateChangeListeners.forEach(listener => listener(newState));
+  }
+}

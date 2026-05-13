@@ -1,0 +1,26 @@
+ACTIONS_JSON:
+{
+  "stage": "developer",
+  "status": "complete",
+  "summary": "Completed Game class and updated index.ts for state management.",
+  "research_requests": [],
+  "writes": [
+    {
+      "path": "src/engine/Game.ts",
+      "content": "import { WorldMap } from '../world/Map';\nimport { EntityManager } from '../entities/EntityManager';\nimport { BlueprintLoader } from './BlueprintLoader';\n\nexport enum GameState {\n  LOADING = 'LOADING',\n  ENTRY_SEQUENCE = 'ENTRY_SEQUENCE',\n  MAIN_MENU = 'MAIN_MENU',\n  GAMEPLAY = 'GAMEPLAY',\n  KEEPER_INTERFACE = 'KEEPER_INTERFACE' // New state for the Keeper UI\n}\n\nexport class Game {\n  private state: GameState = GameState.LOADING;\n  private worldMap: WorldMap;\n  private entityManager: EntityManager;\n  private blueprintLoader: BlueprintLoader;\n  private stateChangeListeners: ((newState: GameState) => void)[] = [];\n  private keeperStatus: string = \"Nominal\"; // New property for Keeper UI interaction\n\n  constructor(worldMap: WorldMap, entityManager: EntityManager, blueprintLoader: BlueprintLoader) {\n    this.worldMap = worldMap;\n    this.entityManager = entityManager;\n    this.blueprintLoader = blueprintLoader;\n  }\n\n  public getState(): GameState {\n    return this.state;\n  }\n\n  public setState(newState: GameState): void {\n    if (this.state === newState) return;\n    console.log(`State transition: ${this.state} -> ${newState}`);\n    this.state = newState;\n    this.stateChangeListeners.forEach(listener => listener(newState));\n  }\n\n  public getEntityManager(): EntityManager {\n    return this.entityManager;\n  }\n\n  public startGame(): void {\n    // Initial setup logic here\n    this.setState(GameState.LOADING);\n  }\n\n  public addStateChangeListener(listener: (newState: GameState) => void): void {\n    this.stateChangeListeners.push(listener);\n  }\n\n  public getKeeperStatus(): string {\n    return this.keeperStatus;\n  }\n\n  public setKeeperStatus(status: string): void {\n    this.keeperStatus = status;\n  }\n}"
+    },
+    {
+      "path": "src/index.ts",
+      "content": "import { Game } from './engine/Game';\nimport { EntityManager } from './entities/EntityManager';\nimport { WorldMap } from './world/Map';\nimport { BlueprintLoader } from './engine/BlueprintLoader';\n\n// Assume these are initialized elsewhere or mocked for this stage\nconst worldMap = new WorldMap();\nconst entityManager = new EntityManager();\nconst blueprintLoader = new BlueprintLoader();\n\nconst game = new Game(worldMap, entityManager, blueprintLoader);\n\n// Example of setting up state change listener\ngame.addStateChangeListener((newState) => {\n  console.log(`Game state changed to: ${newState}`);\n  // Logic to update UI or other systems based on state\n});\n\n// Start the game\ngame.startGame();\n\n// Example of setting keeper status\ngame.setKeeperStatus(\"Active\");\n\n// Export game instance or relevant functions for testing/usage\nexport { game };"
+    }
+  ],
+  "patches": [],
+  "commands": [],
+  "blockers": [],
+  "design_required": false,
+  "assets_required": false,
+  "qa_result": null,
+  "artifacts": [],
+  "risks": [],
+  "next_stage_recommendation": "qa"
+}

@@ -42,6 +42,13 @@
         </div>
       </div>
 
+      <!-- KEEPER INTERFACE (Placeholder for Terraforming Keeper UI) -->
+      <div id="keeper-interface" class="screen">
+        <h1 class="small-title">KEEPER INTERFACE</h1>
+        <p class="log-line">Awaiting Terraforming Directive Input...</p>
+        <p class="log-line">System Status: Nominal</p>
+      </div>
+
     </div>
     
     <!-- Game Canvas -->
@@ -54,6 +61,7 @@
       const loadingScreen = document.getElementById('loading-screen');
       const entrySequence = document.getElementById('entry-sequence');
       const mainMenu = document.getElementById('main-menu');
+      const keeperInterface = document.getElementById('keeper-interface');
       const progressText = document.getElementById('loading-progress');
       
       // Simulate loading progress
@@ -75,6 +83,7 @@
           loadingScreen.classList.remove('active');
           entrySequence.classList.remove('active');
           mainMenu.classList.remove('active');
+          keeperInterface.classList.remove('active');
 
           // Show specific screen
           if (newState === 'LOADING') {
@@ -93,6 +102,8 @@
 
           } else if (newState === 'MAIN_MENU') {
             mainMenu.classList.add('active');
+          } else if (newState === 'KEEPER_INTERFACE') {
+            keeperInterface.classList.add('active');
           }
         });
         

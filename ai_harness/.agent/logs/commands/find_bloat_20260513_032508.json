@@ -1,0 +1,8 @@
+{
+  "name": "find_bloat",
+  "success": true,
+  "stdout": "[]\n",
+  "stderr": "",
+  "returncode": 0,
+  "command": "python tools/find_bloat.py --json"
+}

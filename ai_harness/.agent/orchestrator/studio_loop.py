@@ -729,7 +729,8 @@ class StudioLoopOrchestrator:
                     errors.append("Typecheck failed after changes.")
                 if not suite["tests"].get("success"):
                     # Only fail if tests exist and failed
-                    if "No tests found" not in suite["tests"].get("stdout", ""):
+                    stdout = suite["tests"].get("stdout") or ""
+                    if "No tests found" not in stdout:
                         errors.append("Unit tests failed after changes.")
                 if not suite["bloat"].get("success"):
                     errors.append("Bloat check failed: oversized files detected.")

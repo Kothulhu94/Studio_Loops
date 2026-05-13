@@ -1,18 +1,24 @@
 {
-  "feature_slug": "implement_the_html_and_css_for_the_scifi_start_m",
-  "target_stage": "developer",
-  "pruned_context": [
-    {
-      "path": "src/engine/Game.ts",
-      "description": "GameState enum and Game class core logic."
-    },
+  "target_files": [
     {
       "path": "public/index.html",
-      "description": "Base HTML structure for UI injection."
+      "reason": "Primary entry point for the UI shell structure."
     },
     {
       "path": "public/style.css",
-      "description": "Existing styles to be extended with sci-fi theme."
+      "reason": "Contains the necessary styling foundation for the Keeper's aesthetic."
+    },
+    {
+      "path": "src/index.ts",
+      "reason": "The designated point to expose the state subscription API to the UI layer."
+    },
+    {
+      "path": "src/engine/Game.ts",
+      "reason": "Source of truth for the game state that the Keeper UI must reflect."
+    },
+    {
+      "path": "src/entities/EntityManager.ts",
+      "reason": "Contains entity definitions, relevant for tracking Keeper-related entities or resources."
     }
   ]
 }

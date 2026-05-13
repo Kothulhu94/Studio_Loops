@@ -1,0 +1,26 @@
+import { Game } from './engine/Game';
+import { EntityManager } from './entities/EntityManager';
+import { WorldMap } from './world/Map';
+import { BlueprintLoader } from './engine/BlueprintLoader';
+
+// Assume these are initialized elsewhere or mocked for this stage
+const worldMap = new WorldMap();
+const entityManager = new EntityManager();
+const blueprintLoader = new BlueprintLoader();
+
+const game = new Game(worldMap, entityManager, blueprintLoader);
+
+// Example of setting up state change listener
+game.addStateChangeListener((newState) => {
+  console.log(`Game state changed to: ${newState}`);
+  // Logic to update UI or other systems based on state
+});
+
+// Start the game
+game.startGame();
+
+// Example of setting keeper status
+game.setKeeperStatus("Active");
+
+// Export game instance or relevant functions for testing/usage
+export { game };

@@ -1,0 +1,29 @@
+import { Game } from './engine/Game';
+import { WorldMap } from './world/Map';
+import { EntityManager } from './entities/EntityManager';
+import { BlueprintLoader } from './engine/BlueprintLoader';
+
+// Mock dependencies for demonstration
+const mockWorldMap = new WorldMap();
+const mockEntityManager = new EntityManager();
+const mockBlueprintLoader = new BlueprintLoader();
+
+const game = new Game(mockWorldMap, mockEntityManager, mockBlueprintLoader);
+
+// Setup state listener
+game.addStateChangeListener((newState) => {
+  console.log(`[App] Game state updated to: ${newState}`);
+  // Here you would trigger UI updates based on the new state
+});
+
+// Start the game
+game.startGame();
+
+// Example of interacting with the new Keeper status
+setTimeout(() => {
+  console.log(`Current Keeper Status: ${game.getKeeperStatus()}`);
+  game.setKeeperStatus("Degraded Mode");
+  console.log(`New Keeper Status: ${game.getKeeperStatus()}`);
+}, 1000);
+
+// In a real application, the main loop would run here, driving state changes.

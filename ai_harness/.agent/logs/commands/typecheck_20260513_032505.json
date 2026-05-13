@@ -1,0 +1,8 @@
+{
+  "name": "typecheck",
+  "success": false,
+  "stdout": "src/index.ts(23,32): error TS2339: Property 'getEntityManager' does not exist on type 'Game'.\nsrc/index.ts(30,10): error TS2339: Property 'startGame' does not exist on type 'Game'.\ntests/feature_x.test.ts(1,17): error TS2307: Cannot find module '../src/feature_x' or its corresponding type declarations.\n",
+  "stderr": "",
+  "returncode": 2,
+  "command": "npx tsc --noEmit"
+}

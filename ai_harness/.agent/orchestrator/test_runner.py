@@ -11,8 +11,8 @@ class TestRunner:
         return {
             "ran": True,
             "success": res.get("success", False),
-            "stdout": res.get("stdout", ""),
-            "stderr": res.get("stderr", "")
+            "stdout": res.get("stdout") or "",
+            "stderr": res.get("stderr") or ""
         }
 
     def run_tests(self, target=None):
@@ -25,8 +25,8 @@ class TestRunner:
         return {
             "ran": True,
             "success": res.get("success", False),
-            "stdout": res.get("stdout", ""),
-            "stderr": res.get("stderr", "")
+            "stdout": res.get("stdout") or "",
+            "stderr": res.get("stderr") or ""
         }
 
     def run_bloat(self):

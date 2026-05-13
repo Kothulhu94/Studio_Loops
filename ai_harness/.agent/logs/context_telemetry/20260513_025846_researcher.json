@@ -1,0 +1,26 @@
+{
+  "stage": "researcher",
+  "max_prompt_chars": 48000,
+  "raw_section_chars": {
+    "state": 5701,
+    "role_instructions": 3438,
+    "skills": 6218,
+    "context": 7413,
+    "required_outputs": 84,
+    "validation_rules": 378
+  },
+  "budgeted_section_chars": {
+    "state": 3457,
+    "role_instructions": 3728,
+    "skills": 3565,
+    "context": 7413
+  },
+  "truncations": [
+    {
+      "section": "skills",
+      "from": 6218,
+      "to": 3500
+    }
+  ],
+  "final_user_chars": 24244
+}

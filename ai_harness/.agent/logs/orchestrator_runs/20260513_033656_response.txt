@@ -1,0 +1,24 @@
+ACTIONS_JSON:
+{
+  "stage": "developer",
+  "status": "complete",
+  "summary": "Fixed type errors in Game class and index.ts to allow UI state transitions.",
+  "research_requests": [],
+  "writes": [
+    {
+      "path": "src/engine/Game.ts",
+      "content": "import { WorldMap } from '../world/Map';\nimport { EntityManager } from '../entities/EntityManager';\nimport { BlueprintLoader } from './BlueprintLoader';\n\nexport enum GameState {\n  LOADING = 'LOADING',\n  ENTRY_SEQUENCE = 'ENTRY_SEQUENCE',\n  MAIN_MENU = 'MAIN_MENU',\n  GAMEPLAY = 'GAMEPLAY',\n  KEEPER_INTERFACE = 'KEEPER_INTERFACE' // New state for the Keeper UI\n}\n\nexport class Game {\n  private state: GameState = GameState.LOADING;\n  private worldMap: WorldMap;\n  private entityManager: EntityManager;\n  private blueprintLoader: BlueprintLoader;\n  private stateChangeListeners: ((newState: GameState) => void)[] = [];\n  private keeperStatus: string = \"Nominal\"; // New property for Keeper UI interaction\n\n  constructor(worldMap: WorldMap, entityManager: EntityManager, blueprintLoader: BlueprintLoader) {\n    this.worldMap = worldMap;\n    this.entityManager = entityManager;\n    this.blueprintLoader = blueprintLoader;\n  }\n\n  public getState(): GameState {\n    return this.state;\n  }\n\n  public setState(newState: GameState): void {\n    if (this.state === newState) return;\n    console.log(`State transition: ${this.state} -> ${newState}`);\n    this.state = newState;\n    this.stateChangeListeners.forEach(listener => listener(newState));\n  }\n\n  public getEntityManager(): EntityManager {\n    return this.entityManager;\n  }\n\n  public startGame(): void {\n    // Initial setup logic here\n    this.setState(GameState.LOADING);\n  }\n\n  public addStateChangeListener(listener: (newState: GameState) => void): void {\n    this.stateChangeListeners.push(listener);\n  }\n\n  public getKeeperStatus(): string {\n    return this.keeperStatus;\n  }\n\n  public setKeeperStatus(status: string): void {\n    this.keeperStatus = status;\n    console.log(`Keeper Status updated to: ${status}`);\n  }\n}\n"
+    },
+    {
+      "path": "src/index.ts",
+      "content": "/**\n * @fileoverview Entry point for the game simulation.\n */\n\nimport { WorldMap } from './world/Map';\nimport { Game, GameState } from './engine/Game';\nimport { EntityManager } from './entities/EntityManager';\nimport { BlueprintLoader } from './engine/BlueprintLoader';\n\nfunction initializeGame(): void {\n    console.log(\"--- Initializing Game Engine ---\");\n\n    // 1. Initialize World Map\n    const worldMap = new WorldMap();\n    \n    // Seed the map with some initial terrain\n    worldMap.setTerrain(0, 0, 'HabitableZone');\n    worldMap.setTerrain(1, 0, 'Vines');\n\n    // 2. Initialize Entities\n    const entityManager = new EntityManager();\n    const player = entityManager.createEntity('Player', { x: 0, y: 0 });\n    const resourceNode = entityManager.createEntity('Resource', { x: 5, y: 5 });\n    \n    console.log(`Entities created: ${entityManager.getAllEntities().length}`);\n\n    // 3. Initialize Blueprint Loader\n    const blueprintLoader = new BlueprintLoader();\n\n    // 4. Initialize Game Engine\n    const game = new Game(worldMap, entityManager, blueprintLoader);\n\n    // 5. Register UI Listener\n    // This allows the UI in public/index.html to react to state changes.\n    game.addStateChangeListener((newState) => {\n        console.log(`[Engine Hook] UI notified of state change: ${newState}`);\n    });\n\n    // 6. Start Simulation\n    game.startGame();\n\n    // 7. Expose globally for the UI layer\n    (window as any).gameInstance = game;\n\n    // --- Keeper Integration Stub ---\n    // The UI now has access to game.getKeeperStatus() and game.setKeeperStatus()\n}\n\n// Start the application\ninitializeGame();\n"
+    }
+  ],
+  "patches": [],
+  "commands": [],
+  "blockers": [],
+  "design_required": false,
+  "assets_required": false,
+  "qa_result": null,
+  "next_stage_recommendation": "Continue development of the Surface Terraforming Keeper UI by implementing logic in the Keeper Interface state to utilize the new keeperStatus property and fulfill the GDD requirements."
+}

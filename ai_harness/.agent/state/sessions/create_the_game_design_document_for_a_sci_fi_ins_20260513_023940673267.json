@@ -1,0 +1,332 @@
+{
+  "session_id": "create_the_game_design_document_for_a_sci_fi_ins_20260513_023940673267",
+  "kind": "design",
+  "stack_profile": "game_source",
+  "title": "create the Game Design Document for a sci fi inspired original project of dungeon keeper.",
+  "slug": "create_the_game_design_document_for_a_sci_fi_ins",
+  "feature": "create the Game Design Document for a sci fi inspired original project of dungeon keeper.",
+  "feature_slug": "create_the_game_design_document_for_a_sci_fi_ins",
+  "active": true,
+  "status": "failed",
+  "current_stage": "researcher",
+  "allowed_roles": [
+    "concept_producer",
+    "researcher",
+    "designer",
+    "asset_creator",
+    "developer",
+    "qa_tester"
+  ],
+  "workspace_roots": [
+    "src",
+    "tests",
+    "tools",
+    "data",
+    "docs",
+    "public",
+    ".agent/Loop_Flow"
+  ],
+  "artifact_root": ".agent/Loop_Flow",
+  "memory_root": ".agent/Loop_Flow/context_packs/create_the_game_design_document_for_a_sci_fi_ins",
+  "completion_criteria": [
+    "Design spec exists and downstream implementation handoff is clear."
+  ],
+  "completed_stages": [
+    "concept_producer"
+  ],
+  "stage_attempts": {},
+  "artifacts": {
+    "create_the_game_design_document_for_a_sci_fi_ins_blueprint.md": ".agent/Loop_Flow/create_the_game_design_document_for_a_sci_fi_ins_blueprint.md"
+  },
+  "context_packs": {
+    "concept_producer": "C:\\Users\\rchos\\Desktop\\Studio_Loop\\ai_harness\\.agent/Loop_Flow\\context_packs\\create_the_game_design_document_for_a_sci_fi_ins_concept_producer_context.md",
+    "researcher": "C:\\Users\\rchos\\Desktop\\Studio_Loop\\ai_harness\\.agent/Loop_Flow\\context_packs\\create_the_game_design_document_for_a_sci_fi_ins_researcher_context.md"
+  },
+  "research_briefs": [
+    "C:\\Users\\rchos\\Desktop\\Studio_Loop\\ai_harness\\.agent/Loop_Flow/research\\create_the_game_design_document_for_a_sci_fi_ins_researcher_Best_practices_for_implementin_research_brief.md"
+  ],
+  "research_results": [
+    {
+      "status": "complete",
+      "query": "Best practices for implementing procedural map generation in a 2D grid-based, real-time strategy game using TypeScript and Canvas API, focusing on geological strata simulation.",
+      "reason": "The GDD identified 'procedural generation logic for geological strata' as a key system to define. I need external research to inform the technical blueprint for this complex mechanic.",
+      "sources": [
+        {
+          "title": "TypeScript: Documentation - Everyday Types",
+          "url": "https://www.typescriptlang.org/docs/handbook/2/everyday-types.html",
+          "status": "fetched",
+          "retrieved_at": "2026-05-13T02:43:25.197735",
+          "text_excerpt_path": "C:\\Users\\rchos\\Desktop\\Studio_Loop\\ai_harness\\.agent/logs/research/cache\\5d550d9902ddb092267eb2582d3c097d.md",
+          "notes": "",
+          "topic_coverage": [
+            "typescript",
+            "javascript data structures",
+            "testing/vitest",
+            "query:time",
+            "query:typescript"
+          ],
+          "relevant": true,
+          "rejected": false
+        },
+        {
+          "title": "TypeScript: Documentation - Object Types",
+          "url": "https://www.typescriptlang.org/docs/handbook/2/objects.html",
+          "status": "fetched",
+          "retrieved_at": "2026-05-13T02:43:26.326426",
+          "text_excerpt_path": "C:\\Users\\rchos\\Desktop\\Studio_Loop\\ai_harness\\.agent/logs/research/cache\\5a49b24def825873734aed053775dd4b.md",
+          "notes": "",
+          "topic_coverage": [
+            "typescript",
+            "javascript data structures",
+            "query:real",
+            "query:time",
+            "query:typescript"
+          ],
+          "relevant": true,
+          "rejected": false
+        },
+        {
+          "title": "Array - JavaScript | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",
+          "status": "fetched",
+          "retrieved_at": "2026-05-13T02:43:27.789583",
+          "text_excerpt_path": "C:\\Users\\rchos\\Desktop\\Studio_Loop\\ai_harness\\.agent/logs/research/cache\\9087f9c3d121e0f5f5e087c111c249e0.md",
+          "notes": "",
+          "topic_coverage": [
+            "javascript data structures",
+            "browser/runtime"
+          ],
+          "relevant": true,
+          "rejected": false
+        },
+        {
+          "title": "Map - JavaScript | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map",
+          "status": "fetched",
+          "retrieved_at": "2026-05-13T02:43:29.389047",
+          "text_excerpt_path": "C:\\Users\\rchos\\Desktop\\Studio_Loop\\ai_harness\\.agent/logs/research/cache\\3c321f17e288c59e88b2a549535f4575.md",
+          "notes": "",
+          "topic_coverage": [
+            "javascript data structures",
+            "browser/runtime",
+            "query:based",
+            "query:time"
+          ],
+          "relevant": true,
+          "rejected": false
+        },
+        {
+          "title": "File System API - Web APIs | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/File_System_API",
+          "status": "fetched",
+          "retrieved_at": "2026-05-13T02:43:30.688857",
+          "text_excerpt_path": "C:\\Users\\rchos\\Desktop\\Studio_Loop\\ai_harness\\.agent/logs/research/cache\\b2dc026618d7e69d4c3548a0a8366aa0.md",
+          "notes": "",
+          "topic_coverage": [
+            "typescript",
+            "queue/task scheduling",
+            "browser/runtime"
+          ],
+          "relevant": true,
+          "rejected": false
+        },
+        {
+          "title": "Fetch API - Web APIs | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API",
+          "status": "fetched",
+          "retrieved_at": "2026-05-13T02:43:31.961922",
+          "text_excerpt_path": "C:\\Users\\rchos\\Desktop\\Studio_Loop\\ai_harness\\.agent/logs/research/cache\\de915f32136ca9abeb8d563ca18280da.md",
+          "notes": "",
+          "topic_coverage": [
+            "typescript",
+            "javascript data structures",
+            "queue/task scheduling",
+            "browser/runtime"
+          ],
+          "relevant": true,
+          "rejected": false
+        },
+        {
+          "title": "Geolocation API - Web APIs | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Geolocation_API",
+          "status": "fetched",
+          "retrieved_at": "2026-05-13T02:43:33.424495",
+          "text_excerpt_path": "C:\\Users\\rchos\\Desktop\\Studio_Loop\\ai_harness\\.agent/logs/research/cache\\f64b555f5faf584b66f5f1e9a1199a6b.md",
+          "notes": "",
+          "topic_coverage": [
+            "javascript data structures",
+            "browser/runtime"
+          ],
+          "relevant": true,
+          "rejected": false
+        },
+        {
+          "title": "HTML DOM API - Web APIs | MDN",
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API",
+          "status": "fetched",
+          "retrieved_at": "2026-05-13T02:43:35.131043",
+          "text_excerpt_path": "C:\\Users\\rchos\\Desktop\\Studio_Loop\\ai_harness\\.agent/logs/research/cache\\12744d2feee32d727c6ea1fba793ca8e.md",
+          "notes": "",
+          "topic_coverage": [
+            "typescript",
+            "javascript data structures",
+            "queue/task scheduling",
+            "browser/runtime",
+            "testing/vitest",
+            "state/modeling"
+          ],
+          "relevant": true,
+          "rejected": false
+        }
+      ],
+      "findings": [
+        "TypeScript: Documentation - Everyday TypesSkip to main contentTypeScriptin EnWas this page helpful?Everyday TypesIn this chapter, we\u2019ll cover some of the most common types of values you\u2019ll find in JavaScript code, and explain the corresponding ways to describe those types in TypeScript. This isn\u2019t an exhaustive list, and future chapters will describe more ways to name and use other types. Types can also appear in many more places than just type annotations. As we learn about the types themselves, we\u2019ll also learn about the places where we can refer to these types to form new constructs. We\u2019ll start by reviewing the most basic and common types you might encounter when writing JavaScript or TypeScript code. These will later form the core building blocks of more complex types. The primitives: string, number, and boolean JavaScript has three very commonly used primitives: string, number, and boolean. Each has a corresponding type in TypeScript. As you might expect, these are the same names you\u2019d see if you used the JavaScript typeof operator on a value of those types: string represents string values like \"Hello, world\" number is for numbers like 42. JavaScript does not have a special runtime value for integers, so there\u2019s no equivalent to int or float - everything is simply number boolean is for the two values true and false The type names String, Number, and Boolean (starting with capital letters) are legal, but refer to some special built-in types that will very rarely appear in your code. Always use string, number, or boolean for types. Arrays To specify the type of an array like [1, 2, 3], you can use the syntax number[]; this syntax works for any type (e.g. string[] is an array of strings, and so on). You may also see this written as Array, which means the same thing. We\u2019ll learn more about the syntax T when we cover generics. Note that [number] is a different thing; refer to the section on Tuples. any TypeScript also has a special type, any, that you can use whene",
+        "TypeScript: Documentation - Object TypesSkip to main contentTypeScriptin EnWas this page helpful?Object TypesIn JavaScript, the fundamental way that we group and pass around data is through objects. In TypeScript, we represent those through object types. As we\u2019ve seen, they can be anonymous: tsfunction greet(person: { name: string; age: number }) { return \"Hello \" + person.name;}Try or they can be named by using either an interface: tsinterface Person { name: string; age: number;} function greet(person: Person) { return \"Hello \" + person.name;}Try or a type alias: tstype Person = { name: string; age: number;}; function greet(person: Person) { return \"Hello \" + person.name;}Try In all three examples above, we\u2019ve written functions that take objects that contain the property name (which must be a string) and age (which must be a number). Quick Reference We have cheat-sheets available for both type and interface, if you want a quick look at the important every-day syntax at a glance. Property Modifiers Each property in an object type can specify a couple of things: the type, whether the property is optional, and whether the property can be written to. Optional Properties Much of the time, we\u2019ll find ourselves dealing with objects that might have a property set. In those cases, we can mark those properties as optional by adding a question mark (?) to the end of their names. tsinterface PaintOptions { shape: Shape; xPos?: number; yPos?: number;} function paintShape(opts: PaintOptions) { // ...} const shape = getShape();paintShape({ shape });paintShape({ shape, xPos: 100 });paintShape({ shape, yPos: 100 });paintShape({ shape, xPos: 100, yPos: 100 });Try In this example, both xPos and yPos are considered optional. We can choose to provide either of them, so every call above to paintShape is valid. All optionality really says is that if the property is set, it better have a specific type. We can also read from those properties - but when we do under strictNullChecks, TypeScr",
+        "Array - JavaScript | MDN Skip to main content Skip to search Web JavaScript Reference Standard built-in objects Array Array Baseline Widely available * This feature is well established and works across many devices and browser versions. It\u2019s been available across browsers since July 2015. * Some parts of this feature may have varying levels of support. Learn more See full compatibility Report feedback The Array object, as with arrays in other programming languages, enables storing a collection of multiple items under a single variable name, and has members for performing common array operations. Description In JavaScript, arrays aren't primitives but are instead Array objects with the following core characteristics: JavaScript arrays are resizable and can contain a mix of different data types. (When those characteristics are undesirable, use typed arrays instead.) JavaScript arrays are not associative arrays and so, array elements cannot be accessed using arbitrary strings as indexes, but must be accessed using nonnegative integers (or their respective string form) as indexes. JavaScript arrays are zero-indexed: the first element of an array is at index 0, the second is at index 1, and so on \u2014 and the last element is at the value of the array's length property minus 1. JavaScript array-copy operations create shallow copies. (All standard built-in copy operations with any JavaScript objects create shallow copies, rather than deep copies). Array indices Array objects cannot use arbitrary strings as element indexes (as in an associative array) but must use nonnegative integers (or their respective string form). Setting or accessing via non-integers will not set or retrieve an element from the array list itself, but will set or access a variable associated with that array's object property collection. The array's object properties and list of array elements are separate, and the array's traversal and mutation operations cannot be applied to these named properties. Array",
+        "Map - JavaScript | MDN Skip to main content Skip to search Web JavaScript Reference Standard built-in objects Map Map Baseline Widely available * This feature is well established and works across many devices and browser versions. It\u2019s been available across browsers since July 2015. * Some parts of this feature may have varying levels of support. Learn more See full compatibility Report feedback The Map object holds key-value pairs and remembers the original insertion order of the keys. Any value (both objects and primitive values) may be used as either a key or a value. Try it Description Map objects are collections of key-value pairs. A key in the Map may only occur once; it is unique in the Map's collection. A Map object is iterated by key-value pairs \u2014 a for...of loop returns a 2-member array of [key, value] for each iteration. Iteration happens in insertion order, which corresponds to the order in which each key-value pair was first inserted into the map by the set() method (that is, there wasn't a key with the same value already in the map when set() was called). The specification requires maps to be implemented \"that, on average, provide access times that are sublinear on the number of elements in the collection\". Therefore, it could be represented internally as a hash table (with O(1) lookup), a search tree (with O(log(N)) lookup), or any other data structure, as long as the complexity is better than O(N). Key equality Value equality is based on the SameValueZero algorithm. (It used to use SameValue, which treated 0 and -0 as different. Check browser compatibility.) This means NaN is considered the same as NaN (even though NaN !== NaN) and all other values are considered equal according to the semantics of the === operator. Also, for object keys, equality is based on object identity. They are compared by reference, not by value. See Using the Map object for examples. Objects vs. Maps Object is similar to Map\u2014both let you set keys to values, retrieve those va",
+        "File System API - Web APIs | MDN Skip to main content Skip to search Web Web APIs File System API File System API Secure context: This feature is available only in secure contexts (HTTPS), in some or all supporting browsers. Note: This feature is available in Web Workers. The File System API \u2014 with extensions provided via the File System Access API to access files on the device file system \u2014 allows read, write and file management capabilities. See Relationship to other file-related APIs for a comparison between this API, the File and Directory Entries API, and the File API. Concepts and Usage This API allows interaction with files on a user's local device, or on a user-accessible network file system. Core functionality of this API includes reading files, writing or saving files, and access to directory structure. Most of the interaction with files and directories is accomplished through handles. A parent FileSystemHandle class helps define two child classes: FileSystemFileHandle and FileSystemDirectoryHandle, for files and directories respectively. The handles represent a file or directory on the user's system. You can first gain access to them by showing the user a file or directory picker using methods such as window.showOpenFilePicker() and window.showDirectoryPicker(). Once these are called, the file picker presents itself and the user selects either a file or directory. Once this happens successfully, a handle is returned. You can also gain access to file handles via: The DataTransferItem.getAsFileSystemHandle() method of the HTML Drag and Drop API. The File Handling API. Each handle provides its own functionality and there are a few differences depending on which one you are using (see the interfaces section for specific details). You then can access file data, or information (including children) of the directory selected. This API opens up potential functionality the web has been lacking. Still, security has been of utmost concern when designing the API, and ",
+        "Fetch API - Web APIs | MDN Skip to main content Skip to search Web Web APIs Fetch API Fetch API The Fetch API provides an interface for fetching resources (including across the network). It is a more powerful and flexible replacement for XMLHttpRequest. Concepts and usage The Fetch API uses Request and Response objects (and other things involved with network requests), as well as related concepts such as CORS and the HTTP Origin header semantics. For making a request and fetching a resource, use the fetch() method. It is a global method in both Window and Worker contexts. This makes it available in pretty much any context you might want to fetch resources in. The fetch() method takes one mandatory argument, the path to the resource you want to fetch. It returns a Promise that resolves to the Response to that request \u2014 as soon as the server responds with headers \u2014 even if the server response is an HTTP error status. You can also optionally pass in an init options object as the second argument (see Request). Once a Response is retrieved, there are a number of methods available to define what the body content is and how it should be handled. You can create a request and response directly using the Request() and Response() constructors, but it's uncommon to do this directly. Instead, these are more likely to be created as results of other API actions (for example, FetchEvent.respondWith() from service workers). Find out more about using the Fetch API features in Using Fetch. Deferred Fetch The fetchLater() API enables a developer to request a deferred fetch, that can be sent after a specified period of time, or when the page is closed or navigated away from. See Using Deferred Fetch. Interfaces Window.fetch() and WorkerGlobalScope.fetch() The fetch() method used to fetch a resource. Window.fetchLater() Used to make a deferred fetch request. DeferredRequestInit Represents the set of options that can be used to configure a deferred fetch request. FetchLaterResult Represen",
+        "Geolocation API - Web APIs | MDN Skip to main content Skip to search Web Web APIs Geolocation API Geolocation API Baseline Widely available This feature is well established and works across many devices and browser versions. It\u2019s been available across browsers since July 2015. Learn more See full compatibility Report feedback Secure context: This feature is available only in secure contexts (HTTPS), in some or all supporting browsers. The Geolocation API allows the user to provide their location to web applications if they so desire. For privacy reasons, the user is asked for permission to report location information. WebExtensions that wish to use the Geolocation object must add the \"geolocation\" permission to their manifest. The user's operating system will prompt the user to allow location access the first time it is requested. Note: The element provides an alternative mechanism for accessing and handling geolocation data that solves some of the shortcomings of the Geolocation API: It provides a consistent UI, and a more intuitive permission management process. Concepts and usage You will often want to retrieve a user's location information in your web app, for example to plot their location on a map, or display personalized information relevant to their location. The Geolocation API is accessed via a call to navigator.geolocation; this will cause the user's browser to ask them for permission to access their location data. If they accept, then the browser will use the best available functionality on the device to access this information (for example, GPS). The developer can now access this location information in a couple of different ways: Geolocation.getCurrentPosition(): Retrieves the device's current location. Geolocation.watchPosition(): Registers a handler function that will be called automatically each time the position of the device changes, returning the updated location. In both cases, the method call takes up to three arguments: A mandatory success cal",
+        "HTML DOM API - Web APIs | MDN Skip to main content Skip to search Web Web APIs HTML DOM API HTML DOM API Baseline Widely available * This feature is well established and works across many devices and browser versions. It\u2019s been available across browsers since July 2015. * Some parts of this feature may have varying levels of support. Learn more See full compatibility Report feedback The HTML DOM API is made up of the interfaces that define the functionality of each of the elements in HTML, as well as any supporting types and interfaces they rely upon. The functional areas included in the HTML DOM API include: Access to and control of HTML elements via the DOM. Access to and manipulation of form data. Interacting with the contents of 2D images and the context of an HTML , for example to draw on top of them. Management of media connected to the HTML media elements ( and ). Dragging and dropping of content on webpages. Access to the browser navigation history Supporting and connective interfaces for other APIs such as Web Components, Web Storage, Web Workers, WebSocket, and Server-sent events. HTML DOM concepts and usage In this article, we'll focus on the parts of the HTML DOM that involve engaging with HTML elements. Discussion of other areas, such as Drag and Drop, WebSockets, Web Storage, etc. can be found in the documentation for those APIs. Structure of an HTML document The Document Object Model (DOM) is an architecture that describes the structure of a document; each document is represented by an instance of the interface Document. A document, in turn, consists of a hierarchical tree of nodes, in which a node is a fundamental record representing a single object within the document (such as an element or text node). Nodes may be strictly organizational, providing a means for grouping other nodes together or for providing a point at which a hierarchy can be constructed; other nodes may represent visible components of a document. Each node is based on the Node inte"
+      ],
+      "artifact_path": "C:\\Users\\rchos\\Desktop\\Studio_Loop\\ai_harness\\.agent/Loop_Flow/research\\create_the_game_design_document_for_a_sci_fi_ins_researcher_Best_practices_for_implementin_research_brief.md",
+      "errors": [],
+      "backend": "playwright",
+      "query_profile": "typescript_browser_architecture",
+      "source_set_relevance_passed": true,
+      "stage": "researcher"
+    }
+  ],
+  "research_request_history": [
+    "researcher:best practices for implementing procedural map generation in a 2d grid-based, real-time strategy game using typescript and canvas api, focusing on geological strata simulation."
+  ],
+  "research_duplicate_warnings": {},
+  "writes": [],
+  "patches": [],
+  "commands": [],
+  "tests": [],
+  "validations": [],
+  "failures": [
+    {
+      "stage": "researcher",
+      "reason": "MODEL_TRANSPORT_ERROR at stage 'researcher': KoboldCPP transport failure at http://127.0.0.1:5001/v1/chat/completions: ('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None)). Configured timeout=(connect=15s, read=1800s).. KoboldCPP timed out, disconnected, or returned an unusable client response before ACTIONS_JSON could be parsed. No schema repair was attempted because this was not model output.",
+      "timestamp": "2026-05-13T02:46:53.825405"
+    }
+  ],
+  "blockers": [],
+  "transition_history": [
+    {
+      "from": "concept_producer",
+      "to": "researcher",
+      "timestamp": "2026-05-13T02:41:17.393641"
+    }
+  ],
+  "skills_used": {
+    "concept_producer": [
+      {
+        "id": "studio-loop.producer",
+        "version": "1.0.0",
+        "trust_level": "core",
+        "manifest": ".agent/skills/producer/skill.json"
+      }
+    ],
+    "researcher": [
+      {
+        "id": "studio-loop.researcher",
+        "version": "1.0.0",
+        "trust_level": "core",
+        "manifest": ".agent/skills/researcher/skill.json"
+      }
+    ]
+  },
+  "last_model_response_path": null,
+  "last_actions": {
+    "stage": "concept_producer",
+    "status": "complete",
+    "summary": "Generated the initial Game Design Document blueprint for the Sci-Fi Dungeon Keeper concept, focusing on core vision, target UX, and thematic alignment as required by the Producer Skill.",
+    "design_required": false,
+    "assets_required": false,
+    "qa_result": null,
+    "writes": [
+      {
+        "path": ".agent/Loop_Flow/create_the_game_design_document_for_a_sci_fi_ins_blueprint.md",
+        "content": "[content written to disk - omitted from state to save context]",
+        "mode": "create"
+      }
+    ],
+    "patches": [],
+    "commands": [],
+    "research_requests": [],
+    "artifacts": [
+      {
+        "name": "create_the_game_design_document_for_a_sci_fi_ins_blueprint.md",
+        "type": "blueprint"
+      }
+    ],
+    "next_stage_recommendation": "researcher",
+    "risks": [
+      "The initial blueprint is high-level. The Researcher must now translate this vision into concrete, testable technical specifications, likely starting with the core digging/map generation system."
+    ],
+    "blockers": []
+  },
+  "last_results": {
+    "writes": [
+      {
+        "path": ".agent/Loop_Flow/create_the_game_design_document_for_a_sci_fi_ins_blueprint.md",
+        "success": true,
+        "error": null
+      }
+    ],
+    "patches": [],
+    "commands": [],
+    "research": []
+  },
+  "last_validation": null,
+  "last_transition": null,
+  "capabilities": {
+    "koboldcpp": {
+      "available": true,
+      "chat_completions": false,
+      "completions": false,
+      "vision_input": false,
+      "max_context_estimate": 32768,
+      "model_name": "koboldcpp/gemma-4-E4B-it-Q5_K_M",
+      "error": null
+    },
+    "filesystem": {
+      "read": true,
+      "write": true,
+      "patch": true
+    },
+    "commands": {
+      "typecheck": true,
+      "test": true,
+      "dev_server": false,
+      "git_status": true,
+      "git_diff": true,
+      "git_commit": false
+    },
+    "research": {
+      "web_search": true,
+      "web_fetch": true,
+      "citations_required": true,
+      "backend": "playwright",
+      "error": null
+    },
+    "browser": {
+      "available": true,
+      "playwright": true,
+      "chrome_devtools": false,
+      "chrome_remote_debugging": false,
+      "performance_trace": false
+    },
+    "multimodal": {
+      "image_input_available": false,
+      "audio_input_available": false,
+      "screenshot_analysis_available": false
+    }
+  },
+  "created_at": "2026-05-13T02:39:40.673267",
+  "updated_at": "2026-05-13T02:46:53.825420",
+  "archived_at": null
+}
