@@ -481,6 +481,48 @@ select#commandSelect {
   padding: 20px;
 }
 
+.kvPanel {
+  grid-row: span 1;
+}
+
+.kvList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 280px;
+}
+
+.kvItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  background: var(--bg);
+  border-left: 3px solid var(--border);
+  font-size: 0.75rem;
+}
+
+.kvItem strong {
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.kvItem span {
+  font-family: var(--mono);
+  color: var(--text);
+  word-break: break-all;
+}
+
+.kv-context_shift { border-left-color: #bb86fc; } /* Purple */
+.kv-batch_processing { border-left-color: #03dac6; } /* Teal */
+.kv-kv_purge { border-left-color: #cf6679; } /* Pink/Red */
+.kv-generation { border-left-color: var(--accent); }
+
 .toggle {
   display: flex;
   align-items: center;

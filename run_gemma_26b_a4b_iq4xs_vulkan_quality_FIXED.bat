@@ -57,7 +57,7 @@ if not defined MODEL_FILE (
     exit /b 1
 )
 
-set "WATCH_SERVER=%ROOT%ai_harness\ui\loop_central_server.py"
+set "WATCH_SERVER=%ROOT%ai_harness\Loop_Central\loop_central_server.py"
 set "KOBOLD_LOG=%ROOT%ai_harness\logs\loop_central\kobold.log"
 if not exist "%ROOT%ai_harness\logs\loop_central" mkdir "%ROOT%ai_harness\logs\loop_central"
 
@@ -164,18 +164,7 @@ echo Batch size:   %BATCH_SIZE%
 echo KV cache:     %KV_QUANT%
 echo ============================================================
 
-"%KOBOLD_EXE%" ^
-  --model "%MODEL_FILE%" ^
-  --usevulkan ^
-  --gpulayers %GPU_LAYERS% ^
-  --threads 8 ^
-  --contextsize %CTX_SIZE% ^
-  --batchsize %BATCH_SIZE% ^
-  --quantkv %KV_QUANT% ^
-  --defaultgenamt 1024 ^
-  --host 127.0.0.1 ^
-  --port 5001 ^
-  --skiplauncher
+powershell -Command "& '%KOBOLD_EXE%' --model '%MODEL_FILE%' --usevulkan --gpulayers %GPU_LAYERS% --threads 8 --contextsize %CTX_SIZE% --batchsize %BATCH_SIZE% --quantkv %KV_QUANT% --defaultgenamt 1024 --host 127.0.0.1 --port 5001 --skiplauncher | Tee-Object -FilePath '%KOBOLD_LOG%' -Append"
 
 set "KCPP_EXIT=%ERRORLEVEL%"
 >>"%KOBOLD_LOG%" echo [%date% %time%] KoboldCPP exited with code %KCPP_EXIT% for profile: %PROFILE_NAME%.

@@ -298,48 +298,17 @@ body, html {
 
 ### Target File: src/index.ts
 ```
-/**
- * @fileoverview Entry point for the game simulation.
- */
+import { Game } from './engine/Game';
 
-import { WorldMap } from './world/Map';
-import { Game, GameState } from './engine/Game';
-import { EntityManager } from './entities/EntityManager';
+const game = new Game(/* dependencies */);
 
-function initializeGame(): void {
-    console.log("--- Initializing Game Engine ---");
-
-    // 1. Initialize World Map
-    const worldMap = new WorldMap();
-    
-    // Seed the map with some initial terrain
-    worldMap.setTerrain(0, 0, 'HabitableZone');
-    worldMap.setTerrain(1, 0, 'Vines');
-
-    // 2. Initialize Game Engine
-    const game = new Game(worldMap);
-
-    // 3. Initialize Entities
-    const entityManager = game.getEntityManager();
-    const player = entityManager.createEntity('Player', { x: 0, y: 0 });
-    const resourceNode = entityManager.createEntity('Resource', { x: 5, y: 5 });
-    
-    console.log(`Entities created: ${entityManager.getAllEntities().length}`);
-
-    // 4. Start Simulation
-    game.startGame();
-
-    // 5. Expose globally for the UI layer
-    (window as any).gameInstance = game;
-
-    // --- Keeper Integration Stub ---
-    // In a full implementation, the Keeper module would hook into game events here.
-    // For now, we ensure the state machine is ready for the Keeper_INTERFACE state.
+function initializeGame() {
+  console.log("Game initializing...");
+  game.setState(GameState.LOADING);
+  // Further setup logic
 }
 
-// Start the application
 initializeGame();
-
 ```
 
 ### Target File: src/engine/Game.ts
@@ -353,7 +322,7 @@ export enum GameState {
   ENTRY_SEQUENCE = 'ENTRY_SEQUENCE',
   MAIN_MENU = 'MAIN_MENU',
   GAMEPLAY = 'GAMEPLAY',
-  KEEPER_INTERFACE = 'KEEPER_INTERFACE' // New state for the Keeper UI
+  KEEPER_INTERFACE = 'KEEPER_INTERFACE'
 }
 
 export class Game {
@@ -362,11 +331,12 @@ export class Game {
   private entityManager: EntityManager;
   private blueprintLoader: BlueprintLoader;
   private stateChangeListeners: ((newState: GameState) => void)[] = [];
+  private keeperStatus: string = "Nominal"; // New property for Keeper UI interaction
 
-  constructor(worldMap: WorldMap) {
+  constructor(worldMap: WorldMap, entityManager: EntityManager, blueprintLoader: BlueprintLoader) {
     this.worldMap = worldMap;
-    this.entityManager = new EntityManager(this.worldMap);
-    this.blueprintLoader = new BlueprintLoader();
+    this.entityManager = entityManager;
+    this.blueprintLoader = blueprintLoader;
   }
 
   public getState(): GameState {
@@ -375,17 +345,30 @@ export class Game {
 
   public setState(newState: GameState): void {
     if (this.state === newState) return;
+    console.log(`State transition: ${this.state} -> ${newState}`);
     this.state = newState;
-    console.log(`[Game] State transitioned to: ${newState}`);
-    this.notifyStateChange(newState);
+    this.stateChangeListeners.forEach(listener => listener(newState));
   }
 
-  public onStateChange(listener: (newState: GameState) => void): void {
+  public getEntityManager(): EntityManager {
+    return this.entityManager;
+  }
+
+  public startGame(): void {
+    // Initial setup logic here
+    this.setState(GameState.LOADING);
+  }
+
+  public addStateChangeListener(listener: (newState: GameState) => void): void {
     this.stateChangeListeners.push(listener);
   }
 
-  private notifyStateChange(newState: GameState): void {
-    this.stateChangeListeners.forEach(listener => listener(newState));
+  public getKeeperStatus(): string {
+    return this.keeperStatus;
+  }
+
+  public setKeeperStatus(status: string): void {
+    this.keeperStatus = status;
   }
 }
 ```
@@ -597,19 +580,22 @@ This map identifies the minimal set of files required for the Developer to begin
 
 ## Pruned Source Context
 --- Context Pruning Map for: ['continue', 'development', 'surface', 'terraforming', 'keeper', 'using', 'docs/gdd_surface_terraforming.md', 'unblock', 'developer', 'continue_development_of_the_surface_terraforming_researcher_content_of_docs_gdd_surface_te_research_brief.md', 'content', 'complete'] ---
-bundle_harness.bat: L89-L101, L90-L101, L92-L101, L5-L24, L71-L90
-HANDOFF_SCHEMA.json: L48-L67, L31-L50, L56-L75, L80-L99
+bundle_harness.bat: L90-L101, L89-L101, L71-L90, L92-L101, L5-L24
+HANDOFF_SCHEMA.json: L48-L67, L56-L75, L31-L50, L80-L99
 send_repair.ps1: L1-L17
-.agent/Loop_Flow/context_map.json: L4-L23, L16-L24, L12-L24
-.agent/Loop_Flow/continue_development_of_the_surface_terraforming_blueprint.md: L9-L28, L49-L68, L8-L27, L22-L41, L54-L70
+.agent/Loop_Flow/context_map.json: L4-L23, L12-L24, L16-L24
+.agent/Loop_Flow/continue_development_of_the_surface_terraforming_blueprint.md: L6-L25, L1-L15, L54-L70, L58-L70, L8-L27
 .agent/Loop_Flow/implement_the_html_and_css_for_the_scifi_start_m_blueprint.md: L15-L34
-.agent/Loop_Flow/make_a_scifi_dungeon_keeper_with_the_digging_the_blueprint.md: L92-L97, L44-L63, L20-L39, L75-L94, L35-L54
-.agent/Loop_Flow/source_index.json: L48-L67, L24-L43, L78-L97, L54-L73, L42-L61
+.agent/Loop_Flow/make_a_scifi_dungeon_keeper_with_the_digging_the_blueprint.md: L92-L97, L29-L48, L44-L63, L75-L94, L82-L97
+.agent/Loop_Flow/source_index.json: L42-L61, L54-L73, L78-L97, L60-L79, L48-L67
 .agent/Loop_Flow/start_menu_loading_screen_title_name_something_c_blueprint.md: L1-L19, L21-L39
-.pytest_cache/v/cache/nodeids: L33-L52, L20-L39, L76-L95, L23-L42, L3-L22
-docs/GDD_Surface_Terraforming.md: L1-L18, L22-L39, L14-L33, L31-L39, L1-L15
-docs/verification/browser_research_mdn_requestanimationframe.md: L44-L53, L25-L44, L37-L53, L28-L47, L22-L41
-public/index.html: L26-L45, L40-L59, L17-L36, L43-L62, L16-L35
-public/style.css: L27-L46, L58-L77, L68-L87
-src/index.ts: L30-L41, L31-L41, L32-L41
-src/engine/Game.ts: L5-L24
+.pytest_cache/v/cache/nodeids: L76-L95, L29-L48, L23-L42, L3-L22, L86-L99
+docs/GDD_Surface_Terraforming.md: L1-L15, L22-L39, L1-L18, L31-L39, L14-L33
+docs/verification/browser_research_mdn_requestanimationframe.md: L17-L36, L13-L32, L15-L34, L22-L41, L44-L53
+Loop_Central/app.js: L264-L283, L315-L334, L50-L69, L166-L185, L164-L183
+Loop_Central/index.html: L1-L19, L58-L77
+Loop_Central/loop_central_server.py: L518-L537, L152-L171, L576-L595, L574-L593, L238-L257
+Loop_Central/style.css: L6-L25, L132-L151, L42-L61, L94-L113, L143-L162
+public/index.html: L17-L36, L26-L45, L41-L60, L100-L117, L42-L61
+public/style.css: L68-L87, L58-L77, L27-L46
+src/engine/Game.ts: L47-L58, L50-L58, L46-L58, L51-L58, L5-L24

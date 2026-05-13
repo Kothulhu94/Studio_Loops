@@ -1,17 +1,20 @@
-import { Game } from './engine/Game';
-import { WorldMap } from './world/WorldMap';
+import { Game, GameState } from './engine/Game';
+import { WorldMap } from './world/Map';
 import { EntityManager } from './entities/EntityManager';
-import { BlueprintLoader } from './BlueprintLoader';
+import { BlueprintLoader } from './engine/BlueprintLoader';
 
-const worldMap = new WorldMap();
-const entityManager = new EntityManager();
-const blueprintLoader = new BlueprintLoader();
-const game = new Game(worldMap, entityManager, blueprintLoader);
+// Mock dependencies for initial setup since they aren't fully defined in context
+const mockWorldMap = new WorldMap();
+const mockEntityManager = new EntityManager(mockWorldMap);
+const mockBlueprintLoader = new BlueprintLoader();
 
-// Example usage
-game.setState(GameState.LOADING);
-console.log(`Game State: ${game.getState()}`);
+const game = new Game(mockWorldMap, mockEntityManager, mockBlueprintLoader);
+window.gameInstance = game; // Expose game instance globally for UI
 
-// Simulate game start
-game.startGame();
-console.log(`Game Started. Current State: ${game.getState()}`);
+function initializeGame() {
+  console.log("Game initializing...");
+  game.setState(GameState.LOADING);
+  // Further setup logic
+}
+
+initializeGame();

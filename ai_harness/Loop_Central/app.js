@@ -29,6 +29,8 @@ const els = {
   diagnosticList: document.querySelector("#diagnosticList"),
   performanceList: document.querySelector("#performanceList"),
   performanceAverages: document.querySelector("#performanceAverages"),
+  kvList: document.querySelector("#kvList"),
+  kvStatus: document.querySelector("#kvStatus"),
 };
 
 let commandMap = {};
@@ -127,6 +129,34 @@ function renderPerformance(history) {
   els.performanceAverages.textContent = `${avgTokens} avg tokens | ${avgTps} avg t/s`;
 }
 
+function renderKV(events) {
+  els.kvList.innerHTML = "";
+  if (!events || !events.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty";
+    empty.textContent = "Waiting for KV cache activity...";
+    els.kvList.appendChild(empty);
+    els.kvStatus.textContent = "Idle";
+    return;
+  }
+
+  els.kvStatus.textContent = `${events.length} recent events`;
+
+  for (const event of [...events].reverse()) {
+    const div = document.createElement("div");
+    div.className = `kvItem kv-${event.type}`;
+    
+    const label = document.createElement("strong");
+    label.textContent = event.type.replace("_", " ").toUpperCase();
+    
+    const info = document.createElement("span");
+    info.textContent = event.text;
+    
+    div.append(label, info);
+    els.kvList.appendChild(div);
+  }
+}
+
 function render(snapshot) {
   const central = snapshot.central_state || {};
   const agent = snapshot.agent_state || {};
@@ -183,6 +213,7 @@ function render(snapshot) {
 
   renderHistory(snapshot.history || []);
   renderPerformance(snapshot.history || []);
+  renderKV(snapshot.kv_events || []);
 }
 
 function renderDiagnostics(report) {

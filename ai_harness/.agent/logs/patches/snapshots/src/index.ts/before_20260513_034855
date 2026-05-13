@@ -1,0 +1,11 @@
+import { Game } from './engine/Game';
+
+const game = new Game(/* dependencies */);
+
+function initializeGame() {
+  console.log("Game initializing...");
+  game.setState(GameState.LOADING);
+  // Further setup logic
+}
+
+initializeGame();

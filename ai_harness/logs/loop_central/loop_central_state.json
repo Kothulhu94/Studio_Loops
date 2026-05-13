@@ -1,14 +1,14 @@
 {
-  "status": "prompt_sent",
-  "updated_at": "2026-05-13T03:42:54",
-  "last_generation_timestamp": "2026-05-13T03:42:54",
-  "last_prompt_chars": 5899,
-  "last_response_chars": 38,
-  "last_orchestrator_log_prefix": "20260513_034254",
+  "status": "model_response_captured",
+  "updated_at": "2026-05-13T03:51:57",
+  "last_generation_timestamp": "2026-05-13T03:51:57",
+  "last_prompt_chars": 3569,
+  "last_response_chars": 452,
+  "last_orchestrator_log_prefix": "20260513_035144",
   "last_stats": {
-    "prompt_tokens": 1491,
-    "completion_tokens": 812,
-    "tps": 12.34,
-    "duration": 65.817718
+    "prompt_tokens": 918,
+    "completion_tokens": 149,
+    "tps": 11.37,
+    "duration": 13.100579
   }
 }

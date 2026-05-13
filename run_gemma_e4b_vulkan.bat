@@ -47,7 +47,7 @@ if not defined MODEL_FILE (
     exit /b 1
 )
 
-set "WATCH_SERVER=%ROOT%ai_harness\ui\loop_central_server.py"
+set "WATCH_SERVER=%ROOT%ai_harness\Loop_Central\loop_central_server.py"
 set "KOBOLD_LOG=%ROOT%ai_harness\logs\loop_central\kobold.log"
 if not exist "%ROOT%ai_harness\logs\loop_central" mkdir "%ROOT%ai_harness\logs\loop_central"
 
@@ -55,25 +55,12 @@ call :start_watch_ui "Gemma E4B Vulkan"
 call :ensure_kobold_slot_free
 if not "%ERRORLEVEL%"=="0" exit /b 1
 
->>"%KOBOLD_LOG%" echo.
->>"%KOBOLD_LOG%" echo [%date% %time%] Launching Gemma E4B Vulkan
->>"%KOBOLD_LOG%" echo Model: %MODEL_FILE%
-
 echo ============================================================
 echo Launching KoboldCPP - Gemma E4B Vulkan
 echo Model: %MODEL_FILE%
 echo ============================================================
 
-"%KOBOLD_EXE%" ^
-  --model "%MODEL_FILE%" ^
-  --usevulkan ^
-  --gpulayers 99 ^
-  --threads 8 ^
-  --contextsize 32768 ^
-  --blasbatchsize 512 ^
-  --host 127.0.0.1 ^
-  --port 5001 ^
-  --skiplauncher
+powershell -Command "& '%KOBOLD_EXE%' --model '%MODEL_FILE%' --usevulkan --gpulayers 99 --threads 8 --contextsize 32768 --blasbatchsize 512 --host 127.0.0.1 --port 5001 --skiplauncher | Tee-Object -FilePath '%KOBOLD_LOG%' -Append"
 
 set "KCPP_EXIT=%ERRORLEVEL%"
 >>"%KOBOLD_LOG%" echo [%date% %time%] KoboldCPP exited with code %KCPP_EXIT%.

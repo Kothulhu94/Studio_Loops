@@ -1,0 +1,41 @@
+{
+  "stage": "developer",
+  "max_prompt_chars": 48000,
+  "raw_section_chars": {
+    "state": 33947,
+    "role_instructions": 4189,
+    "skills": 5733,
+    "context": 24284,
+    "required_outputs": 119,
+    "validation_rules": 186
+  },
+  "budgeted_section_chars": {
+    "state": 5413,
+    "role_instructions": 4190,
+    "skills": 3565,
+    "context": 14981
+  },
+  "truncations": [
+    {
+      "section": "skills",
+      "from": 5733,
+      "to": 3500
+    },
+    {
+      "section": "context:Target Source Files",
+      "from": 11664,
+      "to": 11000
+    },
+    {
+      "section": "context:Pruned Source Context",
+      "from": 4539,
+      "to": 2500
+    },
+    {
+      "section": "context_pack",
+      "from": 24284,
+      "to": 14981
+    }
+  ],
+  "final_user_chars": 33609
+}

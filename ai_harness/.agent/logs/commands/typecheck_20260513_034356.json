@@ -1,0 +1,8 @@
+{
+  "name": "typecheck",
+  "success": false,
+  "stdout": "src/index.ts(3,14): error TS2554: Expected 3 arguments, but got 0.\nsrc/index.ts(7,17): error TS2304: Cannot find name 'GameState'.\ntests/feature_x.test.ts(1,17): error TS2307: Cannot find module '../src/feature_x' or its corresponding type declarations.\n",
+  "stderr": "",
+  "returncode": 2,
+  "command": "npx tsc --noEmit"
+}
