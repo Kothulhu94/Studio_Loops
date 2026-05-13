@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import argparse
+import re
 from datetime import datetime
 
 # Add the current directory to sys.path to allow absolute imports of sibling modules
@@ -77,15 +78,45 @@ class StudioLoopOrchestrator:
 
     def run(self, feature_text, mode="single_stage"):
         safe_feature = self.copyright_guard.transform_prompt(feature_text)
+        slug = self.pruner.generate_slug(safe_feature)
+        
+        # Check for existing session with this slug before creating a new one
+        state = self.state_store.load_state()
+        if state.get("active") and state.get("feature_slug") == slug:
+            print(f"Resuming active session for slug '{slug}': {state.get('session_id')}")
+            if mode == "auto":
+                self.autonomous_loop()
+            else:
+                self.execute_stage(state.get("current_stage"))
+            return
+
+        # If not active, check if any existing session matches this slug
+        sessions = self.state_store.list_sessions()
+        existing = [s for s in sessions if s.get("feature_slug") == slug and s.get("status") != "archived"]
+        if existing:
+            # Sort by updated_at to get latest
+            latest = sorted(existing, key=lambda x: x.get("updated_at", ""), reverse=True)[0]
+            print(f"Found existing session for slug '{slug}': {latest.get('session_id')}. Resuming.")
+            state = self.state_store.resume_session(latest.get("session_id"))
+            if mode == "auto":
+                self.autonomous_loop()
+            else:
+                self.execute_stage(state.get("current_stage"))
+            return
+
         print(f"Original request: {feature_text}")
         if safe_feature != feature_text:
             print(f"Transformed (copyright-safe): {safe_feature}")
             
-        slug = self.pruner.generate_slug(safe_feature)
         kind = self.session_router.infer_kind(safe_feature)
         start_stage = self.session_router.route_initial_stage(safe_feature, kind)
-        state = self.state_store.start_feature(safe_feature, slug, start_stage, kind=kind)
         
+        # Check if another active session exists and warn
+        if state.get("active"):
+            print(f"WARNING: Another session is already active ({state.get('session_id')}).")
+            print(f"Creating NEW session for: {safe_feature}")
+
+        state = self.state_store.start_feature(safe_feature, slug, start_stage, kind=kind)
         self.detect_capabilities()
         
         print(f"Starting feature: {safe_feature} (slug: {slug})")
@@ -154,6 +185,7 @@ class StudioLoopOrchestrator:
 
     def execute_stage(self, stage_name, attempt=0, repair_prompt_override=None):
         state = self.state_store.load_state()
+        context_content = None
         if not state["active"]:
             print("No active feature. Run 'run <feature>' first.")
             return False
@@ -188,6 +220,7 @@ class StudioLoopOrchestrator:
             print("Building context...")
             source_context = self.source_indexer.generate_context_summary()
             pack_path = self.pruner.build_context_pack(state["feature_slug"], stage_name, state["feature"], state)
+            self.state_store.record_context_pack(stage_name, pack_path)
             with open(pack_path, 'r', encoding='utf-8') as f:
                 context_content = f.read()
             
@@ -202,6 +235,7 @@ class StudioLoopOrchestrator:
                 role_workflow, role_skills, context_content + "\n" + source_context, 
                 val_rules, req_outputs
             )
+            self._record_context_telemetry(stage_name, prompt.get("telemetry"))
         
         # 3. Call Model
         print(f"Requesting actions from local model (attempt {attempt+1})...")
@@ -223,7 +257,7 @@ class StudioLoopOrchestrator:
         if not is_valid:
             print(f"Invalid ACTIONS_JSON: {err}")
             if self.retry_engine.should_retry(attempt):
-                return self.repair_output(response_text, err, stage_name, attempt + 1, results=None)
+                return self.repair_output(response_text, err, stage_name, attempt + 1, results=None, context_content=context_content)
             self.record_stage_validation_failure(stage_name, err, response_text)
             return False
 
@@ -233,14 +267,14 @@ class StudioLoopOrchestrator:
             print(f"Safety Guard Blocked Actions: {err}")
             # We treat safety violations as failures that require repair
             if self.retry_engine.should_retry(attempt):
-                return self.repair_output(response_text, f"SAFETY_VIOLATION: {err}", stage_name, attempt + 1, results=None)
+                return self.repair_output(response_text, f"SAFETY_VIOLATION: {err}", stage_name, attempt + 1, results=None, context_content=context_content)
             return False
 
         typecheck_ok, typecheck_error = self._validate_typecheck_available_for_source_actions(stage_name, actions)
         if not typecheck_ok:
             print(f"Typecheck gate blocked source actions: {typecheck_error}")
             if self.retry_engine.should_retry(attempt):
-                return self.repair_output(response_text, typecheck_error, stage_name, attempt + 1, results=None)
+                return self.repair_output(response_text, typecheck_error, stage_name, attempt + 1, results=None, context_content=context_content)
             self.record_stage_validation_failure(stage_name, typecheck_error, response_text)
             return False
 
@@ -248,12 +282,32 @@ class StudioLoopOrchestrator:
         if not research_ok:
             print(f"Research gate blocked final stage actions: {research_error}")
             if self.retry_engine.should_retry(attempt):
-                return self.repair_output(response_text, research_error, stage_name, attempt + 1, results=None, stack_profile=state.get("stack_profile", "game_source"))
+                return self.repair_output(response_text, research_error, stage_name, attempt + 1, results=None, stack_profile=state.get("stack_profile", "game_source"), context_content=context_content)
             self.record_stage_validation_failure(stage_name, research_error, response_text)
             return False
 
         if state.get("stack_profile") == "harness_internal" and "design" not in state.get("feature", "").lower():
             actions["design_required"] = False
+
+        available_targets = self._blocked_on_available_target_context(stage_name, actions, context_content)
+        if available_targets:
+            repair_error = (
+                "SOURCE_CONTEXT_ALREADY_AVAILABLE: The response says source context is missing, "
+                "but these target files are present in the supplied Target Source Files section: "
+                + ", ".join(available_targets)
+                + ". Do not request research for these files; proceed with concrete writes or patches."
+            )
+            print(repair_error)
+            if self.retry_engine.should_retry(attempt):
+                return self.repair_output(
+                    response_text,
+                    repair_error,
+                    stage_name,
+                    attempt + 1,
+                    results=None,
+                    stack_profile=state.get("stack_profile", "game_source"),
+                    context_content=context_content,
+                )
 
         # 7. Execute Actions
         print("Executing actions...")
@@ -292,7 +346,8 @@ class StudioLoopOrchestrator:
                             stage_name,
                             attempt + 1,
                             results={"execution_results": execution_results},
-                            stack_profile=state.get("stack_profile", "game_source")
+                            stack_profile=state.get("stack_profile", "game_source"),
+                            context_content=context_content
                         )
                     state["status"] = "failed"
                     state["failures"].append({
@@ -329,7 +384,7 @@ class StudioLoopOrchestrator:
                         "patch_results": execution_results.get("patches", []),
                         "instruction": "Use overwrite for existing artifacts that were already written successfully."
                     }
-                    return self.repair_output(response_text, repair_error, stage_name, attempt + 1, results=repair_results)
+                    return self.repair_output(response_text, repair_error, stage_name, attempt + 1, results=repair_results, context_content=context_content)
                 self.record_stage_validation_failure(stage_name, "; ".join(val_report["errors"]), response_text)
                 return False
             
@@ -456,7 +511,12 @@ class StudioLoopOrchestrator:
                     is_local = True
                     target_files = []
                 else:
-                    is_local = any(word in query.lower() for word in ["local", "codebase", "audit", "inspect", "files", "existing"])
+                    is_local = (
+                        req.get("mode") == "local_codebase" 
+                        or bool(target_files) 
+                        or audit_kind is not None
+                        or any(word in query.lower() for word in ["local", "codebase", "audit", "inspect", "files", "existing"])
+                    )
                 if is_local and not target_files and audit_kind != "discovery" and has_local_discovery_request:
                     print(f"Deferring dependent local audit without target_files until discovery re-entry: {query}")
                     continue
@@ -722,7 +782,7 @@ class StudioLoopOrchestrator:
             return True, None
         state = self.state_store.load_state()
         has_complete_research = any(
-            r.get("status") == "complete" and r.get("stage") == stage_name
+            r.get("status") in ["complete", "partial", "sufficient"] and r.get("stage") == stage_name
             for r in state.get("research_results", [])
         )
         if has_complete_research:
@@ -763,7 +823,7 @@ class StudioLoopOrchestrator:
         self.state_store.update_capabilities(caps)
         print("Capabilities detected and stored.")
 
-    def repair_output(self, raw_response, error, stage_name, attempt, results=None, stack_profile="game_source"):
+    def repair_output(self, raw_response, error, stage_name, attempt, results=None, stack_profile="game_source", context_content=None):
         print(f"Attempting output repair (attempt {attempt})...")
         
         # 1. Generate repair prompt
@@ -771,21 +831,87 @@ class StudioLoopOrchestrator:
         repair_prompt = self.retry_engine.get_repair_prompt(
             error_type,
             error,
-            context_snippet=raw_response[:1000] if raw_response else None,
+            context_snippet=raw_response[:2000] if raw_response else None, # More snippet
             stage_name=stage_name,
             results=results,
             stack_profile=stack_profile
         )
+        
+        system_text = "You are repairing the previous ACTIONS_JSON for the current Studio Loop stage.\nReturn corrected ACTIONS_JSON only."
+        if context_content:
+            system_text += "\n\nRELEVANT CONTEXT FOR REPAIR:\n" + context_content[:10000] # Cap context in repair
+            
         repair_prompt_packet = {
-            "system": (
-                "You are repairing the previous ACTIONS_JSON for the current Studio Loop stage.\n"
-                "Return corrected ACTIONS_JSON only."
-            ),
+            "system": system_text,
             "user": repair_prompt
         }
         
         # 2. Get repair response from model
         return self.execute_stage(stage_name, attempt, repair_prompt_override=repair_prompt_packet)
+
+    def _record_context_telemetry(self, stage_name, telemetry):
+        if not telemetry:
+            return
+        try:
+            log_dir = os.path.join(self.base_path, self.config["paths"]["logs"], "context_telemetry")
+            os.makedirs(log_dir, exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            path = os.path.join(log_dir, f"{timestamp}_{stage_name}.json")
+            with open(path, "w", encoding="utf-8") as handle:
+                json.dump(telemetry, handle, indent=2)
+        except Exception as exc:
+            print(f"Warning: failed to write context telemetry: {exc}")
+
+    def _blocked_on_available_target_context(self, stage_name, actions, context_content):
+        if stage_name not in ["developer", "debug_dev"]:
+            return []
+        if actions.get("status") != "blocked" or not context_content:
+            return []
+
+        available_targets = re.findall(r"^### Target File:\s+(.+?)\s*$", context_content, flags=re.MULTILINE)
+        available_targets = [target.strip() for target in available_targets]
+        if not available_targets:
+            return []
+
+        text_parts = [str(actions.get("summary", ""))]
+        for key in ("blockers", "risks"):
+            for item in actions.get(key, []) or []:
+                if isinstance(item, dict):
+                    text_parts.append(str(item.get("reason", "")))
+                else:
+                    text_parts.append(str(item))
+        combined = " ".join(text_parts).lower()
+
+        missing_context_markers = [
+            "source code content",
+            "source code for",
+            "source files",
+            "not provided",
+            "not retrieved",
+            "unavailable",
+            "missing source",
+            "without reading",
+            "cannot proceed",
+        ]
+        if not any(marker in combined for marker in missing_context_markers):
+            return []
+
+        mentioned_paths = {
+            match.replace("\\", "/")
+            for match in re.findall(
+                r"((?:src|public|tests|tools|data)/[A-Za-z0-9_./-]+\.(?:ts|tsx|js|jsx|css|html|json|py))",
+                combined,
+                flags=re.IGNORECASE,
+            )
+        }
+        if mentioned_paths:
+            present = [target for target in available_targets if target.lower() in {path.lower() for path in mentioned_paths}]
+            if present:
+                return present
+
+        if "target file" in combined or "source" in combined:
+            return available_targets[:5]
+        return []
 
     def _has_complete_local_codebase_research(self, research_results):
         """Return True when a batch contains at least one usable local audit result."""

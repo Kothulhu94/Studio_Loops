@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "roles": ["developer"],
   "required_tools": ["file_writer", "patch_applier", "typecheck", "test", "find_bloat", "git_diff"],
-  "allowed_write_paths": ["src", "tests", "tools", "data", ".agent/Loop_Flow", "docs/adr"],
+  "allowed_write_paths": ["src", "tests", "tools", "data", "public", ".agent/Loop_Flow", "docs/adr"],
   "expected_artifacts": [
     {"type": "implementation_report", "path": ".agent/Loop_Flow/{feature}_implementation_report.md", "required": false, "required_sections": ["Implementation Summary", "Files Changed", "Verification"]}
   ],

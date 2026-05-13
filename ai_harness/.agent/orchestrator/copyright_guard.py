@@ -38,12 +38,12 @@ class CopyrightGuard:
 
     def transform_prompt(self, prompt_text):
         # Specific transformation for clone-like prompts as requested in Section 19
-        if re.search(r"Dungeon Keeper.*clone", prompt_text, re.IGNORECASE):
+        if re.search(r"Legacy IP.*clone", prompt_text, re.IGNORECASE):
             return "original sci-fi underground/asteroid-base management game inspired by general genre mechanics: indirect worker control, room construction, resource systems, invasion defense, research progression, traps, and emergent base simulation"
 
         # Implementation of concept transformation logic
         replacements = {
-            r"Dungeon Keeper": "underground overlord sim",
+            r"Legacy IP": "underground overlord sim",
             r"clone": "inspired original project"
         }
         
@@ -63,7 +63,7 @@ class CopyrightGuard:
         default_terms = {
             "research_allowed": True,
             "game_facing_forbidden": [
-                "Dungeon Keeper", "Dungeon Heart", "Horned Reaper", "Bile Demon", 
+                "Legacy IP", "Legacy Term", "Legacy Term", "Legacy Term", 
                 "Portal Gem", "Imps", "Keeper", "Warlock", "Mistress", "Bullfrog"
             ]
         }

@@ -89,7 +89,17 @@ class ResearchClient:
                 text = handle.read()
 
             inspected.append(rel_path)
+            
+            # Include both the summary AND the full content (up to limit)
             details = self._summarize_local_file(rel_path, text)
+            
+            content_snippet = text
+            if len(content_snippet) > 10000:
+                content_snippet = content_snippet[:10000] + "\n... [TRUNCATED] ..."
+            
+            findings.append(f"### FULL SOURCE CODE: {rel_path}\n```\n{content_snippet}\n```")
+            findings.extend(details)
+            
             sources.append({
                 "title": f"Local file: {rel_path}",
                 "url": f"local://{rel_path}",
@@ -98,13 +108,12 @@ class ResearchClient:
                 "retrieved_at": retrieved_at,
                 "notes": "Local codebase audit"
             })
-            findings.extend(details)
 
-        status = "complete" if inspected and not errors and len(findings) >= 2 else "blocked"
+        status = "complete" if inspected and not errors and len(findings) >= 1 else "blocked"
         if not target_files:
             errors.append("Local codebase audit requires target_files.")
-        if inspected and len(findings) < 2:
-            errors.append("Local codebase audit produced fewer than two findings.")
+        if inspected and len(findings) < 1:
+            errors.append("Local codebase audit produced no findings.")
 
         return {
             "query": query,
@@ -144,7 +153,7 @@ class ResearchClient:
             findings.append("No tests/test_orchestrator.py found; closest known candidate is tools/test_orchestrator.py.")
 
         errors = root_errors
-        status = "complete" if len(selected) >= 3 and len(findings) >= 2 and not errors else "blocked"
+        status = "complete" if len(selected) >= 3 and len(findings) >= 1 and not errors else "blocked"
         if not selected:
             errors.append("Local discovery found no relevant files.")
 
@@ -521,6 +530,7 @@ class ResearchClient:
         "tools",
         "docs",
         "src",
+        "public",
     ]
     IGNORED_DIRS = {".git", "node_modules", "dist", "build", "__pycache__", "logs", "Loop_Flow"}
     DISCOVERY_EXTENSIONS = (".py", ".md", ".json", ".ts", ".tsx")

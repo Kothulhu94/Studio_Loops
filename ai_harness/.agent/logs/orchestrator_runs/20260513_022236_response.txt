@@ -1,0 +1,19 @@
+ACTIONS_JSON:
+{
+  "stage": "developer",
+  "status": "blocked",
+  "summary": "Cannot proceed without reading existing files to implement UI hooks.",
+  "research_requests": [],
+  "writes": [],
+  "patches": [],
+  "commands": [],
+  "blockers": [
+    "SAFETY_VIOLATION: Command not in allowlist: file_reader"
+  ],
+  "design_required": false,
+  "assets_required": false,
+  "qa_result": null,
+  "artifacts": [],
+  "risks": [],
+  "next_stage_recommendation": null
+}

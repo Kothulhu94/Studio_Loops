@@ -1,6 +1,9 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
 
+REM Open a secondary command prompt for the Studio Loop orchestrator
+start "Studio Loop Terminal" cmd /k "cd /d %~dp0ai_harness && echo --- Studio Loop Terminal --- && echo Run: python .agent/orchestrator/studio_loop.py auto \"Task\""
+
 REM ============================================================
 REM Gemma 4 26B-A4B IQ4_XS Vulkan launcher for KoboldCPP
 REM Quality-first profile for ROG Ally X / AMD 890M unified memory.
@@ -54,6 +57,18 @@ if not defined MODEL_FILE (
     exit /b 1
 )
 
+set "WATCH_SERVER=%ROOT%ai_harness\ui\loop_central_server.py"
+set "KOBOLD_LOG=%ROOT%ai_harness\logs\loop_central\kobold.log"
+if not exist "%ROOT%ai_harness\logs\loop_central" mkdir "%ROOT%ai_harness\logs\loop_central"
+
+call :start_watch_ui "Gemma 26B A4B IQ4_XS Vulkan"
+call :ensure_kobold_slot_free
+if not "%ERRORLEVEL%"=="0" exit /b 1
+
+>>"%KOBOLD_LOG%" echo.
+>>"%KOBOLD_LOG%" echo [%date% %time%] Launching Gemma 26B A4B IQ4_XS Vulkan
+>>"%KOBOLD_LOG%" echo Model: %MODEL_FILE%
+
 echo ============================================================
 echo Gemma 4 26B-A4B IQ4_XS Vulkan launcher
 echo KoboldCPP: %KOBOLD_EXE%
@@ -68,31 +83,31 @@ pause
 REM ------------------------------------------------------------
 REM PROFILE 1: QUALITY-FIRST
 REM Best chance of being meaningfully better than E4B.
-REM Full Vulkan offload, 6K context, q8_0 KV.
+REM Full Vulkan offload, 32K context, q4_0 KV.
 REM ------------------------------------------------------------
-call :launch "QUALITY-FIRST: all GPU, 6K ctx, q8_0 KV" 99 6144 128 q8_0
+call :launch "QUALITY-FIRST: all GPU, 32K ctx, q4_0 KV" 99 32768 128 q4_0
 if "%ERRORLEVEL%"=="0" goto :done
 
 REM ------------------------------------------------------------
 REM PROFILE 2: STABLE QUALITY
-REM Full Vulkan offload, smaller context, q8_0 KV.
+REM Full Vulkan offload, 32K context, q4_0 KV.
 REM ------------------------------------------------------------
-call :launch "STABLE QUALITY: all GPU, 4K ctx, q8_0 KV" 99 4096 128 q8_0
+call :launch "STABLE QUALITY: all GPU, 32K ctx, q4_0 KV" 99 32768 128 q4_0
 if "%ERRORLEVEL%"=="0" goto :done
 
 REM ------------------------------------------------------------
 REM PROFILE 3: MEMORY SAFE
-REM Full Vulkan offload, 4K context, q5_1 KV.
+REM Full Vulkan offload, 32K context, q5_1 KV.
 REM Lower memory than q8_0 but usually better than q4_0.
 REM ------------------------------------------------------------
-call :launch "MEMORY SAFE: all GPU, 4K ctx, q5_1 KV" 99 4096 64 q5_1
+call :launch "MEMORY SAFE: all GPU, 32K ctx, q5_1 KV" 99 32768 64 q5_1
 if "%ERRORLEVEL%"=="0" goto :done
 
 REM ------------------------------------------------------------
 REM PROFILE 4: LAST RESORT
 REM Lower GPU layers. Slower. Use only if all-GPU profiles fail.
 REM ------------------------------------------------------------
-call :launch "LAST RESORT: partial GPU, 4K ctx, q5_1 KV" 28 4096 64 q5_1
+call :launch "LAST RESORT: partial GPU, 32K ctx, q5_1 KV" 28 32768 64 q5_1
 if "%ERRORLEVEL%"=="0" goto :done
 
 echo.
@@ -102,6 +117,36 @@ echo background apps, then run this file again.
 echo ============================================================
 pause
 exit /b 1
+
+:start_watch_ui
+set "MODEL_LABEL=%~1"
+if not exist "%WATCH_SERVER%" exit /b 0
+
+where py >nul 2>nul
+if "%ERRORLEVEL%"=="0" (
+    start "Loop_Central" /min cmd /c py -3 "%WATCH_SERVER%" --open --model-label "%MODEL_LABEL%" --model-path "%MODEL_FILE%" --kobold-port 5001
+    exit /b 0
+)
+
+where python >nul 2>nul
+if "%ERRORLEVEL%"=="0" (
+    start "Loop_Central" /min cmd /c python "%WATCH_SERVER%" --open --model-label "%MODEL_LABEL%" --model-path "%MODEL_FILE%" --kobold-port 5001
+)
+exit /b 0
+
+:ensure_kobold_slot_free
+powershell -NoProfile -Command "if (Get-Process koboldcpp -ErrorAction SilentlyContinue) { exit 0 } exit 1" >nul 2>nul
+if not "%ERRORLEVEL%"=="0" exit /b 0
+
+echo.
+echo KoboldCPP is already running. Both Gemma launchers use port 5001.
+echo Close the existing KoboldCPP process before launching this model?
+choice /c YN /n /m "Close existing KoboldCPP and continue? [Y/N] "
+if errorlevel 2 exit /b 1
+
+taskkill /IM koboldcpp.exe /F >nul 2>nul
+timeout /t 2 /nobreak >nul
+exit /b 0
 
 :launch
 set "PROFILE_NAME=%~1"
@@ -133,6 +178,7 @@ echo ============================================================
   --skiplauncher
 
 set "KCPP_EXIT=%ERRORLEVEL%"
+>>"%KOBOLD_LOG%" echo [%date% %time%] KoboldCPP exited with code %KCPP_EXIT% for profile: %PROFILE_NAME%.
 echo.
 echo KoboldCPP exited with code %KCPP_EXIT% for profile: %PROFILE_NAME%
 echo.

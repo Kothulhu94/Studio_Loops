@@ -61,6 +61,23 @@ class TestSessionsAndSkills(unittest.TestCase):
         archived = self.state_store.archive_session(second["session_id"])
         self.assertEqual(archived["status"], "archived")
 
+    def test_missing_active_session_file_recovers_full_state_shape(self):
+        state = self.state_store.start_feature("Build the loading menu", "build_loading_menu", "developer", kind="implementation")
+        session_path = os.path.join(self.base_dir, ".agent/state/sessions", state["session_id"] + ".json")
+        os.remove(session_path)
+
+        loaded = self.state_store.load_state()
+
+        self.assertEqual(loaded["session_id"], state["session_id"])
+        self.assertEqual(loaded["current_stage"], "developer")
+        self.assertIn("context_packs", loaded)
+        self.assertIn("artifacts", loaded)
+        self.assertTrue(os.path.exists(session_path))
+
+        self.state_store.record_context_pack("developer", "pack.md")
+        loaded = self.state_store.load_state()
+        self.assertEqual(loaded["context_packs"]["developer"], "pack.md")
+
     def test_two_sessions_keep_stage_artifacts_and_research_isolated(self):
         first = self.state_store.start_feature("Research pathfinding", "research_pathfinding", "researcher", kind="research")
         first["current_stage"] = "developer"

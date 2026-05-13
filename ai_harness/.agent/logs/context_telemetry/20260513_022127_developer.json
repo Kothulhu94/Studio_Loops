@@ -1,0 +1,26 @@
+{
+  "stage": "developer",
+  "max_prompt_chars": 48000,
+  "raw_section_chars": {
+    "state": 3538,
+    "role_instructions": 4189,
+    "skills": 5733,
+    "context": 5534,
+    "required_outputs": 119,
+    "validation_rules": 186
+  },
+  "budgeted_section_chars": {
+    "state": 1542,
+    "role_instructions": 4190,
+    "skills": 3565,
+    "context": 5534
+  },
+  "truncations": [
+    {
+      "section": "skills",
+      "from": 5733,
+      "to": 3500
+    }
+  ],
+  "final_user_chars": 20531
+}

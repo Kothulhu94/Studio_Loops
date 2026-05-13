@@ -24,8 +24,8 @@ class TestGemma4FactoryTuning(unittest.TestCase):
             ["Functional Code", "Verification Results"],
         )
 
-        self.assertIn("Gemma 4 through KoboldCPP", packet["system"])
-        self.assertIn("native system role", packet["system"])
+        self.assertIn("Gemma 4 instruction-tuned model through KoboldCPP", packet["user"])
+        self.assertIn("Treat the system message as authoritative", packet["user"])
         self.assertIn("Gemma 4 Factory Tuning", packet["user"])
         self.assertIn("Freshness and Verification Protocol", packet["user"])
         self.assertIn("Current run date (UTC):", packet["user"])

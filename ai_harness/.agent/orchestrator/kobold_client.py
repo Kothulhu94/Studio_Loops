@@ -75,3 +75,41 @@ class KoboldClient:
             json.dump(prompt, f, indent=2)
         with open(os.path.join(log_dir, f"{timestamp}_response.txt"), 'w', encoding='utf-8') as f:
             f.write(response)
+
+        self.log_watch_interaction(prompt, response, timestamp)
+
+    def log_watch_interaction(self, prompt, response, timestamp):
+        watch_dir = os.path.join(self.base_path, "logs", "loop_central")
+        os.makedirs(watch_dir, exist_ok=True)
+
+        prompt_text = json.dumps(prompt, indent=2, ensure_ascii=False)
+        entry = {
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "source": "studio_loop",
+            "prompt": prompt,
+            "prompt_text": self._truncate_for_watch(prompt_text),
+            "response": self._truncate_for_watch(response),
+            "prompt_chars": len(prompt_text),
+            "response_chars": len(response),
+        }
+
+        generations_path = os.path.join(watch_dir, "generations.jsonl")
+        with open(generations_path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+        state_path = os.path.join(watch_dir, "loop_central_state.json")
+        state = {
+            "status": "model_response_captured",
+            "updated_at": entry["timestamp"],
+            "last_generation_timestamp": entry["timestamp"],
+            "last_prompt_chars": entry["prompt_chars"],
+            "last_response_chars": entry["response_chars"],
+            "last_orchestrator_log_prefix": timestamp,
+        }
+        with open(state_path, "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2)
+
+    def _truncate_for_watch(self, text, max_chars=120000):
+        if len(text) <= max_chars:
+            return text
+        return text[:max_chars] + "\n\n[truncated for Kobold watch UI]"

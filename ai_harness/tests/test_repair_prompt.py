@@ -75,12 +75,12 @@ class TestRepairPrompt(unittest.TestCase):
         self.assertIn('Do not wrap it in {"actions": ...}', repair_prompt_packet["user"])
         self.assertIn("Do not return arrays at the root", repair_prompt_packet["user"])
 
-    def test_running_status_triggers_repair_and_fenced_valid_repair_is_accepted(self):
+    def test_running_status_is_normalized_to_blocked_without_repair(self):
         self.orchestrator.state_store.reset_state()
         self.orchestrator.state_store.start_feature(
             "Research test feature", "research_test_feature", "researcher", kind="research"
         )
-        self.orchestrator.client.call = MagicMock(side_effect=[
+        self.orchestrator.client.call = MagicMock(return_value=
             """
             ACTIONS_JSON:
             {
@@ -89,21 +89,12 @@ class TestRepairPrompt(unittest.TestCase):
               "summary": "Trying to begin research with an invalid status."
             }
             """,
-            """```json
-            {
-              "stage": "researcher",
-              "status": "blocked",
-              "summary": "Research is needed before technical handoff can complete.",
-              "qa_result": null,
-              "blockers": [{"reason": "External research required."}]
-            }
-            ```""",
-        ])
+        )
 
         success = self.orchestrator.execute_stage("researcher")
 
         self.assertFalse(success)
-        self.assertEqual(self.orchestrator.client.call.call_count, 2)
+        self.assertEqual(self.orchestrator.client.call.call_count, 1)
         state = self.orchestrator.state_store.load_state()
         self.assertEqual(state["current_stage"], "researcher")
         self.assertEqual(state["status"], "blocked")
@@ -117,8 +108,9 @@ class TestRepairPrompt(unittest.TestCase):
         ACTIONS_JSON:
         {
           "stage": "researcher",
-          "status": "running",
-          "summary": "Invalid status should exhaust repair attempts."
+          "status": "complete",
+          "summary": "Invalid QA result should exhaust repair attempts.",
+          "qa_result": "WRONG"
         }
         """
         self.orchestrator.client.call = MagicMock(return_value=invalid_response)

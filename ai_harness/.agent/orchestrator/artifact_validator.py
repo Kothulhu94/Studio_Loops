@@ -145,6 +145,13 @@ class ArtifactValidator:
                     latest_errors = self.validate_research_result(all_research[-1])
                     errors.append("Mandatory research failed to meet quality metrics: " + "; ".join(latest_errors))
 
+        # 7. Implementation Gate for Developer stage
+        if stage == "developer" and actions.get("status") == "complete":
+            writes = execution_results.get("writes", [])
+            patches = execution_results.get("patches", [])
+            if not any(w["success"] for w in writes) and not any(p["success"] for p in patches):
+                errors.append("Developer stage marked as complete but no files were written or patched. Implementation work is required before completion.")
+
         validators = {
             validator
             for manifest in skill_manifests

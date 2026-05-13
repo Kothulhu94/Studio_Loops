@@ -132,25 +132,25 @@ class TestResponseParser(unittest.TestCase):
         self.assertFalse(valid)
         self.assertIn("root shape is rejected", error)
 
-    def test_invalid_running_status_still_fails_schema_validation(self):
+    def test_invalid_running_status_is_normalized_to_blocked(self):
         parsed = self.parser.parse(
             """
             ACTIONS_JSON:
             {
               "stage": "researcher",
               "status": "running",
-              "summary": "This should fail validation."
+              "summary": "This should be normalized to blocked."
             }
             """
         )
 
         valid, error = self.parser.validate_actions(parsed["actions"])
 
-        self.assertFalse(valid)
-        self.assertIn("running", error)
+        self.assertTrue(valid, error)
+        self.assertEqual(parsed["actions"]["status"], "blocked")
 
-    def test_next_stage_rejected_and_next_stage_recommendation_accepted(self):
-        bad_actions = {
+    def test_next_stage_is_normalized_to_next_stage_recommendation(self):
+        legacy_actions = {
             "stage": "researcher",
             "status": "blocked",
             "summary": "Blocked while requesting external research.",
@@ -163,12 +163,34 @@ class TestResponseParser(unittest.TestCase):
             "next_stage_recommendation": "developer",
         }
 
-        bad_valid, bad_error = self.parser.validate_actions(json.loads(json.dumps(bad_actions)))
+        legacy_copy = json.loads(json.dumps(legacy_actions))
+        legacy_valid, legacy_error = self.parser.validate_actions(legacy_copy)
         good_valid, good_error = self.parser.validate_actions(json.loads(json.dumps(good_actions)))
 
-        self.assertFalse(bad_valid)
-        self.assertIn("Additional properties", bad_error)
+        self.assertTrue(legacy_valid, legacy_error)
+        self.assertNotIn("next_stage", legacy_copy)
+        self.assertEqual(legacy_copy["next_stage_recommendation"], "developer")
         self.assertTrue(good_valid, good_error)
+
+    def test_command_strings_are_normalized_to_allowlist_names(self):
+        parsed = self.parser.parse(
+            """
+            ACTIONS_JSON:
+            {
+              "stage": "developer",
+              "status": "blocked",
+              "summary": "Requesting verification commands.",
+              "commands": ["npm run typecheck", {"command": "npx vitest run", "args": {"bad": "shape"}}]
+            }
+            """
+        )
+
+        valid, error = self.parser.validate_actions(parsed["actions"])
+
+        self.assertTrue(valid, error)
+        self.assertEqual(parsed["actions"]["commands"][0]["name"], "typecheck")
+        self.assertEqual(parsed["actions"]["commands"][1]["name"], "test")
+        self.assertNotIn("args", parsed["actions"]["commands"][1])
 
     def test_research_request_topic_stack_is_normalized_to_schema_shape(self):
         parsed = self.parser.parse(

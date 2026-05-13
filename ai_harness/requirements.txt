@@ -2,3 +2,4 @@ playwright
 requests
 jsonschema
 psutil
+pytest

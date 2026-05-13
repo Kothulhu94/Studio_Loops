@@ -5,15 +5,18 @@
     "model": "local-gemma-4",
     "temperature": 0.3,
     "top_p": 0.9,
-    "max_output_tokens": 2500,
+    "max_output_tokens": 5000,
     "connect_timeout_seconds": 15,
-    "read_timeout_seconds": 900
+    "read_timeout_seconds": 1800
   },
   "context_budget": {
     "max_prompt_chars": 48000,
+    "state_chars": 6000,
     "project_capsule_chars": 5000,
     "role_instruction_chars": 7000,
+    "skill_instruction_chars": 3500,
     "active_artifact_chars": 12000,
+    "target_source_chars": 18000,
     "pruned_context_chars": 20000,
     "decision_memory_chars": 4000
   },
@@ -29,7 +32,7 @@
     "default_mode": "single_stage",
     "allow_auto_continue": true,
     "max_total_stages": 20,
-    "max_stage_retries": 3,
+    "max_stage_retries": 5,
     "require_validation_before_transition": true,
     "require_tests_after_code_changes": true,
     "require_typecheck_after_code_changes": true,

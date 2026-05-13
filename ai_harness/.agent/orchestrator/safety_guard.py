@@ -8,7 +8,7 @@ class SafetyGuard:
         self.stage_write_policy = {}
         self.session_workspace_roots = []
         self.allowed_roots = [
-            "src/", "tests/", "tools/", "data/", "docs/", 
+            "src/", "tests/", "tools/", "data/", "docs/", "public/",
             ".agent/Loop_Flow/", ".agent/logs/", ".agent/state/", 
             ".agent/orchestrator/", ".agent/workflows/", ".agent/skills/"
         ]
@@ -70,9 +70,9 @@ class SafetyGuard:
         permissions = self.stage_write_policy or {
             "concept_producer": [".agent/Loop_Flow", "docs/adr"],
             "researcher": [".agent/Loop_Flow", "docs/adr"],
-            "designer": [".agent/Loop_Flow"],
-            "asset_creator": [".agent/Loop_Flow", "src/assets", "data/assets", "src/SVG"],
-            "developer": ["src", "tests", "tools", "data", ".agent/Loop_Flow", "docs/adr"],
+            "designer": [".agent/Loop_Flow", "public"],
+            "asset_creator": [".agent/Loop_Flow", "src/assets", "data/assets", "src/SVG", "public/assets"],
+            "developer": ["src", "tests", "tools", "data", "public", ".agent/Loop_Flow", "docs/adr"],
             "qa_tester": [".agent/Loop_Flow", "tests"],
             "bug_hunter": [".agent/Loop_Flow", "tools"],
             "debug_dev": ["src", "tests", "tools", ".agent/Loop_Flow"]

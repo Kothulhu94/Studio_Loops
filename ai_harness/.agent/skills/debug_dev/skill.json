@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "roles": ["debug_dev"],
   "required_tools": ["file_writer", "patch_applier", "typecheck", "test", "test_target", "git_diff"],
-  "allowed_write_paths": ["src", "tests", "tools", ".agent/Loop_Flow"],
+  "allowed_write_paths": ["src", "tests", "tools", "public", ".agent/Loop_Flow"],
   "expected_artifacts": [
     {"type": "fix_report", "path": ".agent/Loop_Flow/{feature}_fix_report.md", "required": false, "required_sections": ["Fix Summary", "Regression Check"]}
   ],

@@ -1,6 +1,9 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
 
+REM Open a secondary command prompt for the Studio Loop orchestrator
+start "Studio Loop Terminal" cmd /k "cd /d %~dp0ai_harness && echo --- Studio Loop Terminal --- && echo Run: python .agent/orchestrator/studio_loop.py auto \"Task\""
+
 REM ============================================================
 REM Gemma E4B Vulkan launcher for KoboldCPP
 REM Expected layout:
@@ -44,6 +47,18 @@ if not defined MODEL_FILE (
     exit /b 1
 )
 
+set "WATCH_SERVER=%ROOT%ai_harness\ui\loop_central_server.py"
+set "KOBOLD_LOG=%ROOT%ai_harness\logs\loop_central\kobold.log"
+if not exist "%ROOT%ai_harness\logs\loop_central" mkdir "%ROOT%ai_harness\logs\loop_central"
+
+call :start_watch_ui "Gemma E4B Vulkan"
+call :ensure_kobold_slot_free
+if not "%ERRORLEVEL%"=="0" exit /b 1
+
+>>"%KOBOLD_LOG%" echo.
+>>"%KOBOLD_LOG%" echo [%date% %time%] Launching Gemma E4B Vulkan
+>>"%KOBOLD_LOG%" echo Model: %MODEL_FILE%
+
 echo ============================================================
 echo Launching KoboldCPP - Gemma E4B Vulkan
 echo Model: %MODEL_FILE%
@@ -60,4 +75,37 @@ echo ============================================================
   --port 5001 ^
   --skiplauncher
 
+set "KCPP_EXIT=%ERRORLEVEL%"
+>>"%KOBOLD_LOG%" echo [%date% %time%] KoboldCPP exited with code %KCPP_EXIT%.
 pause
+exit /b %KCPP_EXIT%
+
+:start_watch_ui
+set "MODEL_LABEL=%~1"
+if not exist "%WATCH_SERVER%" exit /b 0
+
+where py >nul 2>nul
+if "%ERRORLEVEL%"=="0" (
+    start "Loop_Central" /min cmd /c py -3 "%WATCH_SERVER%" --open --model-label "%MODEL_LABEL%" --model-path "%MODEL_FILE%" --kobold-port 5001
+    exit /b 0
+)
+
+where python >nul 2>nul
+if "%ERRORLEVEL%"=="0" (
+    start "Loop_Central" /min cmd /c python "%WATCH_SERVER%" --open --model-label "%MODEL_LABEL%" --model-path "%MODEL_FILE%" --kobold-port 5001
+)
+exit /b 0
+
+:ensure_kobold_slot_free
+powershell -NoProfile -Command "if (Get-Process koboldcpp -ErrorAction SilentlyContinue) { exit 0 } exit 1" >nul 2>nul
+if not "%ERRORLEVEL%"=="0" exit /b 0
+
+echo.
+echo KoboldCPP is already running. Both Gemma launchers use port 5001.
+echo Close the existing KoboldCPP process before launching this model?
+choice /c YN /n /m "Close existing KoboldCPP and continue? [Y/N] "
+if errorlevel 2 exit /b 1
+
+taskkill /IM koboldcpp.exe /F >nul 2>nul
+timeout /t 2 /nobreak >nul
+exit /b 0

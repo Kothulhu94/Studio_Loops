@@ -1,30 +1,18 @@
 {
-  "context_management_strategy": "semantic_retention",
-  "pinned_elements": [
-    "task_goal",
-    "current_role",
-    "active_workspace_root",
-    "critical_error_state"
-  ],
-  "pruning_tiers": {
-    "tier_0": {
-      "description": "Essential state",
-      "retention": "permanent",
-      "examples": ["goal", "identity"]
+  "feature_slug": "implement_the_html_and_css_for_the_scifi_start_m",
+  "target_stage": "developer",
+  "pruned_context": [
+    {
+      "path": "src/engine/Game.ts",
+      "description": "GameState enum and Game class core logic."
     },
-    "tier_1": {
-      "description": "Recent semantic history",
-      "retention": "summarized",
-      "examples": ["recent_reasoning", "active_file_context"]
+    {
+      "path": "public/index.html",
+      "description": "Base HTML structure for UI injection."
     },
-    "tier_2": {
-      "description": "Transient tool data",
-      "retention": "ephemeral",
-      "examples": ["raw_stdout", "search_results"]
+    {
+      "path": "public/style.css",
+      "description": "Existing styles to be extended with sci-fi theme."
     }
-  },
-  "safety_thresholds": {
-    "max_risk_score": 5,
-    "require_human_approval_on": ["destructive_filesystem_ops", "network_egress"]
-  }
+  ]
 }

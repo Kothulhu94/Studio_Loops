@@ -11,7 +11,7 @@ description: Task Template for tracking AI identity contributions
 *To be defined by the Concept Producer. High-level goal and thematic alignment.*
 
 - **Summary**: [What is this feature?]
-- **Thematic Alignment**: [How does it fit Cryo-Awakening?]
+- **Thematic Alignment**: [How does it fit the project aesthetic?]
 - **Core Loop**: [Describe the player experience]
 
 ## 2. Technical Audit (Researcher)

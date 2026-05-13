@@ -28,10 +28,17 @@ def get_context_map(root_dir, search_terms):
     # 2. Heuristic search
     ignore_dirs = {
         '.git', 'node_modules', '.agent/logs', '.agent/state', 
-        '.agent/Loop_Flow/context_packs', '.agent/Loop_Flow/research'
+        '.agent/Loop_Flow/context_packs', '.agent/Loop_Flow/research',
+        '.agent/bin', '.agent/orchestrator', '.agent/skills', '.agent/workflows',
+        '.agent/scratch', 'tests', 'tools', 'ui', 'logs', 'scratch', '__pycache__'
     }
     ignore_patterns = [
         r'\.agent/logs/.*',
+        r'ui/.*',
+        r'logs/.*',
+        r'scratch/.*',
+        r'.*__pycache__/.*',
+        r'.*\.pyc$',
         r'\.agent/Loop_Flow/context_packs/.*',
         r'\.agent/Loop_Flow/research/latest_.*',
         r'\.agent/Loop_Flow/test_.*',
@@ -39,8 +46,16 @@ def get_context_map(root_dir, search_terms):
         r'\.agent/Loop_Flow/multi_feature_.*',
         r'\.agent/Loop_Flow/feature_x_.*',
         r'\.agent/Loop_Flow/implement_feature_x_.*',
+        r'ai_harness_bundle\.txt',
+        r'debug_prompt\.txt',
         r'test_final\.txt',
-        r'tasklist\.txt'
+        r'tasklist\.txt',
+        r'package-lock\.json',
+        r'yarn\.lock',
+        r'pnpm-lock\.yaml',
+        r'LICENSE.*',
+        r'COPYING.*',
+        r'NOTICE.*'
     ]
 
     for root, dirs, files in os.walk(root_dir):
@@ -52,6 +67,8 @@ def get_context_map(root_dir, search_terms):
             continue
             
         for file in files:
+            if file.endswith(('.pyc', '.pyo', '.exe', '.dll', '.png', '.jpg', '.jpeg', '.gif', '.ico', '.svg')):
+                continue
             path = os.path.join(root, file)
             rel_path = os.path.relpath(path, root_dir).replace("\\", "/")
             

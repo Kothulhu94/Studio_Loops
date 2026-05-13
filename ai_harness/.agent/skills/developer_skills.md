@@ -61,3 +61,22 @@ This consolidated skill file contains all core capabilities required for the Dev
 ### Orchestrator Actions
 - **.agent/Loop_Flow/**: Storage for hand-off artifacts.
 - **studio_loop_state.json**: Verification of data integrity between stages.
+## 6. Incremental Implementation
+**Description**: Breaking down complex scaffolds into manageable, verified steps to ensure system stability.
+
+### Instructions
+1. **Incremental but Autonomous**: While you should focus on logic in manageable chunks, use `status: running` to automatically trigger the next turn for verification and subsequent implementation steps. 
+2. **Avoid Premature Blocks**: Do not use `status: blocked` for normal step-by-step progress. Only use it if you are truly stuck or need user clarification.
+3. **Continuous Verification**: Always include `commands: ["typecheck"]` (or similar) in your ACTIONS_JSON. If it passes, set `status: running` to proceed to the next task in the blueprint.
+4. **Context Maintenance**: Keep implementation summaries detailed so the next turn has clear continuity.
+
+---
+
+## 7. Implementation Mandate
+**Description**: Ensuring that the development stage does not terminate until all tasks in the Feature Blueprint are addressed.
+
+### Instructions
+1. **Blueprint Audit**: Before marking a stage as `complete`, you MUST audit the `feature_blueprint.md` or implementation plan in `.agent/Loop_Flow/`.
+2. **Action Requirement**: If the blueprint defines files to be created or logic to be implemented, and those files do not exist or logic is missing, you MUST NOT set `status: complete`.
+3. **Avoid Premature Handover**: Do not recommend a transition to `qa_tester` if you have not performed at least one `write` or `patch` action that addresses the feature requirements.
+4. **Task Progress**: Use the `summary` field to explicitly list which blueprint tasks were completed and which are pending for the next turn.

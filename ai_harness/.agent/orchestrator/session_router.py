@@ -68,6 +68,18 @@ class SessionRouter:
         now = datetime.now().isoformat()
         session_id = self._make_session_id(slug, now)
         initial_stage = start_stage or self.route_initial_stage(title, resolved_kind)
+        if resolved_kind == "harness_upgrade":
+            workspace_roots = [
+                ".agent/orchestrator",
+                ".agent/workflows",
+                ".agent/skills",
+                "tests",
+                "tools",
+                "docs",
+                ".agent/Loop_Flow",
+            ]
+        else:
+            workspace_roots = ["src", "tests", "tools", "data", "docs", "public", ".agent/Loop_Flow"]
 
         return {
             "session_id": session_id,
@@ -81,7 +93,7 @@ class SessionRouter:
             "status": "running",
             "current_stage": initial_stage,
             "allowed_roles": self.KIND_ALLOWED_ROLES.get(resolved_kind, self.KIND_ALLOWED_ROLES["feature"]),
-            "workspace_roots": ["src", "tests", "tools", "data", "docs", ".agent/Loop_Flow"],
+            "workspace_roots": workspace_roots,
             "artifact_root": ".agent/Loop_Flow",
             "memory_root": f".agent/Loop_Flow/context_packs/{slug}",
             "completion_criteria": self.KIND_COMPLETION_CRITERIA.get(resolved_kind, []),

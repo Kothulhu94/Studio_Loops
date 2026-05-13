@@ -1,5 +1,6 @@
 import json
 import os
+from copy import deepcopy
 from datetime import datetime
 from session_router import SessionRouter
 
@@ -12,15 +13,34 @@ class StateStore:
     def load_state(self):
         if not os.path.exists(self.state_path):
             return self.reset_state()
-        with open(self.state_path, 'r', encoding='utf-8') as f:
-            state = json.load(f)
+        
+        try:
+            with open(self.state_path, 'r', encoding='utf-8') as f:
+                state = json.load(f)
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"Error loading pointer state: {e}. Resetting.")
+            return self.reset_state()
+
         active_session_id = state.get("active_session_id")
         if active_session_id:
             session_path = self.session_router.session_path(active_session_id)
             if os.path.exists(session_path):
-                with open(session_path, 'r', encoding='utf-8') as f:
-                    return json.load(f)
-        return state
+                try:
+                    with open(session_path, 'r', encoding='utf-8') as f:
+                        session_data = json.load(f)
+                        # Ensure the session data is actually for this session_id
+                        if session_data.get("session_id") == active_session_id:
+                            return session_data
+                        else:
+                            print(f"Session data mismatch for {active_session_id}. Falling back to pointer.")
+                except (json.JSONDecodeError, IOError) as e:
+                    print(f"Error loading session {active_session_id}: {e}. Falling back to pointer.")
+            else:
+                print(f"Warning: Active session file missing: {session_path}. Feature context will be limited.")
+                if state.get("active"):
+                    return self._recover_missing_session(state, active_session_id)
+        
+        return self._ensure_state_shape(state)
 
     def save_state(self, state):
         state["updated_at"] = datetime.now().isoformat()
@@ -115,12 +135,30 @@ class StateStore:
         if stage_name not in state["completed_stages"]:
             state["completed_stages"].append(stage_name)
         
-        # New: Record detailed stage result components
+        # New: Record detailed stage result components (stripped of large blobs)
         if "actions" in result:
-            state["last_actions"] = result["actions"]
+            actions = json.loads(json.dumps(result["actions"])) # Deep copy
+            if "writes" in actions:
+                for w in actions["writes"]:
+                    if "content" in w:
+                        w["content"] = "[content written to disk - omitted from state to save context]"
+            if "patches" in actions:
+                for p in actions["patches"]:
+                    if "diff" in p:
+                        p["diff"] = "[stripped for brevity]"
+            state["last_actions"] = actions
         
         if "results" in result:
-            state["last_results"] = result["results"]
+            results = json.loads(json.dumps(result["results"])) # Deep copy
+            if "writes" in results:
+                for w in results["writes"]:
+                    if "content" in w:
+                        w["content"] = "[stripped for brevity]"
+            if "patches" in results:
+                for p in results["patches"]:
+                    if "diff" in p:
+                        p["diff"] = "[diff applied to disk - omitted from state to save context]"
+            state["last_results"] = results
             
         # Record artifacts from result
         for art in result.get("artifacts_written", []):
@@ -169,6 +207,7 @@ class StateStore:
 
     def record_context_pack(self, stage_name, path):
         state = self.load_state()
+        state.setdefault("context_packs", {})
         state["context_packs"][stage_name] = path
         self.save_state(state)
 
@@ -213,3 +252,94 @@ class StateStore:
             "current_stage": session_state.get("current_stage"),
             "updated_at": datetime.now().isoformat(),
         }
+
+    def _default_state(self):
+        return {
+            "active_session_id": None,
+            "active": False,
+            "feature": None,
+            "feature_slug": None,
+            "status": "idle",
+            "current_stage": None,
+            "completed_stages": [],
+            "stage_attempts": {},
+            "artifacts": {},
+            "context_packs": {},
+            "research_briefs": [],
+            "research_results": [],
+            "research_request_history": [],
+            "research_duplicate_warnings": {},
+            "writes": [],
+            "patches": [],
+            "commands": [],
+            "tests": [],
+            "validations": [],
+            "failures": [],
+            "blockers": [],
+            "transition_history": [],
+            "skills_used": {},
+            "last_model_response_path": None,
+            "last_actions": None,
+            "last_results": None,
+            "last_validation": None,
+            "last_transition": None,
+            "capabilities": {},
+            "created_at": None,
+            "updated_at": None,
+            "archived_at": None,
+        }
+
+    def _ensure_state_shape(self, state):
+        if not isinstance(state, dict):
+            return self.reset_state()
+        defaults = self._default_state()
+        for key, value in defaults.items():
+            state.setdefault(key, deepcopy(value))
+
+        active_session_id = state.get("active_session_id")
+        if active_session_id and not state.get("session_id"):
+            state["session_id"] = active_session_id
+        if state.get("feature") and not state.get("title"):
+            state["title"] = state["feature"]
+        if state.get("feature_slug") and not state.get("slug"):
+            state["slug"] = state["feature_slug"]
+
+        kind = state.get("kind")
+        if not kind and state.get("feature"):
+            kind = self.session_router.infer_kind(state.get("feature"))
+            state["kind"] = kind
+        if not state.get("stack_profile"):
+            state["stack_profile"] = "harness_internal" if kind == "harness_upgrade" else "game_source"
+
+        if kind:
+            if not state.get("allowed_roles"):
+                state["allowed_roles"] = self.session_router.KIND_ALLOWED_ROLES.get(
+                    kind,
+                    self.session_router.KIND_ALLOWED_ROLES["feature"],
+                )
+            if not state.get("completion_criteria"):
+                state["completion_criteria"] = self.session_router.KIND_COMPLETION_CRITERIA.get(kind, [])
+        return state
+
+    def _recover_missing_session(self, pointer_state, active_session_id):
+        feature = pointer_state.get("feature") or "Recovered Studio Loop session"
+        slug = pointer_state.get("feature_slug") or str(active_session_id).rsplit("_", 1)[0] or "recovered_session"
+        kind = pointer_state.get("kind") or self.session_router.infer_kind(feature)
+        stage = pointer_state.get("current_stage") or self.session_router.route_initial_stage(feature, kind)
+        recovered = self.session_router.create_session(feature, slug, kind=kind, start_stage=stage)
+        recovered["session_id"] = active_session_id
+        recovered["active"] = bool(pointer_state.get("active", True))
+        recovered["status"] = pointer_state.get("status", "running")
+        recovered["current_stage"] = stage
+        recovered["created_at"] = pointer_state.get("created_at") or pointer_state.get("updated_at") or recovered["created_at"]
+
+        for key, value in pointer_state.items():
+            if key in {"active_session_id", "session_id"}:
+                continue
+            if value is not None:
+                recovered[key] = value
+
+        recovered = self._ensure_state_shape(recovered)
+        print(f"Recovered missing active session metadata into: {self.session_router.session_path(active_session_id)}")
+        self.save_state(recovered)
+        return recovered

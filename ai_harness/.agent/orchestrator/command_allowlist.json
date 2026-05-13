@@ -4,12 +4,14 @@
       "name": "typecheck",
       "command": ["npx", "tsc", "--noEmit"],
       "allow_args": false,
+      "requires_shell": true,
       "timeout": 120
     },
     {
       "name": "test",
       "command": ["npx", "vitest", "run"],
       "allow_args": false,
+      "requires_shell": true,
       "timeout": 180
     },
     {
@@ -17,6 +19,7 @@
       "command": ["npx", "vitest", "run"],
       "allow_args": true,
       "arg_pattern": "^[A-Za-z0-9_./\\\\-]+$",
+      "requires_shell": true,
       "timeout": 180
     },
     {

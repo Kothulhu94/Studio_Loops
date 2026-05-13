@@ -3,7 +3,7 @@
   "title": "ACTIONS_JSON",
   "type": "object",
   "required": ["stage", "status", "summary"],
-  "additionalProperties": false,
+  "additionalProperties": true,
   "properties": {
     "stage": {
       "type": "string",
@@ -20,7 +20,7 @@
     },
     "status": {
       "type": "string",
-      "enum": ["complete", "blocked", "failed"]
+      "enum": ["complete", "blocked", "failed", "running"]
     },
     "summary": {
       "type": "string",
@@ -31,7 +31,7 @@
       "items": {
         "type": "object",
         "required": ["query"],
-        "additionalProperties": false,
+        "additionalProperties": true,
         "properties": {
           "query": { "type": "string" },
           "reason": { "type": "string" },
@@ -50,7 +50,7 @@
       "items": {
         "type": "object",
         "required": ["path", "content"],
-        "additionalProperties": false,
+        "additionalProperties": true,
         "properties": {
           "path": { "type": "string" },
           "content": { "type": "string" },
@@ -63,7 +63,7 @@
       "items": {
         "type": "object",
         "required": ["path", "diff"],
-        "additionalProperties": false,
+        "additionalProperties": true,
         "properties": {
           "path": { "type": "string" },
           "diff": { "type": "string" }
@@ -75,7 +75,7 @@
       "items": {
         "type": "object",
         "required": ["name"],
-        "additionalProperties": false,
+        "additionalProperties": true,
         "properties": {
           "name": { "type": "string" },
           "args": { "type": ["array", "string", "null"] },
@@ -88,9 +88,11 @@
       "items": {
         "type": "object",
         "required": ["reason"],
-        "additionalProperties": false,
+        "additionalProperties": true,
         "properties": {
           "reason": { "type": "string" },
+          "stage": { "type": "string" },
+          "timestamp": { "type": "string" },
           "required_followup": { "type": "string" }
         }
       }
@@ -106,7 +108,7 @@
       "items": {
         "type": "object",
         "required": ["name", "type"],
-        "additionalProperties": false,
+        "additionalProperties": true,
         "properties": {
           "name": { "type": "string" },
           "type": { "type": "string" }
@@ -115,7 +117,19 @@
     },
     "risks": {
       "type": "array",
-      "items": { "type": "string" }
+      "items": {
+        "anyOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "required": ["reason"],
+            "additionalProperties": true,
+            "properties": {
+              "reason": { "type": "string" }
+            }
+          }
+        ]
+      }
     },
     "next_stage_recommendation": {
       "type": ["string", "null"]

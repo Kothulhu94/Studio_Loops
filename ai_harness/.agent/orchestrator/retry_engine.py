@@ -38,11 +38,22 @@ class RetryEngine:
                 for w in results["writes"]:
                     status = "SUCCESS" if w["success"] else f"FAILED: {w['error']}"
                     prompt += f"- {w['path']}: {status}\n"
-            if results.get("patches"):
-                prompt += "Patches:\n"
-                for p in results["patches"]:
-                    status = "SUCCESS" if p["success"] else f"FAILED: {p['error']}"
-                    prompt += f"- {p['path']}: {status}\n"
+            
+            if results.get("quality_check"):
+                qc = results["quality_check"]
+                prompt += "QUALITY CHECK STATUS:\n"
+                if "typecheck" in qc:
+                    t = qc["typecheck"]
+                    t_status = "PASSED" if t["success"] else "FAILED"
+                    prompt += f"- Typecheck: {t_status}\n"
+                    if not t["success"]:
+                        prompt += f"  Errors:\n{t['stderr'] or t['stdout']}\n"
+                if "tests" in qc:
+                    ts = qc["tests"]
+                    ts_status = "PASSED" if ts["success"] else "FAILED"
+                    prompt += f"- Unit Tests: {ts_status}\n"
+                    if not ts["success"]:
+                        prompt += f"  Failures:\n{ts['stderr'] or ts['stdout']}\n"
             prompt += "\n"
 
         if "POST_EXECUTION_VALIDATION_FAILED" in error_message:

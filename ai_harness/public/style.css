@@ -1,0 +1,152 @@
+/* Game UI Styles */
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #050a0f;
+  color: #00ffcc;
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+}
+
+#game-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+#ui-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none; /* Let clicks pass through if no UI element catches them */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* CRT Scanlines Overlay */
+.crt-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+  pointer-events: none;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  background-size: 100% 4px, 6px 100%;
+  animation: flicker 0.15s infinite;
+}
+
+@keyframes flicker {
+  0% { opacity: 0.95; }
+  50% { opacity: 1; }
+  100% { opacity: 0.95; }
+}
+
+/* Screens */
+.screen {
+  display: none;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.screen.active {
+  display: flex;
+}
+
+/* Terminal Log / Loading */
+.terminal-content {
+  text-align: left;
+  width: 80%;
+  max-width: 600px;
+  background: rgba(0, 20, 10, 0.6);
+  padding: 20px;
+  border: 1px solid #00ffcc;
+  box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+}
+
+.log-line {
+  margin: 5px 0;
+  font-size: 1.2rem;
+  text-shadow: 0 0 5px #00ffcc;
+}
+
+.cursor {
+  animation: blinker 1s linear infinite;
+}
+
+@keyframes blinker {
+  50% { opacity: 0; }
+}
+
+/* Entry Sequence */
+.glitch-title {
+  font-size: 4rem;
+  margin-bottom: 0;
+  text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff;
+  letter-spacing: 5px;
+}
+
+.subtitle {
+  font-size: 1.5rem;
+  color: #aaddcc;
+  margin-top: 10px;
+  letter-spacing: 3px;
+}
+
+.prompt {
+  margin-top: 50px;
+  font-size: 1.2rem;
+  color: #fff;
+  text-shadow: 0 0 8px #fff;
+}
+
+.blink {
+  animation: blinker 1.5s ease-in-out infinite;
+}
+
+/* Main Menu */
+.small-title {
+  font-size: 2.5rem;
+  margin-bottom: 40px;
+  text-shadow: 0 0 10px #00ffcc;
+}
+
+.menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.menu-btn {
+  background: transparent;
+  color: #00ffcc;
+  border: 1px solid transparent;
+  padding: 10px 30px;
+  font-size: 1.5rem;
+  font-family: 'Share Tech Mono', monospace;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-btn:hover {
+  border: 1px solid #00ffcc;
+  background: rgba(0, 255, 204, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+  transform: scale(1.05);
+}

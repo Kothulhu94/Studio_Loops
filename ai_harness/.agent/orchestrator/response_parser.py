@@ -94,6 +94,31 @@ class ResponseParser:
         self.validator = SchemaValidator(schema_path) if schema_path else None
         self.required_action_keys = {"stage", "status", "summary"}
 
+    def _relaxed_json_loads(self, json_str):
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            # Try to fix common issues iteratively
+            cleaned = json_str
+            
+            # 1. Fix invalid escapes: \ followed by a non-standard character
+            cleaned = re.sub(r"\\(?![\\\"\/bfnrtu])", "", cleaned)
+            
+            # 2. Fix trailing commas: [1, 2, ] -> [1, 2]
+            cleaned = re.sub(r',\s*([\]}])', r'\1', cleaned)
+            
+            # 3. Fix unescaped control characters (like literal newlines in strings)
+            # Try to escape literal newlines/tabs between quotes
+            def escape_control_chars(match):
+                return match.group(0).replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+            cleaned = re.sub(r'"[^"]*"', escape_control_chars, cleaned, flags=re.DOTALL)
+
+            try:
+                return json.loads(cleaned)
+            except json.JSONDecodeError as e2:
+                # If still failing, raise the most recent error which might be more descriptive
+                raise e2
+
     def _parse_json_object_at(self, text, json_start):
         depth = 0
         in_string = False
@@ -122,20 +147,27 @@ class ResponseParser:
                     if depth == 0:
                         json_str = text[json_start:i+1]
                         try:
-                            return json.loads(json_str), i + 1
+                            return self._relaxed_json_loads(json_str), i + 1
                         except json.JSONDecodeError:
                             return None, i + 1
         return None, None
 
     def extract_json(self, text, marker):
         """Extracts JSON starting from marker using balanced brace counting."""
-        start_idx = text.find(marker)
-        if start_idx == -1:
+        # Case-insensitive search for marker, with or without colon
+        pattern = re.compile(re.escape(marker.rstrip(":")), re.IGNORECASE)
+        match = pattern.search(text)
+        if not match:
             return None
         
+        start_idx = match.end()
         json_start = text.find('{', start_idx)
         if json_start == -1:
-            return None
+            # If no { found after marker, try searching before it if the marker is inside the JSON
+            # (Gemma 4 sometimes puts the marker as a key)
+            json_start = text.rfind('{', 0, match.start())
+            if json_start == -1:
+                return None
 
         data, _ = self._parse_json_object_at(text, json_start)
         if data is None:
@@ -149,24 +181,30 @@ class ResponseParser:
         stripped = text.strip()
         candidates = []
         
-        fence_match = re.fullmatch(r"```(?:json)?\s*(\{.*\})\s*```", stripped, re.DOTALL)
-        if fence_match:
-            candidate_text = fence_match.group(1)
-            data, end = self._parse_json_object_at(candidate_text, 0)
-            if data is not None and end == len(candidate_text):
-                candidates.append(data)
-        elif stripped.startswith("{"):
-            data, end = self._parse_json_object_at(stripped, 0)
-            if data is not None and end == len(stripped):
+        # 1. Try fenced blocks
+        fence_matches = re.findall(r"```(?:json)?\s*(\{.*?\})\s*```", text, re.DOTALL)
+        for candidate_text in fence_matches:
+            data, _ = self._parse_json_object_at(candidate_text, 0)
+            if data is not None:
                 candidates.append(data)
         
-        if len(candidates) != 1:
-            return None
+        # 2. Try searching for any { } if no fenced blocks found
+        if not candidates:
+            json_start = text.find('{')
+            while json_start != -1:
+                data, next_start = self._parse_json_object_at(text, json_start)
+                if data is not None:
+                    candidates.append(data)
+                    json_start = text.find('{', next_start)
+                else:
+                    json_start = text.find('{', json_start + 1)
         
-        actions = candidates[0]
-        actions = self._unwrap_actions_json(actions)
-        if self._is_action_shaped(actions):
-            return actions
+        # Filter for action-shaped objects
+        action_candidates = [self._unwrap_actions_json(c) for c in candidates if self._is_action_shaped(self._unwrap_actions_json(c))]
+        
+        if len(action_candidates) >= 1:
+            # Prefer the first one
+            return action_candidates[0]
         return None
 
     def _is_action_shaped(self, data):
@@ -230,6 +268,16 @@ class ResponseParser:
 
         self.normalize_actions(actions)
         
+        # Reserved Name Guard: Block shadowing built-in JS/TS objects
+        reserved_names = ["Map", "Set", "Object", "Array", "Error", "Date", "Math", "JSON", "Promise"]
+        for write in actions.get("writes", []):
+            content = write.get("content", "")
+            for name in reserved_names:
+                # Look for 'class Map', 'interface Map', 'type Map'
+                pattern = rf"(class|interface|type)\s+{name}\b"
+                if re.search(pattern, content):
+                    return False, f"Reserved name conflict: Do not name custom classes/interfaces '{name}' as it shadows built-in JavaScript/TypeScript types. Use a more specific name (e.g., 'World{name}' or 'Game{name}') to avoid typecheck errors."
+
         if self.validator:
             return self.validator.validate(actions)
             
@@ -248,8 +296,29 @@ class ResponseParser:
         if actions.get("qa_result") == "null":
             actions["qa_result"] = None
             
+        # Normalize status
+        status = actions.get("status")
+        if isinstance(status, str):
+            status_map = {
+                "running": "blocked",
+                "in_progress": "blocked",
+                "pending": "blocked",
+                "working": "blocked",
+                "researching": "blocked",
+                "success": "complete",
+                "done": "complete",
+                "finished": "complete",
+                "error": "failed"
+            }
+            lowered = status.lower().strip()
+            if lowered in status_map:
+                actions["status"] = status_map[lowered]
+            
         # Normalize next_stage_recommendation
         allowed_stages = ["concept_producer", "researcher", "designer", "asset_creator", "developer", "qa_tester", "bug_hunter", "debug_dev", "handover_complete"]
+        if "next_stage" in actions and "next_stage_recommendation" not in actions:
+            actions["next_stage_recommendation"] = actions.get("next_stage")
+        actions.pop("next_stage", None)
         rec = actions.get("next_stage_recommendation")
         if rec and rec not in allowed_stages:
             # Map common misspellings or variants
@@ -263,6 +332,32 @@ class ResponseParser:
             }
             actions["next_stage_recommendation"] = mapping.get(rec.lower(), None)
 
+        # Normalize commands
+        commands = actions.get("commands", [])
+        if isinstance(commands, list):
+            new_commands = []
+            for command in commands:
+                if isinstance(command, str):
+                    mapped = self._infer_command_name(command)
+                    if mapped:
+                        new_commands.append({"name": mapped, "reason": f"Normalized from command string: {command}"})
+                    continue
+                if not isinstance(command, dict):
+                    continue
+                name = command.get("name") or command.get("command")
+                if not name:
+                    continue
+                mapped = self._infer_command_name(str(name)) or str(name)
+                normalized = {
+                    "name": mapped,
+                    "reason": str(command.get("reason", "Verification command.")),
+                }
+                args = command.get("args")
+                if isinstance(args, (list, str)) or args is None:
+                    normalized["args"] = args
+                new_commands.append(normalized)
+            actions["commands"] = new_commands
+
         # Normalize blockers
         blockers = actions.get("blockers", [])
         if isinstance(blockers, list):
@@ -270,8 +365,9 @@ class ResponseParser:
             for b in blockers:
                 if isinstance(b, str):
                     new_blockers.append({"reason": b})
-                elif isinstance(b, dict) and "reason" in b:
-                    new_blockers.append(b)
+                elif isinstance(b, dict):
+                    if "reason" in b:
+                        new_blockers.append({"reason": b["reason"]})
             actions["blockers"] = new_blockers
 
         # Normalize artifact declarations
@@ -338,13 +434,39 @@ class ResponseParser:
                     req["mode"] = "local_codebase"
                 req.pop("evidence_type", None)
 
-                target_files = req.get("target_files")
+                target_files = req.get("target_files") or req.get("pruned_context") or []
                 if isinstance(target_files, list):
                     req["target_files"] = [str(path) for path in target_files if isinstance(path, str) and path.strip()]
                     if req["target_files"]:
                         req["mode"] = "local_codebase"
                 elif target_files is not None:
                     req.pop("target_files", None)
+
+                # 0. Handle model hallucination: stringified dict in query
+                # Example: "query": "audit_kind='discovery' target_files=['a.ts']"
+                query_str = str(req.get("query", ""))
+                if "audit_kind=" in query_str or "target_files=" in query_str:
+                    import ast
+                    try:
+                        # Try to extract keys using regex then parse as literal
+                        kind_match = re.search(r"audit_kind=['\"](.*?)['\"]", query_str)
+                        if kind_match:
+                            req["audit_kind"] = kind_match.group(1)
+                        
+                        files_match = re.search(r"target_files=\[(.*?)\]", query_str)
+                        if files_match:
+                            try:
+                                files_str = "[" + files_match.group(1) + "]"
+                                req["target_files"] = ast.literal_eval(files_str)
+                            except:
+                                pass
+                        
+                        # Clean the query to be more natural
+                        new_query = re.sub(r"(audit_kind|target_files)=.*?([, ]|$)", "", query_str).strip(", ")
+                        if new_query:
+                            req["query"] = new_query
+                    except:
+                        pass
 
                 audit_kind = req.get("audit_kind")
                 if audit_kind not in ("discovery", "file_audit"):
@@ -368,6 +490,20 @@ class ResponseParser:
             actions["research_requests"] = new_requests
             
         return actions
+
+    def _infer_command_name(self, command_text):
+        lowered = command_text.lower().strip()
+        if "typecheck" in lowered or "tsc" in lowered:
+            return "typecheck"
+        if "vitest" in lowered or "npm test" in lowered or lowered == "test":
+            return "test"
+        if "git status" in lowered:
+            return "git_status"
+        if "git diff" in lowered:
+            return "git_diff"
+        if "find_bloat" in lowered:
+            return "find_bloat"
+        return None
 
     def _infer_artifact_type(self, name):
         lowered = name.lower()
