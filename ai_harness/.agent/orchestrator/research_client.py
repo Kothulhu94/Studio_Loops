@@ -227,6 +227,15 @@ class ResearchClient:
                 continue
 
             full_path = os.path.join(self.base_path, rel_path)
+            
+            # If path does not exist and is not a directory/glob, try to resolve it
+            if not os.path.exists(full_path) and not os.path.isdir(full_path):
+                suggestion = self._closest_existing_file(rel_path)
+                if suggestion:
+                    print(f"ResearchClient: Resolved {rel_path} to {suggestion}")
+                    rel_path = suggestion
+                    full_path = os.path.join(self.base_path, rel_path)
+
             if os.path.isdir(full_path):
                 discovered = self._collect_discovery_files([rel_path])
                 for item in discovered:
@@ -234,14 +243,13 @@ class ResearchClient:
                         expanded.append(item["path"])
                         seen.add(item["path"])
                 continue
+
             if not self._is_allowed_local_path(rel_path):
                 errors.append(f"Target file is outside allowed local audit roots: {rel_path}")
                 continue
+
             if not os.path.isfile(full_path):
-                suggestion = self._closest_existing_file(rel_path)
                 message = f"Target file does not exist: {rel_path}"
-                if suggestion:
-                    message += f". Closest candidate: {suggestion}"
                 errors.append(message)
                 continue
             if self._is_ignored_rel_path(rel_path):

@@ -49,6 +49,11 @@ class CapabilityRegistry:
                 "image_input_available": False,
                 "audio_input_available": False,
                 "screenshot_analysis_available": False
+            },
+            "mcp": {
+                "available": False,
+                "servers": [],
+                "tools": []
             }
         }
 
@@ -57,6 +62,7 @@ class CapabilityRegistry:
         self._detect_commands()
         self._detect_research()
         self._detect_browser()
+        self._detect_mcp()
         return self.capabilities
 
     def _detect_kobold(self):
@@ -145,6 +151,20 @@ class CapabilityRegistry:
             self.capabilities["browser"]["performance_trace"] = False
         except:
             self.capabilities["browser"]["available"] = False
+
+    def _detect_mcp(self):
+        mcp_config = self.config.get("mcp", {})
+        servers = mcp_config.get("servers", {})
+        if not servers:
+            self.capabilities["mcp"]["available"] = False
+            return
+
+        self.capabilities["mcp"]["available"] = True
+        self.capabilities["mcp"]["servers"] = list(servers.keys())
+        
+        # In a real implementation, we might try to connect and list tools here
+        # but for detection, we'll just list the configured servers.
+        self.capabilities["mcp"]["tools"] = []
 
     def _can_run(self, cmd):
         try:

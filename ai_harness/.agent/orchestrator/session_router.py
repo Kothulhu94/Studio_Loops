@@ -9,7 +9,7 @@ class SessionRouter:
     KIND_ROUTES = {
         "feature": "concept_producer",
         "design": "concept_producer",
-        "research": "researcher",
+        "research": "field_researcher",
         "asset": "asset_creator",
         "bug": "bug_hunter",
         "implementation": "developer",
@@ -17,13 +17,13 @@ class SessionRouter:
     }
 
     KIND_ALLOWED_ROLES = {
-        "feature": ["concept_producer", "researcher", "designer", "asset_creator", "developer", "qa_tester", "bug_hunter", "debug_dev"],
-        "design": ["concept_producer", "researcher", "designer", "asset_creator", "developer", "qa_tester"],
-        "research": ["researcher", "designer", "developer"],
+        "feature": ["concept_producer", "field_researcher", "lab_assistant", "researcher", "designer", "asset_creator", "developer", "qa_tester", "bug_hunter", "debug_dev"],
+        "design": ["concept_producer", "field_researcher", "lab_assistant", "researcher", "designer", "asset_creator", "developer", "qa_tester"],
+        "research": ["field_researcher", "lab_assistant", "researcher", "designer", "developer"],
         "asset": ["asset_creator", "designer", "developer", "qa_tester"],
         "bug": ["bug_hunter", "debug_dev", "qa_tester"],
         "implementation": ["developer", "qa_tester", "bug_hunter", "debug_dev"],
-        "harness_upgrade": ["concept_producer", "researcher", "developer", "qa_tester", "bug_hunter", "debug_dev"],
+        "harness_upgrade": ["concept_producer", "field_researcher", "lab_assistant", "researcher", "developer", "qa_tester", "bug_hunter", "debug_dev"],
     }
 
     KIND_COMPLETION_CRITERIA = {

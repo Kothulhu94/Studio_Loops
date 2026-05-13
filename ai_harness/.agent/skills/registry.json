@@ -2,6 +2,8 @@
   "version": "1.0",
   "skills": [
     {"id": "studio-loop.producer", "manifest": ".agent/skills/producer/skill.json"},
+    {"id": "studio-loop.field_researcher", "manifest": ".agent/skills/field_researcher/skill.json"},
+    {"id": "studio-loop.lab_assistant", "manifest": ".agent/skills/lab_assistant/skill.json"},
     {"id": "studio-loop.researcher", "manifest": ".agent/skills/researcher/skill.json"},
     {"id": "studio-loop.designer", "manifest": ".agent/skills/designer/skill.json"},
     {"id": "studio-loop.asset_creator", "manifest": ".agent/skills/asset_creator/skill.json"},

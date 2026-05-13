@@ -93,6 +93,7 @@ class ResponseParser:
     def __init__(self, schema_path=None):
         self.validator = SchemaValidator(schema_path) if schema_path else None
         self.required_action_keys = {"stage", "status", "summary"}
+        self.last_error = None
 
     def _relaxed_json_loads(self, json_str):
         try:
@@ -107,8 +108,7 @@ class ResponseParser:
             # 2. Fix trailing commas: [1, 2, ] -> [1, 2]
             cleaned = re.sub(r',\s*([\]}])', r'\1', cleaned)
             
-            # 3. Fix unescaped control characters (like literal newlines in strings)
-            # Try to escape literal newlines/tabs between quotes
+            # 3. Fix unescaped control characters
             def escape_control_chars(match):
                 return match.group(0).replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
             cleaned = re.sub(r'"[^"]*"', escape_control_chars, cleaned, flags=re.DOTALL)
@@ -116,8 +116,15 @@ class ResponseParser:
             try:
                 return json.loads(cleaned)
             except json.JSONDecodeError as e2:
-                # If still failing, raise the most recent error which might be more descriptive
-                raise e2
+                # Build a detailed error message with snippet
+                pos = e2.pos
+                start = max(0, pos - 40)
+                end = min(len(cleaned), pos + 40)
+                snippet = cleaned[start:end]
+                # Add pointer to error
+                pointer = " " * (pos - start) + "^"
+                error_msg = f"JSON Parse Error at char {pos}: {e2.msg}\nSnippet:\n{snippet}\n{pointer}"
+                raise ValueError(error_msg)
 
     def _parse_json_object_at(self, text, json_start):
         depth = 0
@@ -148,7 +155,8 @@ class ResponseParser:
                         json_str = text[json_start:i+1]
                         try:
                             return self._relaxed_json_loads(json_str), i + 1
-                        except json.JSONDecodeError:
+                        except (json.JSONDecodeError, ValueError) as e:
+                            self.last_error = str(e)
                             return None, i + 1
         return None, None
 
@@ -264,7 +272,9 @@ class ResponseParser:
 
     def validate_actions(self, actions):
         if not actions:
-            return False, "No valid ACTIONS_JSON found or root shape is rejected (e.g. {\"actions\": []})."
+            err = self.last_error or "No valid ACTIONS_JSON found or root shape is rejected (e.g. {\"actions\": []})."
+            self.last_error = None # Clear after use
+            return False, err
 
         self.normalize_actions(actions)
         
@@ -315,7 +325,7 @@ class ResponseParser:
                 actions["status"] = status_map[lowered]
             
         # Normalize next_stage_recommendation
-        allowed_stages = ["concept_producer", "researcher", "designer", "asset_creator", "developer", "qa_tester", "bug_hunter", "debug_dev", "handover_complete"]
+        allowed_stages = ["concept_producer", "field_researcher", "lab_assistant", "researcher", "designer", "asset_creator", "developer", "qa_tester", "bug_hunter", "debug_dev", "handover_complete"]
         if "next_stage" in actions and "next_stage_recommendation" not in actions:
             actions["next_stage_recommendation"] = actions.get("next_stage")
         actions.pop("next_stage", None)

@@ -30,7 +30,7 @@ class StateStore:
                         session_data = json.load(f)
                         # Ensure the session data is actually for this session_id
                         if session_data.get("session_id") == active_session_id:
-                            return session_data
+                            return self._ensure_state_shape(session_data)
                         else:
                             print(f"Session data mismatch for {active_session_id}. Falling back to pointer.")
                 except (json.JSONDecodeError, IOError) as e:
@@ -177,6 +177,7 @@ class StateStore:
 
     def fail_stage(self, stage_name, reason):
         state = self.load_state()
+        state.setdefault("failures", [])
         state["failures"].append({
             "stage": stage_name,
             "reason": reason,
@@ -202,6 +203,7 @@ class StateStore:
 
     def record_artifact(self, key, path):
         state = self.load_state()
+        state.setdefault("artifacts", {})
         state["artifacts"][key] = path
         self.save_state(state)
 
@@ -294,7 +296,8 @@ class StateStore:
             return self.reset_state()
         defaults = self._default_state()
         for key, value in defaults.items():
-            state.setdefault(key, deepcopy(value))
+            if key not in state or state[key] is None:
+                state[key] = deepcopy(value)
 
         active_session_id = state.get("active_session_id")
         if active_session_id and not state.get("session_id"):

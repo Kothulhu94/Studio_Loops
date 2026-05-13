@@ -31,6 +31,7 @@ from source_indexer import SourceIndexer
 from hooks import OrchestratorHooks
 from context_compactor import ContextCompactor
 from session_router import SessionRouter
+from mcp_client import MCPClient
 
 
 class StudioLoopOrchestrator:
@@ -68,6 +69,7 @@ class StudioLoopOrchestrator:
         self.response_parser = ResponseParser(schema_path=os.path.join(self.base_path, ".agent/orchestrator/actions_schema.json"))
         self.copyright_guard = CopyrightGuard(base_path)
         self.safety_guard = SafetyGuard(base_path)
+        self.mcp_client = MCPClient(base_path)
         self.retry_engine = RetryEngine(max_retries=self.config.get("automation", {}).get("max_stage_retries", 3))
         self.artifact_validator = ArtifactValidator(base_path)
         self.session_router = SessionRouter(base_path)
@@ -117,6 +119,7 @@ class StudioLoopOrchestrator:
             print(f"Creating NEW session for: {safe_feature}")
 
         state = self.state_store.start_feature(safe_feature, slug, start_stage, kind=kind)
+        self._connect_mcp_servers()
         self.detect_capabilities()
         
         print(f"Starting feature: {safe_feature} (slug: {slug})")
@@ -130,6 +133,7 @@ class StudioLoopOrchestrator:
 
     def autonomous_loop(self):
         state = self.state_store.load_state()
+        self._connect_mcp_servers()
         stage_count = 0
         max_stages = self.config.get("automation", {}).get("max_total_stages", 20)
         
@@ -334,10 +338,10 @@ class StudioLoopOrchestrator:
                     )
                 else:
                     print(f"Mandatory research failed quality checks: {bad_required_research}. Marking stage as failed.")
-                    if state.get("stack_profile") == "harness_internal" and self.retry_engine.should_retry(attempt):
+                    if self.retry_engine.should_retry(attempt):
                         repair_error = (
                             "RESEARCH_REQUEST_FAILED: " + "; ".join(bad_required_research) + ". "
-                            "For harness_internal local_codebase research, provide target_files that exist inside the workspace, "
+                            "Ensure that local_codebase research provides target_files that exist inside the workspace, "
                             "or explicitly set mode=\"web\" for web research."
                         )
                         return self.repair_output(
@@ -430,7 +434,7 @@ class StudioLoopOrchestrator:
         state = self.state_store.load_state()
         self._apply_policy_context(state)
         feature_slug = state.get("feature_slug")
-        results = {"writes": [], "patches": [], "commands": [], "research": []}
+        results = {"writes": [], "patches": [], "commands": [], "research": [], "mcp": [], "errors": []}
         
         if "research_request_history" not in state:
             state["research_request_history"] = []
@@ -478,7 +482,7 @@ class StudioLoopOrchestrator:
                         "query": query,
                         "reason": "Research loop: Query repeated after warning.",
                         "sources": [], "findings": [], "artifact_path": None,
-                        "errors": ["Research already exists. Do not request again."]
+                        "errors": ["Research already exists in your context. Do not request again. Use the existing 'Target Source Files' or 'Research Briefs' sections provided."]
                     }
                 else:
                     print(f"Research loop guard: Query '{query}' already completed. Injecting brief and issuing warning.")
@@ -487,6 +491,11 @@ class StudioLoopOrchestrator:
                     state["research_duplicate_warnings"][fingerprint] = True
             elif state["research_request_history"].count(fingerprint) >= 2:
                 print(f"Research loop guard: Blocking repeated query '{query}' for stage '{stage}'.")
+                
+                # Provide explicit feedback about what is already available
+                existing_briefs = [os.path.basename(b) for b in state.get("research_briefs", [])]
+                briefs_str = "\n- ".join(existing_briefs) if existing_briefs else "None"
+                
                 res = {
                     "status": "blocked",
                     "query": query,
@@ -494,7 +503,13 @@ class StudioLoopOrchestrator:
                     "sources": [],
                     "findings": [],
                     "artifact_path": None,
-                    "errors": ["Research loop detected. Please provide final artifact based on existing research."]
+                    "errors": [
+                        f"RESEARCH LOOP DETECTED: You have already requested the query '{query}' multiple times in this stage.",
+                        "The orchestrator is blocking this request to prevent infinite loops and token waste.",
+                        "AVAILABLE RESEARCH BRIEFS IN YOUR CONTEXT:",
+                        f"- {briefs_str}",
+                        "ACTION REQUIRED: Do not request this query again. Instead, utilize the findings in the briefs listed above. If you need specific code from a file, use a targeted audit of THAT file, or if the file is already in your 'Target Source Files', simply read it."
+                    ]
                 }
             else:
                 self.hooks.trigger("before_research", {"stage": stage, "query": query})
@@ -511,11 +526,18 @@ class StudioLoopOrchestrator:
                     is_local = True
                     target_files = []
                 else:
+                    query_lower = query.lower()
+                    # Extract paths like src/something.ts or .agent/something
+                    extracted_paths = re.findall(r"(?:[a-zA-Z0-9._\-/]+\.[a-zA-Z0-9]+)|(?:src/[a-zA-Z0-9._\-/]+)|(?:tests/[a-zA-Z0-9._\-/]+)|(?:tools/[a-zA-Z0-9._\-/]+)", query)
+                    if extracted_paths and not target_files:
+                        print(f"Heuristic: Extracted target_files from query: {extracted_paths}")
+                        target_files.extend(extracted_paths)
+
                     is_local = (
                         req.get("mode") == "local_codebase" 
                         or bool(target_files) 
                         or audit_kind is not None
-                        or any(word in query.lower() for word in ["local", "codebase", "audit", "inspect", "files", "existing"])
+                        or any(word in query_lower for word in ["local", "codebase", "audit", "inspect"])
                     )
                 if is_local and not target_files and audit_kind != "discovery" and has_local_discovery_request:
                     print(f"Deferring dependent local audit without target_files until discovery re-entry: {query}")
@@ -598,6 +620,11 @@ class StudioLoopOrchestrator:
             mode = w.get("mode", "overwrite")
             content = w["content"]
             
+            # Check for path traversal / policy
+            if not self.safety_guard.is_path_allowed(path, mode="write", stage=stage):
+                results["errors"].append(f"Write BLOCKED: Path '{path}' is outside allowed role boundaries.")
+                continue
+            
             # Preflight Conflict Detection
             full_path = os.path.join(self.base_path, path)
             if mode == "create" and os.path.exists(full_path):
@@ -622,10 +649,27 @@ class StudioLoopOrchestrator:
             self.hooks.trigger("after_write", {"stage": stage, "path": path, "success": success})
             results["writes"].append({"path": path, "success": success, "error": err})
 
-        # 3. Patches
+        # 3. MCP Tool Calls
+        mcp_calls = actions.get("mcp_calls", [])
+        for call in mcp_calls:
+            tool_name = call.get("tool")
+            args = call.get("arguments", {})
+            try:
+                res = self.mcp_client.call_tool_sync(tool_name, args)
+                results["mcp"].append({"tool": tool_name, "result": res})
+            except Exception as e:
+                results["errors"].append(f"MCP Call Failed ({tool_name}): {str(e)}")
+
+        # 4. Patches
         all_patches = actions.get("patches", [])
         for p in all_patches:
             self.hooks.trigger("before_patch", {"stage": stage, "path": p["path"]})
+            
+            # Safety Check
+            if not self.safety_guard.is_path_allowed(p["path"], mode="patch", stage=stage):
+                results["errors"].append(f"Patch BLOCKED: Path '{p['path']}' is outside allowed role boundaries.")
+                continue
+
             success, err = self.patch_applier.apply(stage, p["path"], p["diff"])
             self.hooks.trigger("after_patch", {"stage": stage, "path": p["path"], "success": success})
             results["patches"].append({"path": p["path"], "success": success, "error": err})
@@ -633,6 +677,13 @@ class StudioLoopOrchestrator:
         # 4. Commands
         for cmd in actions.get("commands", []):
             self.hooks.trigger("before_command", {"stage": stage, "command": cmd})
+            
+            # Safety Check
+            allowed_names = [c["name"] for c in self.safety_guard.allowlist.get("allowed_commands", [])]
+            if cmd["name"] not in allowed_names:
+                results["errors"].append(f"Command BLOCKED: '{cmd['name']}' is not in the allowlist for this session.")
+                continue
+
             res = self.command_runner.run(cmd["name"], cmd.get("args"))
             self.hooks.trigger("after_command", {"stage": stage, "result": res})
             results["commands"].append(res)
@@ -669,7 +720,7 @@ class StudioLoopOrchestrator:
                 try:
                     with open(os.path.join(self.base_path, w["path"]), 'r', encoding='utf-8') as f:
                         content = f.read()
-                    violations = self.copyright_guard.scan_text(content, is_research=(stage_name == "researcher"))
+                    violations = self.copyright_guard.scan_text(content, is_research=(stage_name in ["researcher", "field_researcher", "lab_assistant"]))
                     for v in violations:
                         errors.append(f"Copyright violation in file {w['path']}: {v['term']}")
                 except Exception:
@@ -725,14 +776,19 @@ class StudioLoopOrchestrator:
                 state["last_quality_check"] = suite
                 self.state_store.save_state(state)
                 
-                if not suite["typecheck"].get("success"):
+                typecheck = suite.get("typecheck") or {}
+                if not typecheck.get("success"):
                     errors.append("Typecheck failed after changes.")
-                if not suite["tests"].get("success"):
+                
+                suite_tests = suite.get("tests") or {}
+                if not suite_tests.get("success"):
                     # Only fail if tests exist and failed
-                    stdout = suite["tests"].get("stdout") or ""
+                    stdout = suite_tests.get("stdout") or ""
                     if "No tests found" not in stdout:
                         errors.append("Unit tests failed after changes.")
-                if not suite["bloat"].get("success"):
+                
+                suite_bloat = suite.get("bloat") or {}
+                if not suite_bloat.get("success"):
                     errors.append("Bloat check failed: oversized files detected.")
                 
         # Write validation report to log
@@ -827,12 +883,17 @@ class StudioLoopOrchestrator:
     def repair_output(self, raw_response, error, stage_name, attempt, results=None, stack_profile="game_source", context_content=None):
         print(f"Attempting output repair (attempt {attempt})...")
         
-        # 1. Generate repair prompt
+        # 1. Try to extract an offending code snippet if it's a validation error
+        snippet = None
+        if "POST_EXECUTION_VALIDATION_FAILED" in error and results:
+            snippet = self._get_error_snippet(error, results)
+
+        # 2. Generate repair prompt
         error_type = "SCHEMA_ERROR" if "JSON" in error else "VALIDATION_FAILED"
         repair_prompt = self.retry_engine.get_repair_prompt(
             error_type,
             error,
-            context_snippet=raw_response[:2000] if raw_response else None, # More snippet
+            context_snippet=snippet or (raw_response[:2000] if raw_response else None),
             stage_name=stage_name,
             results=results,
             stack_profile=stack_profile
@@ -847,8 +908,38 @@ class StudioLoopOrchestrator:
             "user": repair_prompt
         }
         
-        # 2. Get repair response from model
+        # 3. Get repair response from model
         return self.execute_stage(stage_name, attempt, repair_prompt_override=repair_prompt_packet)
+
+    def _get_error_snippet(self, error_message, results):
+        """Extract a 10-line snippet around the first file:line error found in the message."""
+        match = re.search(r'([a-zA-Z0-9_\-\./]+\.(?:ts|tsx|js|jsx|py|css|html))\s*[:\(]\s*(\d+)', error_message)
+        if not match:
+            # Check results for typecheck errors if not in message
+            if results and results.get("quality_check"):
+                qc = results["quality_check"]
+                if not qc.get("typecheck", {}).get("success"):
+                    out = qc["typecheck"].get("stdout", "") + qc["typecheck"].get("stderr", "")
+                    match = re.search(r'([a-zA-Z0-9_\-\./]+\.(?:ts|tsx|js|jsx|py|css|html))\s*[:\(]\s*(\d+)', out)
+        
+        if match:
+            file_path = match.group(1)
+            line_num = int(match.group(2))
+            full_path = os.path.join(self.base_path, file_path)
+            if os.path.exists(full_path):
+                try:
+                    with open(full_path, 'r', encoding='utf-8') as f:
+                        lines = f.readlines()
+                    start = max(0, line_num - 5)
+                    end = min(len(lines), line_num + 5)
+                    snippet = f"--- Snippet from {file_path} (Line {line_num}) ---\n"
+                    for i in range(start, end):
+                        prefix = "> " if i + 1 == line_num else "  "
+                        snippet += f"{i+1:4d}: {prefix}{lines[i]}"
+                    return snippet
+                except Exception:
+                    pass
+        return None
 
     def _record_context_telemetry(self, stage_name, telemetry):
         if not telemetry:
@@ -1053,6 +1144,21 @@ class StudioLoopOrchestrator:
                     pass # keep it
                 else:
                     shutil.rmtree(item_path)
+
+    def _connect_mcp_servers(self):
+        mcp_config = self.config.get("mcp", {})
+        servers = mcp_config.get("servers", {})
+        if not servers:
+            return
+            
+        print(f"Initializing {len(servers)} MCP servers...")
+        for server_id, server_data in servers.items():
+            cmd = server_data.get("command")
+            if not cmd:
+                continue
+            args = server_data.get("args", [])
+            env = server_data.get("env", {})
+            self.mcp_client.connect_sync(server_id, cmd, args, env)
 
     def retry_stage(self, stage_name):
         return self.execute_stage(stage_name, attempt=0)

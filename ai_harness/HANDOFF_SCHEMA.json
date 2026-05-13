@@ -17,12 +17,46 @@
       "can_request_research": true,
       "required_input": ["User Request", "Current Roadmap"],
       "required_output": ["Feature Vision Artifact (.md)", "Target User Experience"],
-      "next_stages": ["researcher"],
+      "next_stages": ["field_researcher"],
       "validation": {
         "required_files": [".agent/Loop_Flow/{feature}_blueprint.md"],
         "required_sections": ["Vision", "Target User Experience", "Thematic Alignment"],
         "forbidden_actions": ["modifies_source_code"],
         "actions_json_required": true
+      }
+    },
+    "field_researcher": {
+      "stage_type": "research",
+      "can_write_source": false,
+      "can_write_artifacts": true,
+      "can_run_commands": true,
+      "can_request_research": true,
+      "required_input": ["Feature Vision Artifact"],
+      "required_output": ["Research Brief (.md)"],
+      "next_stages": ["lab_assistant"],
+      "validation": {
+        "required_files": [".agent/Loop_Flow/{feature}_research_brief.md"],
+        "required_sections": ["External Findings", "Target Libraries/Tools", "Competitive Analysis"],
+        "forbidden_actions": ["modifies_source_code"],
+        "actions_json_required": true,
+        "research_required": true
+      }
+    },
+    "lab_assistant": {
+      "stage_type": "research",
+      "can_write_source": false,
+      "can_write_artifacts": true,
+      "can_run_commands": true,
+      "can_request_research": true,
+      "required_input": ["Feature Vision Artifact", "Research Brief"],
+      "required_output": ["Technical Audit (.md)", "Implementation Blueprint", "Context Pruning Map"],
+      "next_stages": ["designer", "developer"],
+      "validation": {
+        "required_files": [".agent/Loop_Flow/{feature}_blueprint.md", ".agent/Loop_Flow/context_map.json"],
+        "required_sections": ["Technical Audit", "Implementation Blueprint", "Context Pruning Map", "Implementation Checklist"],
+        "forbidden_actions": ["modifies_source_code"],
+        "actions_json_required": true,
+        "research_required": true
       }
     },
     "researcher": {

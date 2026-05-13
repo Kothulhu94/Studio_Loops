@@ -34,36 +34,55 @@ class PromptCompiler:
         
         if stack_profile == "harness_internal":
             stack_info = (
+                "### HARNESS INTERNAL STACK\n"
                 "- Primary language: Python 3\n"
                 "- Harness files: .agent/orchestrator/\n"
                 "- Tests: tests/*.py\n"
                 "- Tools: tools/*.py\n"
-                "- Docs/workflows/skills may be edited when relevant\n"
-                "- TypeScript/Vitest only matters if src/ or tests/*.ts are touched\n"
-                "- Do not force browser/game-source constraints onto orchestrator work"
+                "- Logic: Pythonic, JSON-driven, async-ready.\n"
+                "- IMPORTANT: Do not force browser/game-source constraints onto orchestrator work."
             )
         else:
             stack_info = (
+                "### GAME SOURCE STACK\n"
                 "- Language: TypeScript (strict)\n"
                 "- Environment: Browser\n"
                 "- Source Directory: src/\n"
                 "- Test Directory: tests/\n"
                 "- Test Runner: Vitest\n"
                 "- Logic: Vanilla JS/TS logic, Canvas/DOM APIs.\n"
-                "- NO Python implementation plans for game source."
+                "- IMPORTANT: Use existing patterns in Target Source Files."
             )
+
 
         current_date_utc = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         stage_specific_contract = ""
-        if stage == "researcher":
+        if stage == "field_researcher":
             feature_slug = state.get("feature_slug", "{feature}")
             stage_specific_contract = (
-                "## Stage Artifact Contract\n"
-                "When completing researcher, write these artifacts in ACTIONS_JSON:\n"
-                f"- `.agent/Loop_Flow/{feature_slug}_blueprint.md` with sections: "
-                "Technical Audit, Implementation Blueprint, Context Pruning Map, Implementation Checklist.\n"
-                "- `.agent/Loop_Flow/context_map.json` as valid JSON with a 'target_files' array of objects containing 'path' and 'reason'.\n"
+                "## Field Researcher Output Contract\n"
+                "Focus on external libraries, documentation, and competitive analysis.\n"
+                "When complete, write this artifact in ACTIONS_JSON:\n"
+                f"- `.agent/Loop_Flow/{feature_slug}_research_brief.md`: External Findings, Target Libraries/Tools, Competitive Analysis.\n"
+                "Set status=\"complete\" only when the research brief is saved.\n"
+            )
+        elif stage in ["lab_assistant", "researcher"]:
+            feature_slug = state.get("feature_slug", "{feature}")
+            stage_specific_contract = (
+                "## Technical Auditor Output Contract\n"
+                "Focus on internal codebase analysis, architectural fit, and context preparation.\n"
+                "Before requesting research, check 'Target Source Files' to avoid duplicate work.\n"
+                "When complete, write these artifacts in ACTIONS_JSON:\n"
+                f"- `.agent/Loop_Flow/{feature_slug}_blueprint.md`: Technical Audit, Blueprint, Context Map, Checklist.\n"
+                "- `.agent/Loop_Flow/context_map.json`: Valid JSON with 'target_files' list.\n"
                 "Set status=\"complete\" only when both writes are present.\n"
+            )
+        else:
+            stage_specific_contract = (
+                "## Stage Execution Contract\n"
+                "1. CHECK 'Source Context Sovereignty': If a file is provided there, DO NOT request research to read it.\n"
+                "2. VALIDATE ACTIONS: Ensure all writes/patches follow the Stack Info above.\n"
+                "3. MINIMIZE BLOAT: Do not rewrite entire files if a patch suffices.\n"
             )
 
         allowed_commands = [
@@ -75,7 +94,7 @@ class PromptCompiler:
         ]
         
         role_safety_guidance = ""
-        if stage == "researcher":
+        if stage in ["researcher", "field_researcher", "lab_assistant"]:
             role_safety_guidance = (
                 "### SAFETY & CAPABILITIES WARNING\n"
                 "- DO NOT attempt to use `read_file`, `cat`, or any command to read source files directly.\n"
@@ -319,13 +338,13 @@ class PromptCompiler:
             None: 1200,
             "Feature Goal": 1200,
             "Current Stage": 400,
-            "Target Source Files": max(8000, int(max_chars * 0.55)),
-            "Context Map Validation": 1200,
-            "Validation Status": 1500,
-            "Relevant Artifacts": 1500,
-            "Artifact Content": max(2500, int(max_chars * 0.20)),
-            "Relevant Research Briefs": 2000,
-            "Pruned Source Context": 2500,
+            "Target Source Files": max(12000, int(max_chars * 0.50)),
+            "Context Map Validation": 800,
+            "Validation Status": 800,
+            "Relevant Artifacts": 1200,
+            "Artifact Content": max(3500, int(max_chars * 0.15)),
+            "Relevant Research Briefs": 1500,
+            "Pruned Source Context": max(12000, int(max_chars * 0.30)),
         }
         pieces = []
         used = 0

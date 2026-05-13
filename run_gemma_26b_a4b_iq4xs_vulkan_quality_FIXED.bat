@@ -2,7 +2,7 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 REM Open a secondary command prompt for the Studio Loop orchestrator
-start "Studio Loop Terminal" cmd /k "cd /d %~dp0ai_harness && echo --- Studio Loop Terminal --- && echo Run: python .agent/orchestrator/studio_loop.py auto \"Task\""
+start "Studio Loop Terminal" cmd /k "cd /d %~dp0ai_harness && echo --- Studio Loop Terminal --- && echo Run: python .agent/orchestrator/studio_loop.py auto "Task""
 
 REM ============================================================
 REM Gemma 4 26B-A4B IQ4_XS Vulkan launcher for KoboldCPP
@@ -120,17 +120,20 @@ exit /b 1
 
 :start_watch_ui
 set "MODEL_LABEL=%~1"
-if not exist "%WATCH_SERVER%" exit /b 0
+if not exist "%WATCH_SERVER%" (
+    echo WARNING: Loop_Central server not found at: %WATCH_SERVER%
+    exit /b 0
+)
 
 where py >nul 2>nul
 if "%ERRORLEVEL%"=="0" (
-    start "Loop_Central" /min cmd /c py -3 "%WATCH_SERVER%" --open --model-label "%MODEL_LABEL%" --model-path "%MODEL_FILE%" --kobold-port 5001
+    start "Loop_Central" cmd /c "py -3 "%WATCH_SERVER%" --open --model-label "%MODEL_LABEL%" --model-path "%MODEL_FILE%" --kobold-port 5001 || pause"
     exit /b 0
 )
 
 where python >nul 2>nul
 if "%ERRORLEVEL%"=="0" (
-    start "Loop_Central" /min cmd /c python "%WATCH_SERVER%" --open --model-label "%MODEL_LABEL%" --model-path "%MODEL_FILE%" --kobold-port 5001
+    start "Loop_Central" cmd /c "python "%WATCH_SERVER%" --open --model-label "%MODEL_LABEL%" --model-path "%MODEL_FILE%" --kobold-port 5001 || pause"
 )
 exit /b 0
 

@@ -1,14 +1,17 @@
 {
   "status": "model_response_captured",
-  "updated_at": "2026-05-13T03:51:57",
-  "last_generation_timestamp": "2026-05-13T03:51:57",
-  "last_prompt_chars": 3569,
-  "last_response_chars": 452,
-  "last_orchestrator_log_prefix": "20260513_035144",
+  "updated_at": "2026-05-13T06:11:00",
+  "last_generation_timestamp": "2026-05-13T06:11:00",
+  "last_prompt_chars": 41825,
+  "last_response_chars": 3736,
+  "last_orchestrator_log_prefix": "20260513_060831",
   "last_stats": {
-    "prompt_tokens": 918,
-    "completion_tokens": 149,
-    "tps": 11.37,
-    "duration": 13.100579
-  }
+    "prompt_tokens": 11670,
+    "completion_tokens": 1157,
+    "tps": 7.79,
+    "duration": 148.577135
+  },
+  "model_label": "Gemma E4B Vulkan",
+  "model_path": "c:\\Users\\rchos\\Desktop\\Studio_Loop\\models\\gemma-4-E4B-it-Q5_K_M.gguf",
+  "kobold_port": 5001
 }

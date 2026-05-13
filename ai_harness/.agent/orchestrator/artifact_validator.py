@@ -157,7 +157,7 @@ class ArtifactValidator:
             for manifest in skill_manifests
             for validator in manifest.get("validators", [])
         }
-        if "research_quality" in validators and (stage == "researcher" or actions.get("research_requests")):
+        if "research_quality" in validators and (stage in ["researcher", "field_researcher", "lab_assistant"] or actions.get("research_requests")):
             all_research = execution_results.get("research", []) + state.get("research_results", [])
             if all_research and not any(not self.validate_research_result(r) for r in all_research):
                 errors.append("Skill validator research_quality failed.")

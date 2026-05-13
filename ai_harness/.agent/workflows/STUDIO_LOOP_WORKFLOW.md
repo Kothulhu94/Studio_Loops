@@ -31,31 +31,35 @@ The Studio Loop Orchestrator moves through the following stages automatically:
 *   **Goal**: Define the "What" and "Why".
 *   **Action**: Create high-level vision and thematic requirements in `.agent/Loop_Flow/[feature]_blueprint.md`.
 
-### 2. Research & Audit Stage (Researcher)
-*   **Goal**: Define technical architecture and implementation steps.
-*   **Action**: Evolve the blueprint into a technical audit with injection points and a checklist. Uses the orchestrator-generated source index and context_culler.py output for source analysis.
+### 2. Field Research Stage (Field Researcher)
+*   **Goal**: Gather external intelligence and documentation.
+*   **Action**: Create a "Research Brief" artifact with external findings, target libraries, and competitive analysis.
 
-### 3. Design Stage (Designer)
+### 3. Lab Audit Stage (Lab Assistant)
+*   **Goal**: Define technical architecture and implementation steps based on internal codebase analysis.
+*   **Action**: Evolve the vision and research brief into a technical audit with injection points and a checklist. Uses the orchestrator-generated source index and context_culler.py output.
+
+### 4. Design Stage (Designer)
 *   **Goal**: Define UI/UX aesthetics and interaction tokens.
 *   **Action**: Generate CSS tokens and component specs in `.agent/Loop_Flow/`.
 
-### 4. Asset Stage (Asset Creator)
+### 5. Asset Stage (Asset Creator)
 *   **Goal**: Generate production-ready assets.
 *   **Action**: Produce SVG/vector specs or integrate via orchestrator asset capabilities.
 
-### 5. Implementation Stage (Developer)
+### 6. Implementation Stage (Developer)
 *   **Goal**: Write functional, clean code.
 *   **Action**: Modify source, tests, and tools. Uses orchestrator `writes` and `patches`.
 
-### 6. Verification Stage (QA Tester)
+### 7. Verification Stage (QA Tester)
 *   **Goal**: Ensure quality and stability.
 *   **Action**: Run tests and perform edge case analysis.
 
-### 7. Forensics Stage (Bug Hunter)
+### 8. Forensics Stage (Bug Hunter)
 *   **Goal**: Isolate and reproduce reported failures.
 *   **Action**: Identify root cause and create reproduction scripts.
 
-### 8. Remediation Stage (Debug Dev)
+### 9. Remediation Stage (Debug Dev)
 *   **Goal**: Implement surgical fixes for identified bugs.
 *   **Action**: Apply fixes and verify regression.
 

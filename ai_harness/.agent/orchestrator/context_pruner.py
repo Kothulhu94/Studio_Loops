@@ -1,7 +1,8 @@
-import os
-import subprocess
-import json
 import ntpath
+import re
+import json
+import subprocess
+import os
 from context_map_validator import ContextMapValidator
 
 def _portable_basename(path):
@@ -27,8 +28,8 @@ class ContextPruner:
 
         search_terms = self.build_search_terms(state, stage)
         
-        print(f"Pruning context with terms: {search_terms}")
-        culler_output = self.run_culler(search_terms)
+        print(f"Pruning context for stage '{stage}' with terms: {search_terms}")
+        culler_output = self.run_culler(search_terms, stage=stage)
 
         # Filter artifacts to only include current feature slug
         all_artifacts = state.get('artifacts', {})
@@ -67,6 +68,21 @@ class ContextPruner:
             f"{state.get('feature', '')}\n\n{artifact_content}",
         )
 
+        # Identify files already provided for Sovereignty section
+        provided_files = []
+        if target_files_content:
+            provided_files = re.findall(r"### Target File:\s+(.+?)\s*$", target_files_content, flags=re.MULTILINE)
+        
+        sovereignty_section = ""
+        if provided_files:
+            sovereignty_section = "## Source Context Sovereignty\n"
+            sovereignty_section += "> [!IMPORTANT]\n"
+            sovereignty_section += "> The following source files are FULLY PROVIDED in the 'Target Source Files' section below.\n"
+            sovereignty_section += "> DO NOT request research for these paths; proceed with implementation using the provided evidence.\n\n"
+            for f in provided_files:
+                sovereignty_section += f"- `{f}` (READ-ONLY ACCESS GRANTED)\n"
+            sovereignty_section += "\n"
+
         content = f"""# Context Pack: {feature_slug} / {stage}
 
 ## Feature Goal
@@ -75,6 +91,7 @@ class ContextPruner:
 ## Current Stage
 {stage}
 
+{sovereignty_section}
 ## Decision Memory
 Refer to .agent/Loop_Flow/context_packs/{feature_slug}_decision_memory.md for stable decisions and constraints.
 
@@ -82,8 +99,6 @@ Refer to .agent/Loop_Flow/context_packs/{feature_slug}_decision_memory.md for st
 {json.dumps(relevant_artifacts, indent=2)}
 
 ## Target Source Files
-These source files are already available in this context. Do not request research just to read them; proceed with the stage using this evidence.
-
 {target_files_content}
 
 ## Context Map Validation
@@ -113,8 +128,7 @@ These source files are already available in this context. Do not request researc
         search_terms.extend(state.get("feature", "").split()[:15])
         # From current stage needs
         search_terms.append(stage)
-        # From recent research. Use concise metadata only; full absolute artifact
-        # paths create noisy Windows path tokens that hurt model compliance.
+        # From recent research
         for brief in state.get("research_briefs", [])[-2:]:
             search_terms.extend(_portable_basename(brief).split()[:10])
         for result in state.get("research_results", [])[-4:]:
@@ -147,9 +161,11 @@ These source files are already available in this context. Do not request researc
             cleaned_terms.append(cleaned)
         return cleaned_terms[:20]
 
-    def run_culler(self, keywords):
+    def run_culler(self, keywords, stage=None):
         try:
             cmd = ["python", "tools/context_culler.py"] + keywords
+            if stage:
+                cmd.extend(["--stage", stage])
             result = subprocess.run(cmd, capture_output=True, text=True, cwd=self.workspace_root)
             return result.stdout if result.returncode == 0 else "Culler failed."
         except Exception as e:
@@ -200,7 +216,6 @@ These source files are already available in this context. Do not request researc
         return research_content
 
     def generate_slug(self, text):
-        import re
         slug = text.lower()
         slug = re.sub(r'[^a-z0-9 ]', '', slug)
         slug = slug.replace(' ', '_')

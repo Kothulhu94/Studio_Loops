@@ -42,11 +42,11 @@
         </div>
       </div>
 
-      <!-- KEEPER INTERFACE (Placeholder for Terraforming Keeper UI) -->
+      <!-- KEEPER INTERFACE (Terraforming Keeper UI) -->
       <div id="keeper-interface" class="screen">
         <h1 class="small-title">KEEPER INTERFACE</h1>
+        <p class="log-line">System Status: <span id="keeper-status">Nominal</span></p>
         <p class="log-line">Awaiting Terraforming Directive Input...</p>
-        <p class="log-line">System Status: Nominal</p>
       </div>
 
     </div>
@@ -63,6 +63,7 @@
       const mainMenu = document.getElementById('main-menu');
       const keeperInterface = document.getElementById('keeper-interface');
       const progressText = document.getElementById('loading-progress');
+      const keeperStatusElement = document.getElementById('keeper-status');
       
       // Simulate loading progress
       let progress = 0;
@@ -78,7 +79,8 @@
       // Listen to GameState changes
       const game = window.gameInstance;
       if (game) {
-        game.onStateChange((newState) => {
+        // Subscribe to state changes
+        game.addStateChangeListener((newState) => {
           // Hide all screens
           loadingScreen.classList.remove('active');
           entrySequence.classList.remove('active');
@@ -104,6 +106,13 @@
             mainMenu.classList.add('active');
           } else if (newState === 'KEEPER_INTERFACE') {
             keeperInterface.classList.add('active');
+            // Update keeper status display when entering the interface
+            keeperStatusElement.textContent = game.getKeeperStatus();
+            // Subscribe to status changes within the keeper interface
+            const statusUpdateListener = () => {
+                keeperStatusElement.textContent = game.getKeeperStatus();
+            };
+            game.addStateChangeListener(statusUpdateListener);
           }
         });
         

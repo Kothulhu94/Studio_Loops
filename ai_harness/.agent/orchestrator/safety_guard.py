@@ -4,6 +4,9 @@ import re
 
 class SafetyGuard:
     def __init__(self, workspace_root):
+        if isinstance(workspace_root, dict):
+            # If a dict is passed (likely self.config), try to extract base_path or fallback
+            workspace_root = workspace_root.get("base_path", os.getcwd())
         self.workspace_root = workspace_root
         self.stage_write_policy = {}
         self.session_workspace_roots = []
@@ -69,6 +72,8 @@ class SafetyGuard:
         # Stage-specific permissions supplied by active skill/session policy.
         permissions = self.stage_write_policy or {
             "concept_producer": [".agent/Loop_Flow", "docs/adr"],
+            "field_researcher": [".agent/Loop_Flow", "docs/adr"],
+            "lab_assistant": [".agent/Loop_Flow", "docs/adr"],
             "researcher": [".agent/Loop_Flow", "docs/adr"],
             "designer": [".agent/Loop_Flow", "public"],
             "asset_creator": [".agent/Loop_Flow", "src/assets", "data/assets", "src/SVG", "public/assets"],
@@ -103,13 +108,26 @@ class SafetyGuard:
                 return True
         return False
 
+    def is_path_allowed(self, path, mode="read", stage=None):
+        """Wrapper for is_path_safe to maintain compatibility with orchestrator calls."""
+        # mode is currently ignored but kept for signature compatibility
+        return self.is_path_safe(path, stage)
+
     def validate_actions(self, stage, actions):
         """Validates all requested actions for safety."""
         
         # 1. Check writes
         for write in actions.get("writes", []):
             if not self.is_path_safe(write["path"], stage):
-                return False, f"Unsafe write path for stage '{stage}': {write['path']}"
+                msg = f"Unsafe write path for stage '{stage}': {write['path']}"
+                # Helpful suggestions for restricted files
+                if "tsconfig.json" in write["path"]:
+                    msg += ". Build configurations are protected. For UI styling, use CSS/SCSS files. For project structure changes, request a 'design' or 'research' stage first."
+                elif "package.json" in write["path"]:
+                    msg += ". Direct dependency modification is restricted. Use allowed commands if you need to install new packages."
+                elif ".env" in write["path"]:
+                    msg += ". Environment files are strictly protected for security."
+                return False, msg
             if write.get("mode") not in ["create", "overwrite", "append", None]:
                 return False, f"Invalid write mode: {write.get('mode')}"
         

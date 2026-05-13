@@ -1,8 +1,0 @@
-{
-  "name": "test",
-  "success": false,
-  "stdout": null,
-  "stderr": null,
-  "returncode": 1,
-  "command": "npx vitest run"
-}

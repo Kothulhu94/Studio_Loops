@@ -9,7 +9,7 @@ class TransitionEngine:
         if any(word in request for word in ["ui", "look", "design", "aesthetic"]):
             return "concept_producer"
         if any(word in request for word in ["research", "how to", "architecture"]):
-            return "researcher"
+            return "field_researcher"
         return "concept_producer"
 
     def get_next_stage(self, current_stage, actions, validation_result):
@@ -30,7 +30,15 @@ class TransitionEngine:
 
         # Transition Rules
         if current_stage == "concept_producer":
-            return "researcher"
+            return "field_researcher"
+        
+        elif current_stage == "field_researcher":
+            return "lab_assistant"
+            
+        elif current_stage == "lab_assistant":
+            if actions.get("design_required"):
+                return "designer"
+            return "developer"
         
         elif current_stage == "researcher":
             if actions.get("design_required"):

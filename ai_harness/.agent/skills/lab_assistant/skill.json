@@ -1,0 +1,21 @@
+{
+  "id": "studio-loop.lab_assistant",
+  "name": "Studio Loop Lab Assistant",
+  "version": "1.0.0",
+  "roles": ["lab_assistant"],
+  "required_tools": ["research_requests", "file_writer", "find_bloat", "git_status"],
+  "allowed_write_paths": [".agent/Loop_Flow", "docs/adr"],
+  "expected_artifacts": [
+    {
+      "type": "blueprint",
+      "path": ".agent/Loop_Flow/{feature}_blueprint.md",
+      "required": true,
+      "required_sections": ["Technical Audit", "Implementation Blueprint", "Context Pruning Map", "Implementation Checklist"]
+    },
+    {"type": "context_map", "path": ".agent/Loop_Flow/context_map.json", "required": true, "required_sections": []}
+  ],
+  "validators": ["required_sections", "research_quality"],
+  "provenance": {"source": "local splitting of researcher role", "legacy_file": ".agent/skills/researcher_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/lab_assistant_skills.md"
+}

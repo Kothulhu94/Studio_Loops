@@ -4,6 +4,8 @@ from skill_registry import SkillRegistry
 class RoleLoader:
     ROLE_MAPPING = {
         "concept_producer": ".agent/workflows/concept_producer.md",
+        "field_researcher": ".agent/workflows/field_researcher.md",
+        "lab_assistant": ".agent/workflows/lab_assistant.md",
         "researcher": ".agent/workflows/researcher.md",
         "designer": ".agent/workflows/designer.md",
         "developer": ".agent/workflows/developer.md",
@@ -15,12 +17,14 @@ class RoleLoader:
 
     SKILL_MAPPING = {
         "concept_producer": ["producer_skills.md"],
+        "field_researcher": ["field_researcher_skills.md"],
+        "lab_assistant": ["lab_assistant_skills.md"],
         "researcher": ["researcher_skills.md"],
         "designer": ["designer_skills.md"],
         "developer": ["developer_skills.md"],
         "qa_tester": ["qa_skills.md"],
         "asset_creator": ["asset_creator_skills.md"],
-        "bug_hunter": ["qa_skills.md", "researcher_skills.md"],
+        "bug_hunter": ["qa_skills.md", "lab_assistant_skills.md"],
         "debug_dev": ["developer_skills.md"]
     }
 

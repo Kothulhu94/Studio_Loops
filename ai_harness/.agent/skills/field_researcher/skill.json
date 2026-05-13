@@ -1,0 +1,20 @@
+{
+  "id": "studio-loop.field_researcher",
+  "name": "Studio Loop Field Researcher",
+  "version": "1.0.0",
+  "roles": ["field_researcher"],
+  "required_tools": ["research_requests", "file_writer"],
+  "allowed_write_paths": [".agent/Loop_Flow"],
+  "expected_artifacts": [
+    {
+      "type": "research_brief",
+      "path": ".agent/Loop_Flow/{feature}_research_brief.md",
+      "required": true,
+      "required_sections": ["External Findings", "Target Libraries/Tools", "Competitive Analysis"]
+    }
+  ],
+  "validators": ["required_sections", "research_quality"],
+  "provenance": {"source": "local splitting of researcher role", "legacy_file": ".agent/skills/researcher_skills.md"},
+  "trust_level": "core",
+  "legacy_markdown": ".agent/skills/field_researcher_skills.md"
+}

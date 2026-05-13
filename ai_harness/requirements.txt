@@ -3,3 +3,5 @@ requests
 jsonschema
 psutil
 pytest
+mcp
+anyio

@@ -1,9 +1,9 @@
 {
-  "active_session_id": "continue_development_of_the_surface_terraforming_20260513_025508174829",
+  "active_session_id": "develop_a_multistep_development_plan_for_the_sur_20260513_052801109262",
   "active": true,
   "status": "blocked",
-  "feature": "Continue development of the Surface Terraforming Keeper using the GDD in docs/GDD_Surface_Terraforming.md and unblock the UI implementation in public/.",
-  "feature_slug": "continue_development_of_the_surface_terraforming",
+  "feature": "Develop a multi-step development plan for the Surface Terraforming Keeper game. Focus on biomass clearing mechanics, resource management (Energy/Biomatter), and the Living Jungle regrowth algorithm.",
+  "feature_slug": "develop_a_multistep_development_plan_for_the_sur",
   "current_stage": "developer",
-  "updated_at": "2026-05-13T03:51:57.646211"
+  "updated_at": "2026-05-13T06:11:05.835094"
 }

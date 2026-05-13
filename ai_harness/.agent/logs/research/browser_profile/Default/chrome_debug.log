@@ -1,5 +1,27 @@
-[0513/030035.617:INFO:CONSOLE:6] "%cairgap.js%c Report-only mode enabled font-size:larger;font-weight:bold;border-radius:0.25em;padding:0.08em 0.25em;;color:amber;background-color:#6e3e00 ", source: https://transcend-cdn.com/cm/d556c3a1-e57c-4bdf-a490-390a1aebf6dd/airgap.js (6)
-[0513/030035.927:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 5cf6b8c3-4031-4007-8385-bba59b919f6d successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
-[0513/030036.380:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping b253f79d-4b82-43eb-b686-ae43bad682ba successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
-[0513/030036.383:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping d7a6a8ed-ac7f-4aa9-b773-135af7d520bb successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
-[0513/030037.422:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 65dac1b0-2782-42d3-8de1-87c4eab831df successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0513/053258.999:INFO:CONSOLE:6] "%cairgap.js%c Report-only mode enabled font-size:larger;font-weight:bold;border-radius:0.25em;padding:0.08em 0.25em;;color:amber;background-color:#6e3e00 ", source: https://transcend-cdn.com/cm/d556c3a1-e57c-4bdf-a490-390a1aebf6dd/airgap.js (6)
+[0513/053259.098:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 9259b1b9-c392-492c-9bf0-c84e080b9707 successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0513/053259.763:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping a285a890-d103-4272-bc08-fc09765870dc successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0513/053259.767:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping cbcfb29d-9f2c-4079-bffc-97a684050f84 successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0513/053300.794:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 4d6a655c-ee71-4975-bc38-96d6585a1507 successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0513/053302.236:WARNING:content\browser\btm\btm_database.cc:128] Failed to initialize the DIPS SQLite database.
+[0513/053302.238:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is denied. (0x5)
+[0513/053302.238:ERROR:net\disk_cache\disk_cache.cc:272] Unable to create cache
+[0513/053302.238:ERROR:gpu\ipc\host\gpu_disk_cache.cc:725] Gpu Cache Creation failed: -2
+[0513/053302.238:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is denied. (0x5)
+[0513/053302.238:ERROR:net\disk_cache\cache_util_win.cc:25] Unable to move the cache: Access is denied. (0x5)
+[0513/053302.238:ERROR:net\disk_cache\disk_cache.cc:272] Unable to create cache
+[0513/053302.238:ERROR:gpu\ipc\host\gpu_disk_cache.cc:725] Gpu Cache Creation failed: -2
+[0513/053302.238:ERROR:net\disk_cache\disk_cache.cc:272] Unable to create cache
+[0513/053302.238:ERROR:gpu\ipc\host\gpu_disk_cache.cc:725] Gpu Cache Creation failed: -2
+[0513/053303.954:INFO:CONSOLE:6] "%cairgap.js%c Report-only mode enabled font-size:larger;font-weight:bold;border-radius:0.25em;padding:0.08em 0.25em;;color:amber;background-color:#6e3e00 ", source: https://transcend-cdn.com/cm/d556c3a1-e57c-4bdf-a490-390a1aebf6dd/airgap.js (6)
+[0513/053304.025:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 1f896127-b45c-4fbd-b46c-a2f4acbde0d4 successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0513/053304.538:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping d6d6a82e-f4be-4529-9d43-2c13ba7b0bba successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0513/053304.540:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 02575bef-af07-4ac6-9715-93926bddab9f successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0513/053305.553:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 1c2c7fd6-c67d-47cf-9271-4abaa6968adb successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0513/053305.993:WARNING:components\leveldb_proto\internal\leveldb_database.cc:124] Unable to open C:\Users\rchos\Desktop\Studio_Loop\ai_harness\.agent\logs\research\browser_profile\Default\shared_proto_db\metadata: IO error: C:\Users\rchos\Desktop\Studio_Loop\ai_harness\.agent\logs\research\browser_profile\Default\shared_proto_db\metadata/LOCK: Access denied. (ChromeMethodBFE: 15::LockFile::5)
+[0513/053308.011:WARNING:components\leveldb_proto\internal\leveldb_database.cc:124] Unable to open C:\Users\rchos\Desktop\Studio_Loop\ai_harness\.agent\logs\research\browser_profile\Default\shared_proto_db\metadata: IO error: C:\Users\rchos\Desktop\Studio_Loop\ai_harness\.agent\logs\research\browser_profile\Default\shared_proto_db\metadata/LOCK: Access denied. (ChromeMethodBFE: 15::LockFile::5)
+[0513/053308.283:INFO:CONSOLE:6] "%cairgap.js%c Report-only mode enabled font-size:larger;font-weight:bold;border-radius:0.25em;padding:0.08em 0.25em;;color:amber;background-color:#6e3e00 ", source: https://transcend-cdn.com/cm/d556c3a1-e57c-4bdf-a490-390a1aebf6dd/airgap.js (6)
+[0513/053308.384:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 5849771d-088c-4680-a2ce-ea9bd58c8d61 successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0513/053309.021:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 2716f552-a208-4a48-8075-84aecafadf6d successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0513/053309.023:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping 675adaa2-98a9-47e4-a480-02035be626bb successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)
+[0513/053310.052:INFO:CONSOLE:1] "(Glean.core.Upload.PingUploadManager) Ping de3af41a-1246-4ac9-ab0d-66c7d791df22 successfully sent 200.", source: https://developer.mozilla.org/static/client/8903.f870aafb338b203a.js (1)

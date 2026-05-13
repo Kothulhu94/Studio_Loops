@@ -1,8 +1,0 @@
-{
-  "name": "typecheck",
-  "success": false,
-  "stdout": "src/index.ts(8,23): error TS2554: Expected 1 arguments, but got 0.\ntests/feature_x.test.ts(1,17): error TS2307: Cannot find module '../src/feature_x' or its corresponding type declarations.\n",
-  "stderr": "",
-  "returncode": 2,
-  "command": "npx tsc --noEmit"
-}

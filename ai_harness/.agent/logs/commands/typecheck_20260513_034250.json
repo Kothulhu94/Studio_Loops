@@ -1,8 +1,0 @@
-{
-  "name": "typecheck",
-  "success": false,
-  "stdout": "src/index.ts(2,26): error TS2307: Cannot find module './world/WorldMap' or its corresponding type declarations.\nsrc/index.ts(4,33): error TS2307: Cannot find module './BlueprintLoader' or its corresponding type declarations.\nsrc/index.ts(7,23): error TS2554: Expected 1 arguments, but got 0.\nsrc/index.ts(12,15): error TS2304: Cannot find name 'GameState'.\ntests/feature_x.test.ts(1,17): error TS2307: Cannot find module '../src/feature_x' or its corresponding type declarations.\n",
-  "stderr": "",
-  "returncode": 2,
-  "command": "npx tsc --noEmit"
-}

@@ -450,7 +450,7 @@ def stop_kobold_processes() -> tuple[int, dict]:
     ensure_files()
     args = ["taskkill", "/IM", "koboldcpp.exe", "/F"]
     try:
-        result = subprocess.run(args, cwd=str(REPO_DIR), capture_output=True, text=True, timeout=10)
+        result = subprocess.run(args, cwd=str(REPO_DIR), capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=10)
     except (OSError, subprocess.TimeoutExpired) as exc:
         append_kobold_log(f"[{now_iso()}] Stop model failed: {exc}\n")
         return 500, {"ok": False, "error": str(exc)}
@@ -470,20 +470,52 @@ class CentralHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
-        if parsed.path in ("", "/"):
+        path = parsed.path
+        print(f"[{now_iso()}] GET {path}")
+        
+        # 1. Main entry points
+        if path in ("", "/", "/index.html"):
             self.serve_file(UI_DIR / "index.html")
-        elif parsed.path == "/api/snapshot":
+            return
+            
+        # 2. API endpoints (handle optional trailing slashes)
+        clean_path = path.rstrip("/")
+        if clean_path == "/api/snapshot":
             self.send_json(build_snapshot(self.server.kobold_port))
-        elif parsed.path == "/api/orchestrator/commands":
+            return
+        if clean_path == "/api/orchestrator/commands":
             self.send_json({"commands": ORCHESTRATOR_COMMANDS})
-        elif parsed.path == "/api/health":
+            return
+        if clean_path == "/api/health":
             self.send_json({"ok": True, "time": now_iso()})
-        else:
-            requested = (UI_DIR / parsed.path.lstrip("/")).resolve()
-            if UI_DIR in requested.parents and requested.exists() and requested.is_file():
-                self.serve_file(requested)
-            else:
-                self.send_error(404, "Not found")
+            return
+        if clean_path == "/api/diagnostics":
+            self.send_json(run_diagnostics(self.server.kobold_port))
+            return
+            
+        # 3. Static assets
+        rel_path = path.lstrip("/")
+        if rel_path.startswith("ui/"):
+            rel_path = rel_path[3:]
+            
+        requested = (UI_DIR / rel_path).resolve()
+        
+        try:
+            # Security check: ensure the file is within UI_DIR
+            # We use lower() for Windows case-insensitivity
+            if str(requested).lower().startswith(str(UI_DIR).lower()):
+                if requested.is_file():
+                    self.serve_file(requested)
+                    return
+                elif (requested / "index.html").is_file():
+                    self.serve_file(requested / "index.html")
+                    return
+            
+            print(f"[{now_iso()}] 404 Not Found: {path} (resolved to {requested})")
+            self.send_error(404, f"File not found: {path}")
+        except Exception as exc:
+            print(f"[{now_iso()}] 500 Server Error: {path} -> {exc}")
+            self.send_error(500, str(exc))
 
     def do_POST(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
@@ -507,6 +539,42 @@ class CentralHandler(BaseHTTPRequestHandler):
             self.send_json(run_diagnostics(self.server.kobold_port))
             return
         self.send_json({"ok": False, "error": "Not found."}, status=404)
+
+    def log_message(self, fmt: str, *args) -> None:
+        return
+
+    def read_body_json(self) -> dict | None:
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            body = self.rfile.read(min(length, 200_000))
+            data = json.loads(body.decode("utf-8") or "{}")
+            return data if isinstance(data, dict) else None
+        except (ValueError, json.JSONDecodeError, OSError):
+            return None
+
+    def send_json(self, data: dict, status: int = 200) -> None:
+        body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def serve_file(self, path: Path) -> None:
+        try:
+            body = path.read_bytes()
+        except OSError:
+            self.send_error(404, "Not found")
+            return
+        content_type = mimetypes.guess_type(str(path))[0] or "application/octet-stream"
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
 
 def run_diagnostics(port: int) -> dict:
     results = []
@@ -548,41 +616,6 @@ def run_diagnostics(port: int) -> dict:
         "checks": results,
         "summary": "System Healthy" if all(c["status"] in ("PASS", "INFO") for c in results) else "Issues Detected"
     }
-
-    def log_message(self, fmt: str, *args) -> None:
-        return
-
-    def read_body_json(self) -> dict | None:
-        try:
-            length = int(self.headers.get("Content-Length", "0"))
-            body = self.rfile.read(min(length, 200_000))
-            data = json.loads(body.decode("utf-8") or "{}")
-            return data if isinstance(data, dict) else None
-        except (ValueError, json.JSONDecodeError, OSError):
-            return None
-
-    def send_json(self, data: dict, status: int = 200) -> None:
-        body = json.dumps(data, ensure_ascii=False).encode("utf-8")
-        self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
-
-    def serve_file(self, path: Path) -> None:
-        try:
-            body = path.read_bytes()
-        except OSError:
-            self.send_error(404, "Not found")
-            return
-        content_type = mimetypes.guess_type(str(path))[0] or "application/octet-stream"
-        self.send_response(200)
-        self.send_header("Content-Type", content_type)
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
 
 
 class CentralServer(ThreadingHTTPServer):

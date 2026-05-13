@@ -12,12 +12,17 @@ class RetryEngine:
         if stage_name:
             prompt += f"CURRENT STAGE:\n{stage_name}\n\n"
         prompt += "GEMMA 4 REPAIR MODE:\n"
-        prompt += "- Treat this as a deterministic JSON repair task, not a fresh stage attempt.\n"
-        prompt += "- Think silently and output only the corrected ACTIONS_JSON block.\n"
-        prompt += "- Do not preserve invalid wrappers, Markdown fences, duplicate JSON, or conversational text from the previous response.\n\n"
+        prompt += "- Treat this as a logical debugging task. Analyze WHY the previous code failed.\n"
+        prompt += "- Think silently. Identify if you are missing a definition or an import.\n"
+        prompt += "- If you are missing a definition (e.g. 'Cannot find name'), you MUST request research (file_reader) to find it before marking complete.\n"
+        prompt += "- Output only the corrected ACTIONS_JSON block.\n"
+        prompt += "- Do not use placeholders like /* dependencies */ or // fix later. Write functional code.\n\n"
         prompt += f"The orchestrator rejected the previous action due to the following error:\n\n"
         prompt += f"ERROR:\n{error_message}\n\n"
         
+        if context_snippet:
+            prompt += f"OFFENDING CODE SNIPPET:\n{context_snippet}\n\n"
+
         if "RESEARCH_REQUIRED_MISSING" in error_message:
             prompt += "REQUIRED RESEARCH REPAIR:\n"
             prompt += "- This stage has research_required=true.\n"
@@ -32,10 +37,14 @@ class RetryEngine:
         
         if results:
             prompt += "ACTION EXECUTION STATUS:\n"
-            prompt += json.dumps(results, indent=2)[:4000] + "\n"
-            if results.get("writes"):
-                prompt += "Writes:\n"
-                for w in results["writes"]:
+            # Limit results to avoid context blowup but keep errors
+            if isinstance(results, dict):
+                compact_results = {k: v for k, v in results.items() if k != "execution_results"}
+                prompt += json.dumps(compact_results, indent=2)[:2000] + "\n"
+            
+            if results.get("write_results"):
+                prompt += "Last Writes:\n"
+                for w in results["write_results"]:
                     status = "SUCCESS" if w["success"] else f"FAILED: {w['error']}"
                     prompt += f"- {w['path']}: {status}\n"
             
@@ -48,66 +57,41 @@ class RetryEngine:
                     prompt += f"- Typecheck: {t_status}\n"
                     if not t["success"]:
                         prompt += f"  Errors:\n{t['stderr'] or t['stdout']}\n"
-                if "tests" in qc:
-                    ts = qc["tests"]
-                    ts_status = "PASSED" if ts["success"] else "FAILED"
-                    prompt += f"- Unit Tests: {ts_status}\n"
-                    if not ts["success"]:
-                        prompt += f"  Failures:\n{ts['stderr'] or ts['stdout']}\n"
             prompt += "\n"
 
         if "POST_EXECUTION_VALIDATION_FAILED" in error_message:
             prompt += "POST-VALIDATION REPAIR:\n"
             prompt += "- If you can fix the validation error by writing missing or corrected artifacts, return status complete.\n"
-            prompt += "- Preserve required artifact filenames and required section headings exactly as named in the validation error/status.\n"
-            prompt += "- Do not return status blocked merely because the previous attempt failed validation.\n\n"
+            prompt += "- If you encounter a missing definition error, do not guess; use research_requests to read the source file first.\n\n"
 
-        if context_snippet:
-            prompt += f"PREVIOUS RESPONSE EXCERPT:\n{context_snippet}\n\n"
-            
         prompt += "INSTRUCTION:\n"
         prompt += "1. Return exactly one ACTIONS_JSON block.\n"
-        prompt += "2. Do not include prose before or after.\n"
+        prompt += "2. Include a 'reasoning' field explaining how you addressed the specific error above.\n"
         prompt += "3. Use valid JSON.\n"
-        prompt += "4. Use null as JSON null, not \"null\".\n"
-        prompt += "5. If a file already exists and you intended to update it, use mode=\"overwrite\".\n"
-        prompt += "6. Do not use mode=\"create\" for files that already exist according to the status above.\n"
-        prompt += "7. Do not invent writes/patches unless needed to satisfy the original stage.\n"
-        prompt += "8. The status field must be exactly one of: complete, blocked, failed. Replace invalid values such as running, in_progress, or pending.\n"
-        prompt += "9. Do not wrap JSON in Markdown fences.\n"
-        prompt += "10. Do not rename fields. Use next_stage_recommendation, not next_stage.\n"
-        prompt += "11. Ensure research_required is satisfied if true in the validation rules.\n"
-        prompt += "12. If research is required and no complete research exists, request research first and do not write a final technical blueprint yet.\n"
+        prompt += "4. If a file already exists and you intended to update it, use mode=\"overwrite\".\n"
+        prompt += "5. Do not use placeholders. If you don't know a type or value, request research.\n"
+        prompt += "6. The status field must be exactly one of: complete, blocked, failed.\n"
+        prompt += "7. Do not wrap JSON in Markdown fences.\n"
+        prompt += "8. Ensure research_required is satisfied if true in the validation rules.\n"
         
         if stack_profile == "harness_internal":
-            prompt += "13. For harness_internal: use Python for orchestrator/tooling changes; use tests/*.py and tools/verify_clean_runtime.py for verification.\n"
-            prompt += "13a. For harness_internal local research, use mode=\"local_codebase\". Use exact target_files when known; otherwise use audit_kind=\"discovery\" with target_files [\".agent\", \"tests\", \"tools\"].\n"
+            prompt += "9. For harness_internal: use Python for orchestrator/tooling changes.\n"
         else:
-            prompt += "13. For game_source: use TypeScript/browser/Vitest; do not propose Python game source implementation.\n"
+            prompt += "9. For game_source: use TypeScript/browser/Vitest.\n"
             
-        prompt += "14. The root object itself must be ACTIONS_JSON.\n"
-        prompt += "15. Do not wrap it in {\"actions\": ...}.\n"
-        prompt += "16. Do not return arrays at the root.\n"
-        prompt += "17. Include stage, status, and summary.\n"
-        prompt += "18. Do not claim verification, commands, research, writes, or patches unless represented in this corrected object or already present in the supplied execution status.\n"
-        prompt += "19. For version-sensitive or current facts, request research instead of relying on stale model knowledge.\n\n"
+        prompt += "10. Include stage, status, reasoning, and summary.\n\n"
         prompt += "REQUIRED ROOT SHAPE:\n"
         prompt += "ACTIONS_JSON:\n"
         root_status = "complete" if "POST_EXECUTION_VALIDATION_FAILED" in error_message else "blocked"
         prompt += json.dumps({
             "stage": current_stage,
             "status": root_status,
-            "summary": "Brief valid summary of at least 10 characters.",
+            "reasoning": "Explain your debugging steps here.",
+            "summary": "Brief summary of the fix.",
             "research_requests": [],
             "writes": [],
             "patches": [],
             "commands": [],
-            "blockers": [],
-            "design_required": False,
-            "assets_required": False,
-            "qa_result": None,
-            "artifacts": [],
-            "risks": [],
             "next_stage_recommendation": None
         }, indent=2)
         prompt += "\n"
